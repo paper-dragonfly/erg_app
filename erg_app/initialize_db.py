@@ -5,7 +5,6 @@ def create_erg_db():
     conn, cur = db_connect('create_dbs', True)
     cur.execute("SELECT datname FROM pg_database")
     db_list = cur.fetchall()
-    pdb.set_trace()
     if ('Erg',) in db_list:
         print('db exists')
     else:
@@ -29,7 +28,7 @@ def create_test_db():
 def create_team_table(cur):
     cur.execute("""CREATE TABLE IF NOT EXISTS team(
         team_id SERIAL PRIMARY KEY,
-        team_name VARCHAR(50)
+        team_name VARCHAR(50) 
         ) """)
 
 def create_users_table(cur):
@@ -50,8 +49,7 @@ def create_workout_log_table(cur):
         date DATE,
         distance INTEGER,
         time_sec INTEGER,
-        split TIME WITHOUT TIME ZONE,
-        duration TIME WITHOUT TIME ZONE,
+        split INTEGER,
         intervals INTEGER,
         comment VARCHAR(255),
         FOREIGN KEY (user_id) REFERENCES users(user_id)
@@ -61,11 +59,11 @@ def create_interval_log_table(cur):
     cur.execute("""CREATE TABLE IF NOT EXISTS interval_log(
         interval_id SERIAL PRIMARY KEY,
         workout_id INTEGER,
-        type VARCHAR(1), 
+        interval_type VARCHAR(10), 
         distance INTEGER,
         time_sec INTEGER,
-        split TIME WITHOUT TIME ZONE,
-        duration TIME WITHOUT TIME ZONE,
+        split INTEGER,
+        rest INTEGER,
         FOREIGN KEY (workout_id) REFERENCES workout_log(workout_id))"""
     )
 

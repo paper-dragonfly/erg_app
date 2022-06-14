@@ -90,16 +90,16 @@ def test_log(client):
         cur.execute("INSERT INTO users(user_id, user_name) VALUES(%s,%s)",(1,'lizzkadoodle'))
         cur.execute("INSERT INTO workout_log(workout_id, user_id, date, distance, time_sec, split, duration,intervals,comment) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s)",(1,1,'2022-01-01', 2000,480,'00:02:00','00:08:00',1,'PR'))
         conn.commit()
+        # POST user_id and capture response
+        response = client.post("/log", data=json.dumps({"user_id":1}), content_type='application/json') 
+        # confirm request was successful
+        assert response.status_code == 200
+        # Confirm content is as expected
     finally:
         conn.close()
         cur.close()   
-    # POST user_id and capture response
-    response = client.post("/log", data=json.dumps({"user_id":1}), content_type='application/json') 
-    # confirm request was successful
-    assert response.status_code == 200
-    # Confirm content is as expected
-    # clear db
-    c.clear_test_db()
+        # clear db
+        c.clear_test_db()
 
 def test_search_sql_str():
     """
@@ -117,7 +117,7 @@ def test_search_sql_str():
 def test_logsearch(client):
     """
     GIVEN a flask app
-    WHEN POST sumbits workout search params
+    WHEN POST sumbits workout search params 
     THEN assert expected workouts are returned + 200 status code
     """
     try: 
@@ -146,6 +146,11 @@ def test_logsearch(client):
         c.clear_test_db()
 
 def test_details(client):
+    """
+    GIVEN a flask app
+    WHEN POST submits workout_id
+    THEN assert returns interval and summary stas for that workout_id 
+    """ # NOTE: not actually asserting info is correct...just that length is as expected and status_code == 200
     try: 
         # populate db: workout_log
         conn, cur = db_connect('testing',True)
@@ -156,13 +161,42 @@ def test_details(client):
         response = client.post("/details", data=json.dumps({'workout_id':1}), content_type='application/json')
         assert response.status_code == 200
         data_dict = json.loads(response.data.decode("ASCII"))
-        pdb.set_trace()
         assert len(data_dict['intervals'])==2 and len(data_dict['workout_summary'])==1
     finally:
         cur.close()
         conn.close()
         c.clear_test_db()
-        
+    
+def test_userstats(client):
+    """
+    GIVEN a flask app
+    WHEN POST submits user_id
+    THEN assert returns summary data for user
+    """
+    try:
+        # populate db with team, user, three matching workouts, one not matching
+        conn, cur = db_connect('testing',False)
+        cur.execute("INSERT INTO team(team_id, team_name) VALUES(1, 'UtahCrew')")
+        cur.execute("INSERT INTO users(user_id, user_name, team) VALUES(%s,%s,%s)",(1,'kaja',1))
+        cur.execute("INSERT INTO users(user_id, user_name, team) VALUES(%s,%s,%s)",(2,'Nico',1))
+        cur.execute("INSERT INTO workout_log(workout_id, user_id, date, distance, time_sec, split, duration,intervals,comment) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s)",(1,1,'2022-01-01', 2000,480,'00:02:00','00:08:00',1,'2k PR'))
+        cur.execute("INSERT INTO workout_log(workout_id, user_id, date, distance, time_sec, split, duration,intervals,comment) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s)",(2,1,'2022-01-02', 2000,488,'00:02:02','00:08:08',1,'2k'))
+        cur.execute("INSERT INTO workout_log(workout_id, user_id, date, distance, time_sec, split, duration,intervals,comment) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s)",(3,1,'2022-01-05', 6000,1800,'00:02:10','00:30:00',3,'3x30min'))
+        cur.execute("INSERT INTO workout_log(workout_id, user_id, date, distance, time_sec, split, duration,intervals,comment) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s)",(4,2,'2022-01-01', 2000,484,'00:2:01','00:8:04',1,'Nico 2k'))
+        conn.commit() 
+
+        # pass POST to flask func
+        response = client.post("/userstats", data=json.dumps({'user_id':1}), content_type='application/json')
+        data_dict = json.loads(response.data.decode("ASCII"))
+        # check for expected results
+        assert response.status_code == 200
+        assert data_dict['distance'] == 22000
+        assert data_dict['user_team'] == ['UtahCrew']
+    finally:
+        cur.close()
+        conn.close()
+        c.clear_test_db()
+
 
 
 

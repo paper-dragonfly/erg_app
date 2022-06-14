@@ -1,6 +1,6 @@
 from flask import Flask, request 
 from pydantic import ValidationError
-from erg_app.post_classes import NewUser, IntervalWorkout
+from erg_app.post_classes import NewInterval, NewUser, IntervalWorkout, NewWorkout
 import json
 from erg_app import logic as l
 import pdb
@@ -24,6 +24,27 @@ def create_app(db):
             return json.dumps({'status_code': 400, 'message': e})
         user_id = l.add_new_user(db, resp_newuser)
         return json.dumps({'status_code': 200, 'user_id': user_id})
+
+    @app.route('/addworkout', methods=['POST'])
+    def addworkout():
+        # POST user_id, date, distance, time_sec, split, intervals, comment | return: workout_id
+        try:
+            workout_inst = NewWorkout.parse_obj(request.get_json())
+        except ValidationError() as e:
+            return json.dumps({'status_code': 400, 'message': e})
+        workout_id = l.add_workout(db, workout_inst)
+        return json.dumps({'status_code': 200, 'workout_id': workout_id})
+
+    @app.route('/addinterval', methods=['POST'])
+    def addinterval():
+        #POST workout_id, interval_type, distance, time_sec, split, rest
+        try:
+            interval_inst = NewInterval.parse_obj(request.get_json())
+        except ValidationError() as e:
+            return json.dumps({'status_code': 400, 'message': e})
+        add_successful = l.add_interval(db, interval_inst)
+        return json.dumps({'status_code': 200, 'message':add_successful})    
+
 
     @app.route("/log", methods = ['POST']) #list all workouts for user
     def log():
@@ -74,23 +95,28 @@ def create_app(db):
             conn.close() 
             return json.dumps({'status_code':200, 'intervals':intervals, 'workout_summary':workout_summary},default=str) 
 
-    @app.route("/total", methods=['POST'])# display summary of all workouts for user
+    @app.route("/userstats", methods=['POST'])# display summary of all workouts for user
     def total():
         #POST user_id
         user_id = request.get_json()['user_id']
         try:
             conn,cur = l.db_connect(db)
-            cur.execute("SELECT distance, time_sec FROM workout_log WHERE user_id=%s",(user_id,))
+            cur.execute("SELECT * FROM users WHERE user_id=%s",(user_id,))
+            user_info = cur.fetchone()
+            cur.execute("SELECT team_name FROM team WHERE team_id=(SELECT team FROM users WHERE user_id=%s)",(user_id,))
+            user_team = cur.fetchone()
+            cur.execute("SELECT distance, time_sec, intervals FROM workout_log WHERE user_id=%s",(user_id,))
             workouts = cur.fetchall()
-            dist = 0
+            distance = 0
             time = 0
+            count = len(workouts)
             for i in range(len(workouts)):
-                distance =+ workouts[i][0]
-                time =+ workouts[i][1]    
+                distance += (workouts[i][0]*workouts[i][2])
+                time += workouts[i][1]    
         finally:
             cur.close()
             conn.close()
-            return json.dumps({'status_code':200, 'distance':distance, 'time':time})
+            return json.dumps({'status_code':200, 'distance':distance, 'time':time, 'count':count, "user_info": user_info, "user_team":user_team})
 
     @app.route("/teamlog", methods=['POST'])
     def teamlog():
@@ -114,3 +140,7 @@ def create_app(db):
 #         return json.dumps({'status_code':200, 'message':None})
     
     return app 
+
+if __name__ == '__main__':
+    app = create_app('erg')
+    app.run(host='localhost', port=5000)

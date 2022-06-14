@@ -1,7 +1,7 @@
 import json
 import yaml
 import psycopg2 
-from erg_app.post_classes import NewUser
+from erg_app.post_classes import NewInterval, NewUser, NewWorkout
 import pdb 
 
 # get database parameters
@@ -50,6 +50,41 @@ def get_user_id(user_name, db='Erg'):
         cur.close()
         conn.close()
         return user_id 
+
+# add workout to workout_log
+def add_workout(db:str, workout_inst:NewWorkout)->int:
+    try:
+        # connect to db
+        conn, cur = db_connect(db, True)
+        # add workout data to workout_log table
+        sql = "INSERT INTO workout_log(user_id, date, distance, time_sec, split, intervals, comment) VALUES(%s,%s,%s,%s,%s,%s,%s)"
+        subs = (workout_inst.user_id, workout_inst.date, workout_inst.distance, workout_inst.time_sec, workout_inst.split, workout_inst.intervals, workout_inst.comment) 
+        cur.execute(sql, subs)
+        cur.execute("SELECT MAX(workout_id) from workout_log")
+        workout_id = cur.fetchone()[0]
+    finally:
+        cur.close()
+        conn.close()
+        return workout_id  
+
+# add interval to interval_log 
+def add_interval(db:str, interval_inst:NewInterval)->bool:
+    added = False
+    try:
+        # connect to db
+        conn, cur = db_connect(db, True)
+        # add interval data to interval_log table
+        sql = "INSERT INTO interval_log(workout_id,interval_type, distance, time_sec, split, rest) VALUES(%s,%s,%s,%s,%s,%s)"
+        subs = (interval_inst.workout_id, interval_inst.interval_type, interval_inst.distance, interval_inst.time_sec, interval_inst.split, interval_inst.rest) 
+        cur.execute(sql, subs)
+        added = True
+    finally:
+        cur.close()
+        conn.close()
+        return added  
+
+       
+
 
 def search_sql_str(workout_search_params:dict)-> str:
     sql = 'SELECT * FROM workout_log WHERE '
