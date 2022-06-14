@@ -25,6 +25,21 @@ def create_app(db):
         user_id = l.add_new_user(db, resp_newuser)
         return json.dumps({'status_code': 200, 'user_id': user_id})
 
+    @app.route("/log", methods = ['POST']) #list all workouts for user
+    def log():
+        # POST user_id -> all workouts listed by date for specific user. Fields: date, distance, time, av split, intervals
+        try:
+            user_id = request.get_json()['user_id']
+            conn, cur=l.db_connect(db)
+            sql = "SELECT * FROM workout_log WHERE user_id=%s ORDER BY date"
+            subs = (user_id,)
+            cur.execute(sql, subs)
+            user_workouts =cur.fetchall() #((v1,v2,v3),(...))
+        finally:
+            conn.close()
+            cur.close()
+            return json.dumps({'status_code':200, 'message':user_workouts}, default=str) #datetime not json serializable so use defualt=str to convert non-serializable values to strings
+
     @app.route('/addworkout', methods=['POST'])
     def addworkout():
         # POST user_id, date, distance, time_sec, split, intervals, comment | return: workout_id
@@ -44,22 +59,6 @@ def create_app(db):
             return json.dumps({'status_code': 400, 'message': e})
         add_successful = l.add_interval(db, interval_inst)
         return json.dumps({'status_code': 200, 'message':add_successful})    
-
-
-    @app.route("/log", methods = ['POST']) #list all workouts for user
-    def log():
-        # POST user_id -> all workouts listed by date for specific user. Fields: date, distance, time, av split, intervals
-        try:
-            user_id = request.get_json()['user_id']
-            conn, cur=l.db_connect(db)
-            sql = "SELECT * FROM workout_log WHERE user_id=%s ORDER BY date"
-            subs = (user_id,)
-            cur.execute(sql, subs)
-            user_workouts =cur.fetchall() #((v1,v2,v3),(...))
-        finally:
-            conn.close()
-            cur.close()
-            return json.dumps({'status_code':200, 'message':user_workouts}, default=str) #datetime not json serializable so use defualt=str to convert non-serializable values to strings
 
     @app.route("/logsearch", methods = ['POST']) # returns all workouts that match search results
     def logsearch():

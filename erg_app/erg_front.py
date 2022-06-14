@@ -39,8 +39,9 @@ def login():
         newuser_dict = {'user_name': user_name, "age": age, 'sex':sex, 'team': team}
         #POST newuser_dict to /newuser
         url = ROOT_URL+'/newuser'
-        flask_resp = requests.post(url, json=newuser_dict).json
+        flask_resp = requests.post(url, json=newuser_dict).json()
         user_id:int = flask_resp['user_id'] 
+        print(f'New user create. Welcome {user_name}')
     return user_id, user_name
 
 def duration_to_seconds(duration:str)->int:
@@ -61,6 +62,8 @@ def create_new_workout_dict(workout_type, user_id):
     split = duration_to_seconds(split_dur)
     if workout_type > 2:
         intervals = int(input("Number of intervalse: "))
+    else:
+        intervals = 1
     comment = input("Comment: ")
     return({'user_id':user_id,'date':date,'distance':distance,'time_sec':time_sec, 'split':split, 'intervals':intervals,'comment':comment })
 
@@ -71,6 +74,47 @@ def create_intervals_dict(workout_id,interval, interval_type):
     split = duration_to_seconds(input('Split (hh:mm:ss.dd): '))
     rest =  duration_to_seconds(input('Rest (hh:mm:ss.dd): '))
     return {'workout_id':workout_id,'interval_type':interval_type,'distance':distance,'time_sec':time_sec,'split':split,'rest':rest}          
+
+def create_logsearch_dict():
+    print('Search by different parameters, press enter to skip a param')
+    data_dict = {}
+    # get user input data for search params
+    valid_entry = False
+    while valid_entry == False:
+        try: 
+            date = input('Date (yyyy-mm-dd): ')
+            distance = input('Distance (m): ')
+            # if user skips distance
+            if distance == "":
+                distance = 0
+            # if distance value given
+            else:
+                distance = int(distance)
+            # request user_input time
+            time_raw = input('Time (hh:mm:ss):' )
+            # if time skipped
+            if time_raw == "":
+                time = 0
+            # convert str time to time in seconds
+            else: 
+                time = time_raw+'.00'
+                time = duration_to_seconds(time)
+            # request user_input intervals
+            intervals = input('Number of Intervals: ')
+            # if intervals skipped
+            if intervals == "":
+                intervals = 0
+            else:
+                intervals = int(intervals) 
+            valid_entry = True
+        except ValueError: #user_input not int where int is required
+            print('distance and intervals must be integers')
+    raw_data_dict = {'date':date,'distance':distance,'time_sec':time,'intervals':intervals}
+    # exclude skipped params
+    for key in raw_data_dict:
+        if raw_data_dict[key] != "" or raw_data_dict[key] == 0:
+            data_dict[key] = raw_data_dict[key]
+    return data_dict
 
 def run(): # TODO: how do I write tests for things with user input? 
     user_id, user_name = login()
@@ -85,13 +129,13 @@ def run(): # TODO: how do I write tests for things with user input?
 
         if action == 1: # view workout log
             url = ROOT_URL+'/log'
-            workout_log:list = requests.post(url, json={'user_id':user_id}).json()['message'] #[(...)(...)]
+            workout_log:list = requests.post(url, json={'user_id':user_id}).json()['message'] #[[...][...]]
             # if no workouts
             if len(workout_log) == 0:
                 print('No workouts for this user')
             else: 
                 #display as table
-                workout_log.insert(0,["workout_id","user_id","date","distance","time_sec","split","duration","intervals","comment"])
+                workout_log.insert(0,["workout_id","user_id","date","distance","time_sec","split","intervals","comment"])
                 print(f'Workout Log for {user_name}')
                 print(tabulate(workout_log, headers='firstrow'))
 
@@ -131,7 +175,18 @@ def run(): # TODO: how do I write tests for things with user input?
                     interval += 1 
 
         elif action == 3: # search by workout
-            pass
+            post_data = create_logsearch_dict()
+            url = ROOT_URL+'/logsearch'
+            flask_select_workouts:list = requests.post(url, json=post_data).json() #[[...][...]]
+            # if no workouts
+            if len(flask_select_workouts) == 0:
+                print('No workouts for this search')
+            else: 
+                #display as table
+                flask_select_workouts.insert(0,["workout_id","user_id","date","distance","time_sec","split","intervals","comment"])
+                print(f'Search Results')
+                print(tabulate(workout_log, headers='firstrow'))
+
         elif action == 4: # view user_stats
             pass
         else:

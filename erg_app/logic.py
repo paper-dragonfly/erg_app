@@ -83,9 +83,6 @@ def add_interval(db:str, interval_inst:NewInterval)->bool:
         conn.close()
         return added  
 
-       
-
-
 def search_sql_str(workout_search_params:dict)-> str:
     sql = 'SELECT * FROM workout_log WHERE '
     subs = []
