@@ -96,7 +96,7 @@ def create_app(db):
 
     @app.route("/userstats", methods=['POST'])# display summary of all workouts for user
     def total():
-        #POST user_id
+        #POST user_id | return status_code, total_distance, total_time, total_workouts, user_info fm users, user's team
         user_id = request.get_json()['user_id']
         try:
             conn,cur = l.db_connect(db)
@@ -109,6 +109,7 @@ def create_app(db):
             distance = 0
             time = 0
             count = len(workouts)
+            # calculate total distance and time
             for i in range(len(workouts)):
                 distance += (workouts[i][0]*workouts[i][2])
                 time += workouts[i][1]    

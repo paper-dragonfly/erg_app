@@ -112,7 +112,7 @@ def create_logsearch_dict():
     raw_data_dict = {'date':date,'distance':distance,'time_sec':time,'intervals':intervals}
     # exclude skipped params
     for key in raw_data_dict:
-        if raw_data_dict[key] != "" or raw_data_dict[key] == 0:
+        if raw_data_dict[key] != "" and raw_data_dict[key] != 0:
             data_dict[key] = raw_data_dict[key]
     return data_dict
 
@@ -128,6 +128,7 @@ def run(): # TODO: how do I write tests for things with user input?
             action = 5 
 
         if action == 1: # view workout log
+            print('\n')
             url = ROOT_URL+'/log'
             workout_log:list = requests.post(url, json={'user_id':user_id}).json()['message'] #[[...][...]]
             # if no workouts
@@ -140,6 +141,7 @@ def run(): # TODO: how do I write tests for things with user input?
                 print(tabulate(workout_log, headers='firstrow'))
 
         elif action == 2: # add workout
+            print('\n')
             print('Select Workout:\n\t1.Single Time\n\t2.Single Distance\n\t3.Interval Time\n\t4.Interval Distance') # TODO add inverval variable for more complexity
             valid_selection = False
             # get user to choose workout type
@@ -175,20 +177,30 @@ def run(): # TODO: how do I write tests for things with user input?
                     interval += 1 
 
         elif action == 3: # search by workout
-            post_data = create_logsearch_dict()
+            print('\n')
+            post_data:dict = create_logsearch_dict()
             url = ROOT_URL+'/logsearch'
-            flask_select_workouts:list = requests.post(url, json=post_data).json() #[[...][...]]
+            flask_select_workouts:list = requests.post(url, json=post_data).json()['message'] #[[...][...]]
             # if no workouts
             if len(flask_select_workouts) == 0:
                 print('No workouts for this search')
             else: 
                 #display as table
                 flask_select_workouts.insert(0,["workout_id","user_id","date","distance","time_sec","split","intervals","comment"])
-                print(f'Search Results')
-                print(tabulate(workout_log, headers='firstrow'))
+                print(f'\nSearch Results')
+                print(tabulate(flask_select_workouts, headers='firstrow'))
 
         elif action == 4: # view user_stats
-            pass
+            print('\n')
+            url = ROOT_URL+'/userstats'
+            flask_userstats:dict = requests.post(url, json={'user_id':user_id}).json()
+            user_info = [['User Name', 'Age', 'Sex', 'Team'],[flask_userstats['user_info'][1],flask_userstats['user_info'][2],flask_userstats['user_info'][3], flask_userstats['user_team']]]
+            print(tabulate(user_info, headers='firstrow'))
+            print('\n')
+            userstats_list = [["Total Distance","Total Time", "Total Number of Workouts"],[flask_userstats['distance'],flask_userstats['time'],flask_userstats['count']]]
+            print(tabulate(userstats_list, headers='firstrow'))
+        elif action == 5: # Exit
+            print('\nGame Exited')
         else:
             print('Invalid Entry, try again')
 
