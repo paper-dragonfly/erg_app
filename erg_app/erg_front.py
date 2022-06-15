@@ -6,6 +6,7 @@ import requests
 from typing import Dict, List, Tuple, Union
 import pdb
 from tabulate import tabulate
+import re
 
 CONTENTS = """
 What would you like to do? 
@@ -18,30 +19,57 @@ What would you like to do?
 
 ROOT_URL = "http://localhost:5000"
 
-def login():
-    print("Welcome to ErgTracker \n1.Login\n2.Create new account")
+def login()->tuple:
+    print("\nWelcome to ErgTracker \n1.Login\n2.Create new account")
     resp = 0
-    while resp != '1' and resp != '2':
+    while resp != '1' and resp != '2': # while invalid entry
         resp= input('pick an option using the coresponding bullet number: ')
-    if resp == '1':
-        print('LOGIN')
+    if resp == '1': # Login
+        valid_input = False # Question: is this the way to ensure valid entries that don't break the program?
+        while valid_input == False:
+            print('\nLOGIN')
+            print('1. List Users \n2. Search by User Name')
+            user_choice = input('> ')
+            try:
+                if int(user_choice) == 1: # List users
+                    # get user names
+                    url = ROOT_URL+'/usernames'
+                    flask_user_names = requests.get(url).json()['user_names']
+                    # print user names
+                    print('\nUser Names') 
+                    for i in range(len(flask_user_names)):
+                        print(flask_user_names[i][0])
+                # Select user by user_name 
+                user_name = input('\nUser Name: ') 
+                url = ROOT_URL+'/userid'
+                flask_resp = requests.post(url, json={'user_name':user_name}).json()
+                user_id:int = flask_resp['user_id']
+                valid_input = True
+            except ValueError:
+                print('ValueError: must select 1 or 2')
+    else: # resp == 2 Create new account
+        print('\nCreate New User')
         user_name = input('User Name: ')
-        # TODO: add search users feature?
-        url = ROOT_URL+'/userid'
-        flask_resp = requests.post(url, json={'user_name':user_name}).json()
-        user_id:int = flask_resp['user_id']
-    else: # resp == 2
-        print('Create New User')
-        user_name = input('User Name: ')
-        age = int(input("Age: "))
-        sex = input('Sex (M/F): ')
+        v = False
+        while not v:
+            try: 
+                age = int(input("Age: "))
+                v = True
+            except ValueError:
+                print('Age must be an integer')
+        v = False
+        sex = ''
+        while sex != 'M' and sex != 'F':    
+            sex = input('Sex (M/F): ').upper()
+            if sex != 'M' and sex != 'F':
+                print('Must select M or F')
         team = input("Team: " )
         newuser_dict = {'user_name': user_name, "age": age, 'sex':sex, 'team': team}
         #POST newuser_dict to /newuser
         url = ROOT_URL+'/newuser'
         flask_resp = requests.post(url, json=newuser_dict).json()
         user_id:int = flask_resp['user_id'] 
-        print(f'New user create. Welcome {user_name}')
+        print(f'\nNew user created. Welcome {user_name}')
     return user_id, user_name
 
 def duration_to_seconds(duration:str)->int:
@@ -52,10 +80,78 @@ def duration_to_seconds(duration:str)->int:
     time_sec = (hours_sec + min_sec + sec + ms_sec)
     return time_sec
 
+def input_int(prompt_str:str):
+    user_input = input(prompt_str)
+    if user_input == "":
+        return user_input
+    valid = False
+    while not valid:
+        try:
+            user_input = int(input(prompt_str))
+            valid = True
+        except ValueError:
+            print('Input must be integer')
+    return user_input
+
+def input_duration(prompt_str):
+    user_input = input(prompt_str)
+    if user_input == "":
+        return user_input
+    #hh:mm:ss.dd
+    while len(re.findall('[0-2]\d:[0-5]\d:[0-5]\d.\d\d',user_input)) != 1:
+        print('Must use hh:mm:ss.dd formatting')
+        user_input = input(prompt_str)
+    while int(user_input[0-2])>23: 
+        print('Must use hh:mm:ss.dd formatting')
+        user_input = input(prompt_str)
+    return user_input 
+
+def input_date(prompt_str):
+    user_input = input(prompt_str)
+    if user_input == "":
+        return user_input
+    #yyyy-mm-dd
+    v = False # Question: v never becomes True but it seems to be doing its job...is this the right way to do this?
+    while not v: 
+        # if input matches formatting
+        if len(re.findall('\d\d\d\d-[0-1]\d-[0-3]\d', user_input)) == 1:
+            # if month a real month 
+            if 0<int(user_input[5:7])<=12:
+                # if month has 31 days
+                if user_input[5:7] in ['01','03','05','07','08','10','12']:
+                    #if day valid
+                    if 0<int(user_input[8:10])<=31:
+                        return user_input
+                    else:
+                        print("day out of range")
+                #if month has 30 days
+                elif user_input[5:7] in ['04','06','09','11']:
+                    #if day valid
+                    if 0<int(user_input[8:10])<=30:
+                        return user_input
+                    else:
+                        print("day out of range")
+                # if febuary
+                elif user_input[5:7] == '02':
+                    #if day valid
+                    if 0<int(user_input[8:10])<=28:
+                        return user_input
+                    else:
+                        print('day out of range')
+            # month not real month
+            else:
+                print('month out of range')
+        else: 
+            print('Must use yyyy-mm-dd formatting')
+        user_input = input("Date (yyyy-mm-dd): ")
 
 def create_new_workout_dict(workout_type, user_id):
-    date = input("Date (yyyy-mm-dd): ")
-    distance = input("Distance (m): ")
+    date = input("Date (yyyy-mm-dd): ") 
+    while len(re.findall('\d\d\d\d-0*[0-12]-0*[0-31]', date)) != 1 and date!="":
+        print('Must use yyyy-mm-dd formatting')
+        date = input("Date (yyyy-mm-dd): ")              
+    v_dist = False # Question: best way to validate formatting? Is there a better way
+    distance = input_int('Distance (m): ')
     duration = input("Time (hh:mm:ss.dd): ") #TODO: how do you enforce formatting?
     time_sec = duration_to_seconds(duration)
     split_dur = input("Split (hh:mm:ss.dd): ")
@@ -124,13 +220,11 @@ def run(): # TODO: how do I write tests for things with user input?
         try: 
             action = int(input('Choose the number corresponding to your desired action: '))
         except ValueError:
-            print('must be number, app exited')
-            action = 5 
-
+            pass 
         if action == 1: # view workout log
             print('\n')
             url = ROOT_URL+'/log'
-            workout_log:list = requests.post(url, json={'user_id':user_id}).json()['message'] #[[...][...]]
+            workout_log:list = requests.post(url, json={'user_id':user_id}).json()['message'] #[[...],[...]]
             # if no workouts
             if len(workout_log) == 0:
                 print('No workouts for this user')

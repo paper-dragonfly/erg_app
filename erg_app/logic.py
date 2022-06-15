@@ -37,7 +37,6 @@ def add_new_user(db:str, resp_newuser:NewUser)->int:
     finally: 
         conn.close()
         cur.close()
-        #does this work here?
         return user_id
 
 #Get User id

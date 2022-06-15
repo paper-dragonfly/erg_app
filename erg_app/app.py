@@ -14,6 +14,19 @@ def create_app(db):
         user_name=request.get_json()['user_name']
         user_id = l.get_user_id(user_name, db)
         return json.dumps({'status_code':200, 'user_id': user_id})
+    
+    @app.route("/usernames", methods = ['GET'])
+    def usernames():
+        # GET, return all user_names 
+        user_names = []
+        try: 
+            conn, cur = l.db_connect(db)
+            cur.execute('SELECT user_name FROM users')
+            user_names = cur.fetchall() #[["n1"],["n2"]]
+        finally: 
+            cur.close()
+            conn.close()
+            return json.dumps({'status_code': 200, 'user_names': user_names})
 
     @app.route("/newuser", methods=['POST']) # create new user
     def newuser():
@@ -29,12 +42,12 @@ def create_app(db):
     def log():
         # POST user_id -> all workouts listed by date for specific user. Fields: date, distance, time, av split, intervals
         try:
-            user_id = request.get_json()['user_id']
             conn, cur=l.db_connect(db)
+            user_id = request.get_json()['user_id']
             sql = "SELECT * FROM workout_log WHERE user_id=%s ORDER BY date"
             subs = (user_id,)
             cur.execute(sql, subs)
-            user_workouts =cur.fetchall() #((v1,v2,v3),(...))
+            user_workouts = cur.fetchall() #[(v1,v2,v3),(...)]
         finally:
             conn.close()
             cur.close()
