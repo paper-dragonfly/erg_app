@@ -44,6 +44,8 @@ def create_app(db):
         try:
             conn, cur=l.db_connect(db)
             user_id = request.get_json()['user_id']
+            if type(user_id) != int:
+                return json.dumps({'status_code':400, 'message':'user_id must be integer'})
             sql = "SELECT * FROM workout_log WHERE user_id=%s ORDER BY date"
             subs = (user_id,)
             cur.execute(sql, subs)
