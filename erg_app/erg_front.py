@@ -20,7 +20,7 @@ def authenticate()->tuple:
         user_id, user_name = create_new_user()    
     return user_id, user_name
 
-def login():
+def login()->tuple:
     while True:
         print('\nLOGIN')
         print('1. List Users \n2. Search by User Name')
@@ -39,12 +39,15 @@ def login():
             url = ROOT_URL+'/userid'
             flask_resp = requests.post(url, json={'user_name':user_name}).json()
             user_id:int = flask_resp['user_id']
-            print(f"{user_name} logged in")
-            return user_id, user_name
+            if user_id == 0:
+                print('User not found')
+            else: 
+                print(f"{user_name} logged in")
+                return user_id, user_name
         except ValueError:
             print('ValueError: must select 1 or 2')
 
-def create_new_user():
+def create_new_user()->tuple:
     print('\nCreate New User')
     user_name = input('User Name: ')
     age = input_int('Age: ')
@@ -68,12 +71,11 @@ def duration_to_seconds(duration:str)->int:
 
 def input_sex(prompt_str:str):
     sex = input(prompt_str).upper()
-    if sex == "":
-        return sex
     # while invalid input
-    while sex != 'M' and sex != 'F':    
+    while sex != 'M' and sex != 'F' and sex != "":    
         print('Must select M or F')
         sex = input('Sex (M/F): ').upper()
+    return sex
 
 def input_int(prompt_str:str):
     user_input = input(prompt_str)
@@ -89,7 +91,7 @@ def input_int(prompt_str:str):
             user_input = input(prompt_str)
     return user_input
 
-def input_duration(prompt_str):
+def input_duration(prompt_str:str)->str:
     user_input = input(prompt_str)
     if user_input == "":
         return user_input
@@ -97,10 +99,10 @@ def input_duration(prompt_str):
     v = False
     while not v:
         # if formatting correct
-        f = re.findall('[0-2]\d:[0-5]\d:[0-5]\d',user_input)
+        f = re.findall('[0-2]\d:[0-5]\d:[0-5]\d', user_input)
         if len(f) == 1:
             # if hours in range
-            if int(user_input[0-2])<24:
+            if int(user_input[0:2])<24:
                 # add ms if neccessary
                 if len(user_input) == 8:
                     user_input += '.00'
@@ -118,9 +120,9 @@ def input_duration(prompt_str):
                 print('hours out of range')
         else:
             print('Must use hh:mm:ss.dd formatting')
-            user_input = input(prompt_str)
+        user_input = input(prompt_str)
 
-def input_date(prompt_str):
+def input_date(prompt_str:str)->str:
     user_input = input(prompt_str)
     if user_input == "":
         return user_input
@@ -159,7 +161,7 @@ def input_date(prompt_str):
             print('Must use yyyy-mm-dd formatting')
         user_input = input("Date (yyyy-mm-dd): ")
 
-def input_interval_type(prompt_str):
+def input_interval_type(prompt_str:str)->str:
     user_input = input(prompt_str)
     v = False
     while v == False:

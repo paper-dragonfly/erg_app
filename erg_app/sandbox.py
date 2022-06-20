@@ -1,5 +1,18 @@
-import datetime
+def f(a,b):
+    c = a+b
+    return c
 
-r =[(1, 1, datetime.date(2022, 1, 1), 2000, 480, datetime.time(0, 2), datetime.time(0, 8), 1, '2k PR'), (2, 1, datetime.date(2022, 1, 2), 2000, 488, datetime.time(0, 2, 2), datetime.time(0, 8, 8), 1, '2k')]
+def g(first=4, second=2):
+    c = first + second
+    return c 
 
-print(len(r))
+b = f(2,5)
+print(b)
+
+u = g(second=9,first=1)
+print(u)
+
+v= f(b=2, a=5)
+print(v)
+
+print(90*60)
