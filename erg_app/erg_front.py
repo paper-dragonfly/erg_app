@@ -8,19 +8,36 @@ import pdb
 from tabulate import tabulate
 import re
 from erg_app.constants import CONTENTS, ROOT_URL
+import json
 
-def authenticate()->tuple:  
+def flask_requests_post(url:str,data:dict,):
+    return requests.post(url, json=data).json()
+
+def flask_requests_get(url:str):
+    return requests.get(url).json()
+
+def flask_client_post(url:str, data:dict,client):
+    response = client.post(url, data=json.dumps(data), content_type='application/json')
+    return json.loads(response.data.decode("ASCII"))
+
+def flask_client_get(url:str,client):
+    response = client.get(url)
+    return json.loads(response.data.decode("ASCII"))
+
+def authenticate(login_get=flask_requests_get, login_get_args={},login_post=flask_requests_post, login_post_args={},new_user_post=flask_requests_post,new_user_post_args={})->tuple:  
     print("\nWelcome to ErgTracker \n1.Login\n2.Create new account")
     resp = 0
     while resp != '1' and resp != '2': # while invalid entry
-        resp= input('pick an option using the coresponding bullet number: ')
+        print('pick an option using the coresponding bullet number')
+        resp= input("> ")
     if resp == '1': # Login
-        user_id, user_name = login()   
+        user_id, user_name = login(login_get,login_get_args, login_post, login_post_args)   
     else: # Create new account
-        user_id, user_name = create_new_user()    
+        user_id, user_name = create_new_user(new_user_post, new_user_post_args)    
     return user_id, user_name
 
-def login()->tuple:
+
+def login(get=flask_requests_get, get_args:dict={},post=flask_requests_post, post_args:dict={})->tuple:
     while True:
         print('\nLOGIN')
         print('1. List Users \n2. Search by User Name')
@@ -29,7 +46,7 @@ def login()->tuple:
             if int(user_choice) == 1: # List users
                 # get user names
                 url = ROOT_URL+'/usernames'
-                flask_user_names = requests.get(url).json()['user_names']
+                flask_user_names = get(url,**get_args)['user_names']
                 # print user names
                 print('\nUser Names') 
                 for i in range(len(flask_user_names)):
@@ -37,7 +54,8 @@ def login()->tuple:
             # Select user by user_name 
             user_name = input('\nUser Name: ') 
             url = ROOT_URL+'/userid'
-            flask_resp = requests.post(url, json={'user_name':user_name}).json()
+            data = {'user_name':user_name}
+            flask_resp = post(url, data, **post_args)
             user_id:int = flask_resp['user_id']
             if user_id == 0:
                 print('User not found')
@@ -47,7 +65,7 @@ def login()->tuple:
         except ValueError:
             print('ValueError: must select 1 or 2')
 
-def create_new_user()->tuple:
+def create_new_user(post=flask_requests_post, post_args:dict={})->tuple:
     print('\nCreate New User')
     user_name = input('User Name: ')
     age = input_int('Age: ')
@@ -56,7 +74,7 @@ def create_new_user()->tuple:
     newuser_dict = {'user_name': user_name, "age": age, 'sex':sex, 'team': team}
     #POST newuser_dict to /newuser
     url = ROOT_URL+'/newuser'
-    flask_resp = requests.post(url, json=newuser_dict).json()
+    flask_resp = post(url, newuser_dict, **post_args)
     user_id:int = flask_resp['user_id'] 
     print(f'\nNew user created. Welcome {user_name}')
     return user_id, user_name
@@ -217,10 +235,11 @@ def create_logsearch_dict():
             data_dict[key] = raw_data_dict[key]
     return data_dict
 
-def view_workout_log(user_id, user_name):
+#TODO: how do I test this func? nothing is returned and the printed table is hard to put in a str...
+def view_workout_log(user_id, user_name,post=flask_requests_post,post_args={}):
     print('\n')
     url = ROOT_URL+'/log'
-    workout_log:list = requests.post(url, json={'user_id':user_id}).json()['message'] #[[...],[...]]
+    workout_log:list = post(url, {'user_id':user_id}, **post_args)['message'] #[[...],[...]]
     # if no workouts
     if len(workout_log) == 0:
         print('No workouts for this user')
@@ -306,3 +325,5 @@ def run(): # TODO: how do I write tests for things with user input?
 
 if __name__ == "__main__":
     run()
+
+# TODO: make entire front end into an app (create front()) so that you can pass 'testing' db to it when testing. 

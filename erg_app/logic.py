@@ -42,11 +42,11 @@ def add_new_user(db:str, resp_newuser:NewUser)->int:
 #Get User id
 def get_user_id(user_name, db='Erg'):
     try:
-        pdb.set_trace()
         conn, cur = db_connect(db)
         cur.execute("SELECT user_id FROM users WHERE user_name=%s",(user_name,))
         user_id = cur.fetchone()[0]
-    except: # exception - no user_name maches given user_name
+    # exception - no user_name maches given user_name
+    except:  
         user_id = 0
     finally:
         cur.close()

@@ -12,12 +12,13 @@ def test_get_user_id():
     WHEN user_name and db_name are passed to get_user_id() 
     THEN assert expected user_id is returned
     """
+    conn, cur = db_connect('testing', True)
     try: 
         # populate db with user if not exists
-        conn, cur = db_connect('testing', True)
         cur.execute("INSERT INTO users(user_id, user_name) VALUES(%s, %s) ON CONFLICT DO NOTHING",(1,'kaja'))
         # use f(x) to get id
         assert get_user_id('kaja', 'testing') == 1
+        assert get_user_id('not_real', 'testing') == 0
     finally: 
         c.clear_test_db()
         cur.close()
