@@ -248,8 +248,9 @@ def view_workout_log(user_id, user_name,post=flask_requests_post,post_args={}):
         workout_log.insert(0,["workout_id","user_id","date","distance","time_sec","split","intervals","comment"])
         print(f'Workout Log for {user_name}')
         print(tabulate(workout_log, headers='firstrow'))
+        return workout_log
 
-def add_workout(user_id):
+def add_workout(user_id,post=flask_requests_post, post_args={})->dict:
     print('\n')
     print('Select Workout:\n\t1.Single Time\n\t2.Single Distance\n\t3.Interval Time\n\t4.Interval Distance') # TODO add inverval variable for more complexity
     valid_selection = False
@@ -259,31 +260,51 @@ def add_workout(user_id):
         if workout_type in range(1,5):
             valid_selection = True
     # get POST data
-    post_data = create_new_workout_dict(workout_type, user_id)
+    post_data:dict = create_new_workout_dict(workout_type, user_id)
     # Add Workout: send POST to /addworkout to add workout to workout_log 
     url=ROOT_URL+'/addworkout'
-    flask_resp = requests.post(url, json=post_data).json() #Status_code, workout_id 
+    flask_resp:dict = post(url, post_data, **post_args) #Status_code, workout_id 
     # Is it an interval workout?
     interval_count = post_data['intervals']
     # if interval workout
-    if interval_count>1:
+    if interval_count == 1:
+        return flask_resp #status_code, workout_id
+    else:
         # get type of interval workout
         interval_type = input_interval_type('Workout type (Distance/Time): ')
         workout_id = flask_resp['workout_id']
         i = 1
+        message_list = []
         while i <= interval_count:
             # get POST data 
             post_data_intervals = create_intervals_dict(workout_id, i, interval_type)
+            # ^ {workout_id, interval_type, distance, time_sec, split, rest}
             # Add Interval: sent POST to /addinterval to add interval to interval_log
             url=ROOT_URL+'/addinterval'
-            flask_resp = requests.post(url, json=post_data_intervals).json()
+            flask_resp = post(url, post_data_intervals,**post_args) #status_code, message:bool
+            message_list.append(flask_resp['message'])
             i += 1 
+        flask_resp['message'] = message_list 
+        return flask_resp #status_code, workout_id:int, message:List[bool]
 
-def search_log():
+def display_interval_details(workout_id,post=flask_requests_post,post_args={}):
+    url = ROOT_URL+'/details'
+    flask_interval_details:dict = post(url, {'workout_id':workout_id},**post_args)
+    print('\nWorkout Summary')
+    workout_log_summary:list = flask_interval_details['workout_summary']
+    workout_log_summary.insert(0,["workout_id","user_id","date","distance","time_sec","split","intervals","comment"])
+    print(tabulate(workout_log_summary, headers='firstrow'))
+    print('\nInterval Details')
+    interval_details:list = flask_interval_details['intervals']
+    interval_details.insert(0,["interval_id","workout_id","interval_type","distance","time","split","rest"])
+    print(tabulate(interval_details, headers='firstrow'))
+    return interval_details #List[list]
+
+def search_log(post=flask_client_post,post_args={})->List[list]:
     print('\n')
     post_data:dict = create_logsearch_dict()
     url = ROOT_URL+'/logsearch'
-    flask_select_workouts:list = requests.post(url, json=post_data).json()['message'] #[[...][...]]
+    flask_select_workouts:list = post(url, post_data, **post_args)['message'] #[[...][...]]
     # if no workouts
     if len(flask_select_workouts) == 0:
         print('No workouts for this search')
@@ -292,16 +313,25 @@ def search_log():
         flask_select_workouts.insert(0,["workout_id","user_id","date","distance","time_sec","split","intervals","comment"])
         print(f'\nSearch Results')
         print(tabulate(flask_select_workouts, headers='firstrow'))
+        workout_id_list = []
+        for i in range(1,len(flask_select_workouts)):
+            workout_id_list.append([i][0])
+        workout_id = input_int('\nEnter a workout_id to view interval details of workout or press ENTER to return to main menue: ')
+        if workout_id in workout_id_list:
+            interval_details:dict = display_interval_details(workout_id,post,post_args)
+            return {'workout_summary':flask_select_workouts, 'interval_details':interval_details} 
+    return flask_select_workouts
 
-def view_user_stats(user_id):
+def view_user_stats(user_id, post=flask_requests_post,post_args={}):
     print('\n')
     url = ROOT_URL+'/userstats'
-    flask_userstats:dict = requests.post(url, json={'user_id':user_id}).json()
+    flask_userstats:dict = post(url, {'user_id':user_id},**post_args)
     user_info = [['User Name', 'Age', 'Sex', 'Team'],[flask_userstats['user_info'][1],flask_userstats['user_info'][2],flask_userstats['user_info'][3], flask_userstats['user_team']]]
     print(tabulate(user_info, headers='firstrow'))
     print('\n')
     userstats_list = [["Total Distance","Total Time", "Total Number of Workouts"],[flask_userstats['distance'],flask_userstats['time'],flask_userstats['count']]]
     print(tabulate(userstats_list, headers='firstrow'))
+    return userstats_list
 
 def run(): # TODO: how do I write tests for things with user input? 
     user_id, user_name = authenticate()

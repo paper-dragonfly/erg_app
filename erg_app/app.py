@@ -72,7 +72,7 @@ def create_app(db):
             interval_inst = NewInterval.parse_obj(request.get_json())
         except ValidationError() as e:
             return json.dumps({'status_code': 400, 'message': e})
-        add_successful = l.add_interval(db, interval_inst)
+        add_successful:bool = l.add_interval(db, interval_inst) 
         return json.dumps({'status_code': 200, 'message':add_successful})    
 
     @app.route("/logsearch", methods = ['POST']) # returns all workouts that match search results
@@ -126,7 +126,7 @@ def create_app(db):
             count = len(workouts)
             # calculate total distance and time
             for i in range(len(workouts)):
-                distance += (workouts[i][0]*workouts[i][2])
+                distance += (workouts[i][0])
                 time += workouts[i][1]    
         finally:
             cur.close()
