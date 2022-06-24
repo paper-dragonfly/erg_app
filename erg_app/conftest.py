@@ -10,7 +10,6 @@ def client():
     return app.test_client()
     
 def clear_test_db():
-    # pdb.set_trace()
     try: 
         conn, cur = db_connect('testing', True)
         cur.execute("DELETE FROM interval_log *")
@@ -31,11 +30,7 @@ def clear_game_db(cur):
         cur.execute("DELETE FROM team *")
     finally:
         cur.close()
-        conn.close()
-
-def set_up_db():
-    conn, cur = db_connect('testing',True)
-    cur.execute("INSERT INTO ") 
+        conn.close() 
 
 def delete_test_db():
     conn, cur = db_connect('testing',True)

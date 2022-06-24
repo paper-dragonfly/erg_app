@@ -6,11 +6,12 @@ import unittest
 from unittest.mock import MagicMock, patch 
 import pdb
 
-def test_duration_to_seconds():
-    secs = front.duration_to_seconds('00:01:40.00')
-    assert secs == 100
-
-def mock(input_values:list, func, **kwargs):
+#TODO: add two spaces between func definitions 
+# TODO: change order of args in mock
+#TODO rewrite mock - remove loop in mock, make for loop in outter func 
+# TODO: rename mock
+# TODO: use patch in mock
+def mock(input_values:list,func, **kwargs):
     output = []
     printed = []
     # patch input() so that when called next value in output:lst is submitted 
@@ -20,7 +21,11 @@ def mock(input_values:list, func, **kwargs):
     while input_values:
         out = func(**kwargs) 
         output.append(out)
-    return output, printed  
+    return output, printed
+
+def test_duration_to_seconds():
+    secs = front.duration_to_seconds('00:01:40.00')
+    assert secs == 100
 
 def test_input_sex():
     output, printed = mock(["M",'f','house',""], front.input_sex, prompt_str="")

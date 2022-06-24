@@ -300,7 +300,7 @@ def display_interval_details(workout_id,post=flask_requests_post,post_args={}):
     print(tabulate(interval_details, headers='firstrow'))
     return interval_details #List[list]
 
-def search_log(post=flask_client_post,post_args={})->List[list]:
+def search_log(post=flask_requests_post,post_args={})->List[list]:
     print('\n')
     post_data:dict = create_logsearch_dict()
     url = ROOT_URL+'/logsearch'
@@ -315,8 +315,8 @@ def search_log(post=flask_client_post,post_args={})->List[list]:
         print(tabulate(flask_select_workouts, headers='firstrow'))
         workout_id_list = []
         for i in range(1,len(flask_select_workouts)):
-            workout_id_list.append([i][0])
-        workout_id = input_int('\nEnter a workout_id to view interval details of workout or press ENTER to return to main menue: ')
+            workout_id_list.append(flask_select_workouts[i][0])
+        workout_id = input_int('\nEnter a workout_id to view interval details of workout or press ENTER to return to main menu: ')
         if workout_id in workout_id_list:
             interval_details:dict = display_interval_details(workout_id,post,post_args)
             return {'workout_summary':flask_select_workouts, 'interval_details':interval_details} 
