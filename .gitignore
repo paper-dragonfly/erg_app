@@ -2,4 +2,5 @@ images/*
 .venv/*
 sandbox/*
 *.pyc
+.DS_Store
 
