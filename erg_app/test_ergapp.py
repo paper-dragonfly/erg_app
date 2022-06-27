@@ -24,6 +24,7 @@ def test_get_user_id():
         cur.close()
         conn.close()
 
+
 def test_userid(client):
     """
     GIVEN a flask app 
@@ -69,6 +70,7 @@ def test_add_new_user():
     # QUESTION: can you have two connections open at once? I open one here then open+close one in c.clear_test_db() then close one here. Does this work? 
     # QUESTION: I need a better understanding of connections and cursors
 
+
 def test_newuser(client):
     """
     GIVEN a flask app
@@ -78,6 +80,7 @@ def test_newuser(client):
     response = client.post("/newuser", data=json.dumps({"user_name":'nico',"pw":'mypw', "sex":'M',"age":30,"team":'tumbleweed',"weight":180}), content_type='application/json') 
     assert response.status_code == 200
     c.clear_test_db()
+
 
 def test_log(client):
     """
@@ -102,6 +105,7 @@ def test_log(client):
         # clear db
         c.clear_test_db()
 
+
 def test_search_sql_str():
     """
     GIVEN an attempt to find workouts matching certain parameters
@@ -114,6 +118,7 @@ def test_search_sql_str():
     sql, subs = search_sql_str(search_dict)
     assert sql == "SELECT * FROM workout_log WHERE user_id=%s AND distance=%s AND intervals=%s"
     assert subs == [1,2000,1] 
+
 
 def test_logsearch(client):
     """
@@ -146,6 +151,7 @@ def test_logsearch(client):
         conn.close()
         c.clear_test_db()
 
+
 def test_details(client):
     """
     GIVEN a flask app
@@ -167,7 +173,8 @@ def test_details(client):
         cur.close()
         conn.close()
         c.clear_test_db()
-    
+
+
 def test_userstats(client):
     """
     GIVEN a flask app
@@ -198,6 +205,7 @@ def test_userstats(client):
         conn.close()
         c.clear_test_db()
 
+
 def test_add_workout():
     """
     GIVEN a POST request has been sumbitted to /addworkout 
@@ -219,6 +227,7 @@ def test_add_workout():
         cur.close()
         conn.close()
         c.clear_test_db() 
+
 
 def test_addworkout(client):
     """
@@ -242,6 +251,7 @@ def test_addworkout(client):
         cur.close()
         conn.close()
         c.clear_test_db()
+
 
 def test_add_interval():
     """
@@ -270,6 +280,7 @@ def test_add_interval():
         conn.close()
         c.clear_test_db() 
 
+
 def test_addinterval(client):
     """
     GIVEN a flask app 
@@ -294,24 +305,6 @@ def test_addinterval(client):
         cur.close()
         conn.close()
         c.clear_test_db()
-
-
-# def test_():
-#     """
-#     GIVEN
-#     WHEN
-#     THEN
-#     """
-#     try:
-#         # populate db
-#         conn, cur = db_connect('testing',True)
-#         sql = "INSERT INTO t(c) VALUES(%s)"
-#         subs = ()
-#         cur.execute(sql, subs)
-#     finally:
-#         cur.close()
-#         conn.close()
-#         c.clear_test_db() 
 
 
 

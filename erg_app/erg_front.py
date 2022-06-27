@@ -13,16 +13,20 @@ import json
 def flask_requests_post(url:str,data:dict,):
     return requests.post(url, json=data).json()
 
+
 def flask_requests_get(url:str):
     return requests.get(url).json()
+
 
 def flask_client_post(url:str, data:dict,client):
     response = client.post(url, data=json.dumps(data), content_type='application/json')
     return json.loads(response.data.decode("ASCII"))
 
+
 def flask_client_get(url:str,client):
     response = client.get(url)
     return json.loads(response.data.decode("ASCII"))
+
 
 def authenticate(login_get=flask_requests_get, login_get_args={},login_post=flask_requests_post, login_post_args={},new_user_post=flask_requests_post,new_user_post_args={})->tuple:  
     print("\nWelcome to ErgTracker \n1.Login\n2.Create new account")
@@ -65,11 +69,12 @@ def login(get=flask_requests_get, get_args:dict={},post=flask_requests_post, pos
         except ValueError:
             print('ValueError: must select 1 or 2')
 
+
 def create_new_user(post=flask_requests_post, post_args:dict={})->tuple:
     print('\nCreate New User')
     user_name = input('User Name: ')
     age = input_int('Age: ')
-    sex = input_sex('Sex (</F): ') 
+    sex = input_sex('Sex (M/F): ') 
     team = input("Team: " )
     newuser_dict = {'user_name': user_name, "age": age, 'sex':sex, 'team': team}
     #POST newuser_dict to /newuser
@@ -79,6 +84,7 @@ def create_new_user(post=flask_requests_post, post_args:dict={})->tuple:
     print(f'\nNew user created. Welcome {user_name}')
     return user_id, user_name
 
+
 def duration_to_seconds(duration:str)->int:
     hours_sec = int(duration[0:2])*60*60
     min_sec = int(duration[3:5])*60
@@ -87,6 +93,7 @@ def duration_to_seconds(duration:str)->int:
     time_sec = (hours_sec + min_sec + sec + ms_sec)
     return time_sec
 
+
 def input_sex(prompt_str:str):
     sex = input(prompt_str).upper()
     # while invalid input
@@ -94,6 +101,7 @@ def input_sex(prompt_str:str):
         print('Must select M or F')
         sex = input('Sex (M/F): ').upper()
     return sex
+
 
 def input_int(prompt_str:str):
     user_input = input(prompt_str)
@@ -108,6 +116,7 @@ def input_int(prompt_str:str):
             print('Input must be integer')
             user_input = input(prompt_str)
     return user_input
+
 
 def input_duration(prompt_str:str)->str:
     user_input = input(prompt_str)
@@ -139,6 +148,7 @@ def input_duration(prompt_str:str)->str:
         else:
             print('Must use hh:mm:ss.dd formatting')
         user_input = input(prompt_str)
+
 
 def input_date(prompt_str:str)->str:
     user_input = input(prompt_str)
@@ -179,6 +189,7 @@ def input_date(prompt_str:str)->str:
             print('Must use yyyy-mm-dd formatting')
         user_input = input("Date (yyyy-mm-dd): ")
 
+
 def input_interval_type(prompt_str:str)->str:
     user_input = input(prompt_str)
     v = False
@@ -193,7 +204,8 @@ def input_interval_type(prompt_str:str)->str:
             print('Invalid entry, try agian')
             user_input= input(prompt_str)
 
-def create_new_workout_dict(workout_type, user_id):
+
+def create_new_workout_dict(workout_type=0, user_id=0):
     date = input_date("Date (yyyy-mm-dd): ") 
     distance = input_int('Distance (m): ')
     duration = input_duration("Time (hh:mm:ss.dd): ")
@@ -207,13 +219,15 @@ def create_new_workout_dict(workout_type, user_id):
     comment = input("Comment: ")
     return({'user_id':user_id,'date':date,'distance':distance,'time_sec':time_sec, 'split':split, 'intervals':intervals,'comment':comment })
 
-def create_intervals_dict(workout_id,interval, interval_type):
+
+def create_intervals_dict(workout_id=0,interval=0, interval_type=""):
     print(f'Interval {interval}')
     distance = input_int('Distance (m): ')
     time_sec = duration_to_seconds(input_duration('Time (hh:mm:ss.dd): '))
     split = duration_to_seconds(input_duration('Split (hh:mm:ss.dd): '))
     rest =  duration_to_seconds(input_duration('Rest (hh:mm:ss.dd): '))
     return {'workout_id':workout_id,'interval_type':interval_type,'distance':distance,'time_sec':time_sec,'split':split,'rest':rest}          
+
 
 def create_logsearch_dict():
     print('Search by different parameters, press enter to skip a param')
@@ -235,6 +249,7 @@ def create_logsearch_dict():
             data_dict[key] = raw_data_dict[key]
     return data_dict
 
+
 #TODO: how do I test this func? nothing is returned and the printed table is hard to put in a str...
 def view_workout_log(user_id, user_name,post=flask_requests_post,post_args={}):
     print('\n')
@@ -249,6 +264,7 @@ def view_workout_log(user_id, user_name,post=flask_requests_post,post_args={}):
         print(f'Workout Log for {user_name}')
         print(tabulate(workout_log, headers='firstrow'))
         return workout_log
+
 
 def add_workout(user_id,post=flask_requests_post, post_args={})->dict:
     print('\n')
@@ -287,6 +303,7 @@ def add_workout(user_id,post=flask_requests_post, post_args={})->dict:
         flask_resp['message'] = message_list 
         return flask_resp #status_code, workout_id:int, message:List[bool]
 
+
 def display_interval_details(workout_id,post=flask_requests_post,post_args={}):
     url = ROOT_URL+'/details'
     flask_interval_details:dict = post(url, {'workout_id':workout_id},**post_args)
@@ -299,6 +316,7 @@ def display_interval_details(workout_id,post=flask_requests_post,post_args={}):
     interval_details.insert(0,["interval_id","workout_id","interval_type","distance","time","split","rest"])
     print(tabulate(interval_details, headers='firstrow'))
     return interval_details #List[list]
+
 
 def search_log(post=flask_requests_post,post_args={})->List[list]:
     print('\n')
@@ -322,6 +340,7 @@ def search_log(post=flask_requests_post,post_args={})->List[list]:
             return {'workout_summary':flask_select_workouts, 'interval_details':interval_details} 
     return flask_select_workouts
 
+
 def view_user_stats(user_id, post=flask_requests_post,post_args={}):
     print('\n')
     url = ROOT_URL+'/userstats'
@@ -332,6 +351,7 @@ def view_user_stats(user_id, post=flask_requests_post,post_args={}):
     userstats_list = [["Total Distance","Total Time", "Total Number of Workouts"],[flask_userstats['distance'],flask_userstats['time'],flask_userstats['count']]]
     print(tabulate(userstats_list, headers='firstrow'))
     return userstats_list
+
 
 def run(): # TODO: how do I write tests for things with user input? 
     user_id, user_name = authenticate()
@@ -348,10 +368,11 @@ def run(): # TODO: how do I write tests for things with user input?
         elif action == 4: # view user_stats
             view_user_stats()
         elif action == 5: # Exit
-            print('\nGame Exited')
+            print('\nApp Exited')
         else:
             print('Invalid Entry, try again')
     return  
+
 
 if __name__ == "__main__":
     run()

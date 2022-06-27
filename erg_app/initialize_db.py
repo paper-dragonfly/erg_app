@@ -12,6 +12,7 @@ def create_erg_db():
     cur.close()
     conn.close()
 
+
 def create_test_db():
     conn, cur = db_connect('create_dbs', True)
     cur.execute("SELECT datname FROM pg_database")
@@ -30,6 +31,7 @@ def create_team_table(cur):
         team_id SERIAL PRIMARY KEY,
         team_name VARCHAR(50) 
         ) """)
+
 
 def create_users_table(cur):
     cur.execute("""CREATE TABLE IF NOT EXISTS users(
@@ -55,6 +57,7 @@ def create_workout_log_table(cur):
         FOREIGN KEY (user_id) REFERENCES users(user_id)
         )""")
 
+
 def create_interval_log_table(cur):
     cur.execute("""CREATE TABLE IF NOT EXISTS interval_log(
         interval_id SERIAL PRIMARY KEY,
@@ -67,6 +70,7 @@ def create_interval_log_table(cur):
         FOREIGN KEY (workout_id) REFERENCES workout_log(workout_id))"""
     )
 
+
 def initialize(db):
     try:
         conn, cur = db_connect(db,True)
@@ -77,6 +81,7 @@ def initialize(db):
     finally:
         conn.close()
         cur.close()
+
 
 if __name__ == "__main__":
     create_erg_db()

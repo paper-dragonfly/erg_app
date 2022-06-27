@@ -8,6 +8,7 @@ app = create_app('testing')
 @pytest.fixture
 def client():
     return app.test_client()
+
     
 def clear_test_db():
     try: 
@@ -31,6 +32,7 @@ def clear_game_db(cur):
     finally:
         cur.close()
         conn.close() 
+
 
 def delete_test_db():
     conn, cur = db_connect('testing',True)

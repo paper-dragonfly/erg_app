@@ -11,6 +11,7 @@ def config(db:str='erg', config_file:str='erg_app/config/config.yaml')-> dict:
     db_params = config_dict[db]
     return db_params 
 
+
 # connect to database
 def db_connect(db:str, autocommit:bool = False):
     params = config(db)
@@ -18,6 +19,7 @@ def db_connect(db:str, autocommit:bool = False):
     cur = conn.cursor()
     conn.autocommit = autocommit
     return conn, cur
+
 
 # add new user to db
 def add_new_user(db:str, resp_newuser:NewUser)->int:
@@ -39,6 +41,7 @@ def add_new_user(db:str, resp_newuser:NewUser)->int:
         cur.close()
         return user_id
 
+
 #Get User id
 def get_user_id(user_name, db='Erg'):
     try:
@@ -52,6 +55,7 @@ def get_user_id(user_name, db='Erg'):
         cur.close()
         conn.close()
         return user_id 
+
 
 # add workout to workout_log
 def add_workout(db:str, workout_inst:NewWorkout)->int:
@@ -69,6 +73,7 @@ def add_workout(db:str, workout_inst:NewWorkout)->int:
         conn.close()
         return workout_id  
 
+
 # add interval to interval_log 
 def add_interval(db:str, interval_inst:NewInterval)->bool:
     added = False
@@ -84,6 +89,7 @@ def add_interval(db:str, interval_inst:NewInterval)->bool:
         cur.close()
         conn.close()
         return added  
+
 
 def search_sql_str(workout_search_params:dict)-> str:
     sql = 'SELECT * FROM workout_log WHERE '

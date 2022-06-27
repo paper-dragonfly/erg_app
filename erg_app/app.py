@@ -8,6 +8,7 @@ import pdb
 def create_app(db):
     app = Flask(__name__) 
 
+
     @app.route("/userid",methods=["POST"]) #find user_id for existing user
     def userid():
         #POST user_name, return user_id
@@ -15,6 +16,7 @@ def create_app(db):
         user_id = l.get_user_id(user_name, db)
         return json.dumps({'status_code':200, 'user_id': user_id})
     
+
     @app.route("/usernames", methods = ['GET'])
     def usernames():
         # GET, return all user_names 
@@ -28,6 +30,7 @@ def create_app(db):
             conn.close()
             return json.dumps({'status_code': 200, 'user_names': user_names})
 
+
     @app.route("/newuser", methods=['POST']) # create new user
     def newuser():
         # POST new_user info, return: user_id
@@ -37,6 +40,7 @@ def create_app(db):
             return json.dumps({'status_code': 400, 'message': e})
         user_id = l.add_new_user(db, resp_newuser)
         return json.dumps({'status_code': 200, 'user_id': user_id})
+
 
     @app.route("/log", methods = ['POST']) #list all workouts for user
     def log():
@@ -55,6 +59,7 @@ def create_app(db):
             cur.close()
             return json.dumps({'status_code':200, 'message':user_workouts}, default=str) #datetime not json serializable so use defualt=str to convert non-serializable values to strings
 
+
     @app.route('/addworkout', methods=['POST'])
     def addworkout():
         # POST user_id, date, distance, time_sec, split, intervals, comment | return: workout_id
@@ -65,6 +70,7 @@ def create_app(db):
         workout_id = l.add_workout(db, workout_inst)
         return json.dumps({'status_code': 200, 'workout_id': workout_id})
 
+
     @app.route('/addinterval', methods=['POST'])
     def addinterval():
         #POST workout_id, interval_type, distance, time_sec, split, rest
@@ -74,6 +80,7 @@ def create_app(db):
             return json.dumps({'status_code': 400, 'message': e})
         add_successful:bool = l.add_interval(db, interval_inst) 
         return json.dumps({'status_code': 200, 'message':add_successful})    
+
 
     @app.route("/logsearch", methods = ['POST']) # returns all workouts that match search results
     def logsearch():
@@ -109,6 +116,7 @@ def create_app(db):
             conn.close() 
             return json.dumps({'status_code':200, 'intervals':intervals, 'workout_summary':workout_summary},default=str) 
 
+
     @app.route("/userstats", methods=['POST'])# display summary of all workouts for user
     def total():
         #POST user_id | return status_code, total_distance, total_time, total_workouts, user_info fm users, user's team
@@ -132,6 +140,7 @@ def create_app(db):
             cur.close()
             conn.close()
             return json.dumps({'status_code':200, 'distance':distance, 'time':time, 'count':count, "user_info": user_info, "user_team":user_team})
+
 
     @app.route("/teamlog", methods=['POST'])
     def teamlog():
