@@ -41,7 +41,7 @@ def authenticate(login_get=flask_requests_get, login_get_args={},login_post=flas
     return user_id, user_name
 
 
-def login(get=flask_requests_get, get_args:dict={},post=flask_requests_post, post_args:dict={})->tuple:
+def login(get=flask_requests_get, get_args:dict={})->tuple:
     while True:
         print('\nLOGIN')
         print('1. List Users \n2. Search by User Name')
@@ -57,9 +57,9 @@ def login(get=flask_requests_get, get_args:dict={},post=flask_requests_post, pos
                     print(flask_user_names[i][0])
             # Select user by user_name 
             user_name = input('\nUser Name: ') 
-            url = ROOT_URL+'/userid'
+            url = ROOT_URL+f'/userid/{user_name}'
             data = {'user_name':user_name}
-            flask_resp = post(url, data, **post_args)
+            flask_resp = get(url, **get_args)
             user_id:int = flask_resp['user_id']
             if user_id == 0:
                 print('User not found')
@@ -251,10 +251,10 @@ def create_logsearch_dict():
 
 
 #TODO: how do I test this func? nothing is returned and the printed table is hard to put in a str...
-def view_workout_log(user_id, user_name,post=flask_requests_post,post_args={}):
+def view_workout_log(user_id, user_name,get=flask_requests_get,get_args={}):
     print('\n')
-    url = ROOT_URL+'/log'
-    workout_log:list = post(url, {'user_id':user_id}, **post_args)['message'] #[[...],[...]]
+    url = ROOT_URL+f'/log/{user_id}'
+    workout_log:list = get(url, **get_args)['message'] #[[...],[...]]
     # if no workouts
     if len(workout_log) == 0:
         print('No workouts for this user')

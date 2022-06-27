@@ -9,10 +9,9 @@ def create_app(db):
     app = Flask(__name__) 
 
 
-    @app.route("/userid",methods=["POST"]) #find user_id for existing user
-    def userid():
+    @app.route("/userid/<user_name>",methods=["GET"]) #find user_id for existing user
+    def userid(user_name):
         #POST user_name, return user_id
-        user_name=request.get_json()['user_name']
         user_id = l.get_user_id(user_name, db)
         return json.dumps({'status_code':200, 'user_id': user_id})
     
@@ -42,12 +41,11 @@ def create_app(db):
         return json.dumps({'status_code': 200, 'user_id': user_id})
 
 
-    @app.route("/log", methods = ['POST']) #list all workouts for user
-    def log():
+    @app.route("/log/<int:user_id>", methods = ['GET']) #list all workouts for user
+    def log(user_id):
         # POST user_id -> all workouts listed by date for specific user. Fields: date, distance, time, av split, intervals
         try:
             conn, cur=l.db_connect(db)
-            user_id = request.get_json()['user_id']
             if type(user_id) != int:
                 return json.dumps({'status_code':400, 'message':'user_id must be integer'})
             sql = "SELECT * FROM workout_log WHERE user_id=%s ORDER BY date"

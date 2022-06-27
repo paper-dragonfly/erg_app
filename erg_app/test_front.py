@@ -105,9 +105,7 @@ def test_login(client):
             front.login,
             func_args={
                 "get":front.flask_client_get,
-                "get_args":{'client':client},
-                "post":front.flask_client_post,
-                "post_args":{'client':client}},
+                "get_args":{'client':client}},
             input_values=['2','sasha'])
         assert output == [(5, 'sasha')]
         assert printed == ['\nLOGIN', '1. List Users \n2. Search by User Name', "sasha logged in" ]  
@@ -160,7 +158,7 @@ def test_view_workout_log(client):
         cur.execute("INSERT INTO users(user_id, user_name) VALUES(%s,%s)",(7,'emma'))
         cur.execute("INSERT INTO workout_log(workout_id, user_id, date, distance, time_sec,split,intervals,comment) VALUES(%s,%s,%s,%s,%s,%s,%s,%s)",(1,7,'2022-01-01', 2000,480,120,1,'PR'))
         # check returns expected
-        assert front.view_workout_log(7,'emma',post=front.flask_client_post,post_args={'client':client}) == [["workout_id","user_id","date","distance","time_sec","split","intervals","comment"],[1,7,'2022-01-01',2000,480,120,1,'PR']]
+        assert front.view_workout_log(7,'emma',get=front.flask_client_get,get_args={'client':client}) == [["workout_id","user_id","date","distance","time_sec","split","intervals","comment"],[1,7,'2022-01-01',2000,480,120,1,'PR']]
     finally: 
         cur.close()
         conn.close()
