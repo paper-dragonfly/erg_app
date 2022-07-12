@@ -41,17 +41,18 @@ def create_app(db):
         return json.dumps({'status_code': 200, 'user_id': user_id})
 
 
-    @app.route("/log/<int:user_id>", methods = ['GET']) #list all workouts for user
+    @app.route("/log/<user_id>", methods = ['GET']) #list all workouts for user
     def log(user_id):
-        # POST user_id -> all workouts listed by date for specific user. Fields: date, distance, time, av split, intervals
+        # submit GET request with user_id -> all workouts listed by date for specific user. Fields: date, distance, time, av split, intervals
         try:
             conn, cur=l.db_connect(db)
-            if type(user_id) != int:
-                return json.dumps({'status_code':400, 'message':'user_id must be integer'})
+            user_id = int(user_id)
             sql = "SELECT * FROM workout_log WHERE user_id=%s ORDER BY date"
             subs = (user_id,)
             cur.execute(sql, subs)
             user_workouts = cur.fetchall() #[(v1,v2,v3),(...)]
+        except ValueError:
+            return json.dumps({'status_code':400, 'message':'user_id must be integer'})
         finally:
             conn.close()
             cur.close()
@@ -80,9 +81,9 @@ def create_app(db):
         return json.dumps({'status_code': 200, 'message':add_successful})    
 
 
-    @app.route("/logsearch", methods = ['POST']) # returns all workouts that match search results
+    @app.route("/logsearch", methods = ['GET']) # returns all workouts that match search results
     def logsearch():
-        workout_search_params = request.get_json()
+        workout_search_params:dict = request.args 
         sql, subs = l.search_sql_str(workout_search_params)
         matching_workouts = None
         try:
@@ -98,10 +99,10 @@ def create_app(db):
                 return json.dumps({'status_code':200, 'message':matching_workouts},default=str)
             
 
-    @app.route("/details", methods=['POST']) #list summary stats + all interval_log data for a specific workout_id
+    @app.route("/details", methods=['GET']) #list summary stats + all interval_log data for a specific workout_id
     def details():
-        # POST workout_id
-        workout_id = request.get_json()['workout_id']
+        # retrieve workout_id
+        workout_id = request.args["workout_id"]
         # List all intervals with workout_id 
         try:
             conn, cur = l.db_connect(db)
@@ -115,10 +116,10 @@ def create_app(db):
             return json.dumps({'status_code':200, 'intervals':intervals, 'workout_summary':workout_summary},default=str) 
 
 
-    @app.route("/userstats", methods=['POST'])# display summary of all workouts for user
+    @app.route("/userstats", methods=['GET'])# display summary of all workouts for user
     def total():
         #POST user_id | return status_code, total_distance, total_time, total_workouts, user_info fm users, user's team
-        user_id = request.get_json()['user_id']
+        user_id = request.args['user_id']
         try:
             conn,cur = l.db_connect(db)
             cur.execute("SELECT * FROM users WHERE user_id=%s",(user_id,))

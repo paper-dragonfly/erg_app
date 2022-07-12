@@ -28,15 +28,15 @@ def test_get_user_id():
 def test_userid(client):
     """
     GIVEN a flask app 
-    WHEN POST submits a user_name
+    WHEN GET submits a user_name
     THEN assert that the returned user_id is as expected
     """
     try: 
         #populate db with user 
         conn, cur = db_connect('testing', True)
         cur.execute("INSERT INTO users(user_id, user_name) VALUES(%s, %s) ON CONFLICT DO NOTHING",(1,'kaja'))
-        # send POST request for user_id 
-        response = client.post("/userid", data=json.dumps({"user_name":"kaja"}), content_type='application/json') 
+        # send GET request for user_id 
+        response = client.get("/userid/kaja")
         assert response.status_code == 200
         #type(response.data)==byte, type(response.data.decode("ASCII"))==str, type(json.loads(...))==dict
         data_dic = json.loads(response.data.decode("ASCII"))
@@ -85,20 +85,23 @@ def test_newuser(client):
 def test_log(client):
     """
     GIVEN a flask app
-    WHEN POST submits user_id
+    WHEN GET submits user_id
     THEN assert returns all workouts for that user_id 
     """
     # populate db with user and workouts
     try:
         conn, cur = db_connect('testing',True)
+        # add user
         cur.execute("INSERT INTO users(user_id, user_name) VALUES(%s,%s)",(1,'lizzkadoodle'))
+        # add workout
         cur.execute("INSERT INTO workout_log(workout_id, user_id, date, distance, time_sec,split,intervals,comment) VALUES(%s,%s,%s,%s,%s,%s,%s,%s)",(1,1,'2022-01-01', 2000,480,120,1,'PR'))
         conn.commit()
-        # POST user_id and capture response
-        response = client.post("/log", data=json.dumps({"user_id":1}), content_type='application/json') 
+        # send GET request with user_id to /log and capture response
+        response = client.get("/log/1") 
         # confirm request was successful
         assert response.status_code == 200
         # Confirm content is as expected
+        assert 'PR' in response.data.decode("ASCII")
     finally:
         conn.close()
         cur.close()   
@@ -109,10 +112,10 @@ def test_log(client):
 def test_search_sql_str():
     """
     GIVEN an attempt to find workouts matching certain parameters
-    WHEN POST submits param info to search_sql_str func 
+    WHEN GET submits param info to search_sql_str func 
     THEN assert returns expected string and string sub values
     """
-    # Define test POST info
+    # Define test GET url info
     search_dict = {'user_id':1,'distance':2000,'intervals':1}
     # pass search_dict to function and assert results as expected
     sql, subs = search_sql_str(search_dict)
@@ -123,7 +126,7 @@ def test_search_sql_str():
 def test_logsearch(client):
     """
     GIVEN a flask app
-    WHEN POST sumbits workout search params 
+    WHEN GET sumbits workout search params 
     THEN assert expected workouts are returned + 200 status code
     """
     try: 
@@ -137,13 +140,14 @@ def test_logsearch(client):
         cur.execute("INSERT INTO workout_log(workout_id, user_id, date, distance, time_sec, split,intervals,comment) VALUES(%s,%s,%s,%s,%s,%s,%s,%s)",(3,1,'2022-01-05', 6000,1800,130,3,'3x30min'))
         cur.execute("INSERT INTO workout_log(workout_id, user_id, date, distance, time_sec, split,intervals,comment) VALUES(%s,%s,%s,%s,%s,%s,%s,%s)",(4,2,'2022-01-01', 2000,484,121,1,'Nico 2k'))
         conn.commit() 
-        # POST user_id and capture flask func response
-        response = client.post("/logsearch", data=json.dumps({'user_id':1,'distance':2000,'intervals':1}), content_type='application/json')
+
+        # GET user_id and capture flask func response
+        response = client.get("/logsearch?user_id=1&distance=2000&intervals=1")
         assert response.status_code == 200 
         data_dict = json.loads(response.data.decode("ASCII"))
         assert len(data_dict['message']) == 2 
         # NOTE: message == [(1, 1, datetime.date(2022, 1, 1), 2000, 480, datetime.time(0, 2), datetime.time(0, 8), 1, '2k PR'), (2, 1, datetime.date(2022, 1, 2), 2000, 488, datetime.time(0, 2, 2), datetime.time(0, 8, 8), 1, '2k')]
-        response = client.post("/logsearch", data=json.dumps({'user_id':1,'distance':3000,'intervals':1}), content_type='application/json')
+        response = client.get("/logsearch?user_id=1&distance=3000&intervals=1")
         data_dict = json.loads(response.data.decode("ASCII"))
         assert len(data_dict['message']) == 0
     finally:
@@ -155,7 +159,7 @@ def test_logsearch(client):
 def test_details(client):
     """
     GIVEN a flask app
-    WHEN POST submits workout_id
+    WHEN GET submits workout_id
     THEN assert returns interval and summary stas for that workout_id 
     """ # NOTE: not actually asserting info is correct...just that length is as expected and status_code == 200
     try: 
@@ -164,8 +168,8 @@ def test_details(client):
         cur.execute("INSERT INTO workout_log(workout_id,distance,time_sec,split,intervals) VALUES(1,1000,440,110,2)")
         # populate db: interval_log
         cur.execute("INSERT INTO interval_log(workout_id,interval_type,distance,time_sec,split) VALUES(1,'distance',1000,224,112),(1,'distance',1000,216,108)")
-        # POST workout_id to /details capture result
-        response = client.post("/details", data=json.dumps({'workout_id':1}), content_type='application/json')
+        # sent GET requ with workout_id to /details capture result
+        response = client.get("/details?workout_id=1")
         assert response.status_code == 200
         data_dict = json.loads(response.data.decode("ASCII"))
         assert len(data_dict['intervals'])==2 and len(data_dict['workout_summary'])==1
@@ -178,7 +182,7 @@ def test_details(client):
 def test_userstats(client):
     """
     GIVEN a flask app
-    WHEN POST submits user_id
+    WHEN GET request submits user_id
     THEN assert returns summary data for user
     """
     try:
@@ -193,8 +197,8 @@ def test_userstats(client):
         cur.execute("INSERT INTO workout_log(workout_id, user_id, date, distance, time_sec, split, intervals,comment) VALUES(%s,%s,%s,%s,%s,%s,%s,%s)",(4,2,'2022-01-01', 2000,484,121,1,'Nico 2k'))
         conn.commit() 
 
-        # pass POST to flask func
-        response = client.post("/userstats", data=json.dumps({'user_id':1}), content_type='application/json')
+        # pass GET to flask func
+        response = client.get("/userstats?user_id=1")
         data_dict = json.loads(response.data.decode("ASCII"))
         # check for expected results
         assert response.status_code == 200
@@ -285,7 +289,7 @@ def test_addinterval(client):
     """
     GIVEN a flask app 
     WHEN POST with interval info submitted to /addinterval
-    THEN interval is added to db and Trus is returned
+    THEN interval is added to db and True is returned
     """
     try:
         # populate db - user

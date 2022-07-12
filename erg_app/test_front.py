@@ -212,8 +212,8 @@ def test_display_interval_details(client):
         cur.execute("INSERT INTO workout_log(workout_id,user_id,date,distance,time_sec,split,intervals,comment) VALUES(2,9,'2000-01-02',2000,480,120,4,'4x500m')") 
         # Add intervals 4x500m
         cur.execute("Insert INTO interval_log(interval_id,workout_id,interval_type,distance,time_sec,split,rest) VALUES(1,2,'distance',500,130,130,60),(2,2,'distance',500,125,125,60),(3,2,'distance',500,115,115,60),(4,2,'distance',500,110,110,60)")
-        # make flask post call
-        r_val = front.display_interval_details(2,post=front.flask_client_post,post_args={'client':client})
+        # make flask get request
+        r_val = front.display_interval_details(2,get=front.flask_client_get,get_args={'client':client})
         assert len(r_val)==5
     finally:
         cur.close()
@@ -234,21 +234,21 @@ def test_search_log(client):
         search_dict = {'date':'2000-01-01', 'distance':2000}
         with patch('erg_app.erg_front.input_int', return_value=""):#skip looking at interval details
             with patch('erg_app.erg_front.create_logsearch_dict', return_value=search_dict):
-                r_val = front.search_log(post=front.flask_client_post,post_args={'client':client})
+                r_val = front.search_log(get=front.flask_client_get,get_args={'client':client})
                 assert len(r_val) == 2
                 assert '2k' in r_val[1]
             search_dict = {'distance':2000}
             with patch('erg_app.erg_front.create_logsearch_dict', return_value=search_dict):
-                r_val = front.search_log(post=front.flask_client_post,post_args={'client':client})
+                r_val = front.search_log(get=front.flask_client_get,get_args={'client':client})
                 assert len(r_val) == 3
             search_dict = {'distance':4000}
             with patch('erg_app.erg_front.create_logsearch_dict', return_value=search_dict):
-                r_val = front.search_log(post=front.flask_client_post,post_args={'client':client})
+                r_val = front.search_log(get=front.flask_client_get,get_args={'client':client})
                 assert len(r_val) == 0
         # TEST WITH INTERVAL DETAILS
         with patch('erg_app.erg_front.create_logsearch_dict', return_value={'distance':2000}):#all workouts
             with patch('erg_app.erg_front.input_int', return_value=2):#view interval details for workout where workout_id == 2
-                r_val = front.search_log(post=front.flask_client_post,post_args={'client':client})
+                r_val = front.search_log(get=front.flask_client_get,get_args={'client':client})
                 assert len(r_val['workout_summary']) == 3
                 assert len(r_val['interval_details']) == 5
     finally:
@@ -265,7 +265,7 @@ def test_view_user_stats(client):
         cur.execute("INSERT INTO workout_log(workout_id,user_id,date,distance,time_sec,split,intervals,comment) VALUES(1,10,'2000-01-01',2000,480,120,1,'2k')")
         cur.execute("INSERT INTO workout_log(workout_id,user_id,date,distance,time_sec,split,intervals,comment) VALUES(2,10,'2000-01-02',2000,480,120,4,'4x500m')") 
         #call func assert return is expected
-        r_val = front.view_user_stats(10,post=front.flask_client_post,post_args={'client':client})
+        r_val = front.view_user_stats(10,get=front.flask_client_get,get_args={'client':client})
         assert r_val[1][0] == 4000
     finally:
         cur.close()

@@ -35,8 +35,8 @@ def authenticate(login_get=flask_requests_get, login_get_args={},login_post=flas
         print('pick an option using the coresponding bullet number')
         resp= input("> ")
     if resp == '1': # Login
-        user_id, user_name = login(login_get,login_get_args, login_post, login_post_args)   
-    else: # Create new account
+        user_id, user_name = login(login_get,login_get_args)   
+    else: # Create new account 
         user_id, user_name = create_new_user(new_user_post, new_user_post_args)    
     return user_id, user_name
 
@@ -58,7 +58,6 @@ def login(get=flask_requests_get, get_args:dict={})->tuple:
             # Select user by user_name 
             user_name = input('\nUser Name: ') 
             url = ROOT_URL+f'/userid/{user_name}'
-            data = {'user_name':user_name}
             flask_resp = get(url, **get_args)
             user_id:int = flask_resp['user_id']
             if user_id == 0:
@@ -304,9 +303,9 @@ def add_workout(user_id,post=flask_requests_post, post_args={})->dict:
         return flask_resp #status_code, workout_id:int, message:List[bool]
 
 
-def display_interval_details(workout_id,post=flask_requests_post,post_args={}):
-    url = ROOT_URL+'/details'
-    flask_interval_details:dict = post(url, {'workout_id':workout_id},**post_args)
+def display_interval_details(workout_id,get=flask_requests_get,get_args={}):
+    url = ROOT_URL+f'/details?workout_id={workout_id}'
+    flask_interval_details:dict = get(url,**get_args)
     print('\nWorkout Summary')
     workout_log_summary:list = flask_interval_details['workout_summary']
     workout_log_summary.insert(0,["workout_id","user_id","date","distance","time_sec","split","intervals","comment"])
@@ -318,11 +317,15 @@ def display_interval_details(workout_id,post=flask_requests_post,post_args={}):
     return interval_details #List[list]
 
 
-def search_log(post=flask_requests_post,post_args={})->List[list]:
+def search_log(get=flask_requests_get,get_args={})->List[list]:
     print('\n')
-    post_data:dict = create_logsearch_dict()
-    url = ROOT_URL+'/logsearch'
-    flask_select_workouts:list = post(url, post_data, **post_args)['message'] #[[...][...]]
+    get_vars:dict = create_logsearch_dict()
+    url_string_list = []
+    for key in get_vars:
+        url_string_list.append(f'{key}={get_vars[key]}')
+    url_str = '&'.join(url_string_list)
+    url = ROOT_URL+f'/logsearch?{url_str}'
+    flask_select_workouts:list = get(url, **get_args)['message'] #[[...][...]]
     # if no workouts
     if len(flask_select_workouts) == 0:
         print('No workouts for this search')
@@ -336,15 +339,15 @@ def search_log(post=flask_requests_post,post_args={})->List[list]:
             workout_id_list.append(flask_select_workouts[i][0])
         workout_id = input_int('\nEnter a workout_id to view interval details of workout or press ENTER to return to main menu: ')
         if workout_id in workout_id_list:
-            interval_details:dict = display_interval_details(workout_id,post,post_args)
+            interval_details:dict = display_interval_details(workout_id,get,get_args)
             return {'workout_summary':flask_select_workouts, 'interval_details':interval_details} 
     return flask_select_workouts
 
 
-def view_user_stats(user_id, post=flask_requests_post,post_args={}):
+def view_user_stats(user_id, get=flask_requests_get,get_args={}):
     print('\n')
-    url = ROOT_URL+'/userstats'
-    flask_userstats:dict = post(url, {'user_id':user_id},**post_args)
+    url = ROOT_URL+f'/userstats?user_id={user_id}'
+    flask_userstats:dict = get(url, **get_args)
     user_info = [['User Name', 'Age', 'Sex', 'Team'],[flask_userstats['user_info'][1],flask_userstats['user_info'][2],flask_userstats['user_info'][3], flask_userstats['user_team']]]
     print(tabulate(user_info, headers='firstrow'))
     print('\n')
