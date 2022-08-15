@@ -1,7 +1,3 @@
-from importlib.resources import contents
-from posixpath import split
-from time import time
-from turtle import distance
 import requests
 from typing import Dict, List, Tuple, Union
 import pdb
@@ -356,7 +352,7 @@ def view_user_stats(user_id, get=flask_requests_get,get_args={}):
     return userstats_list
 
 
-def run(): # TODO: how do I write tests for things with user input? 
+def run():  
     user_id, user_name = authenticate()
     action = 0
     while int(action) != 5: # not Exit

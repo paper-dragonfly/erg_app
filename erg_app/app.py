@@ -1,6 +1,6 @@
 from flask import Flask, request 
-from pydantic import ValidationError
-from erg_app.post_classes import NewInterval, NewUser, IntervalWorkout, NewWorkout
+from pydantic import ValidationError 
+from erg_app.post_classes import NewInterval, NewUser, NewWorkout
 import json
 from erg_app import logic as l
 import pdb
@@ -11,7 +11,7 @@ def create_app(db):
 
     @app.route("/userid/<user_name>",methods=["GET"]) #find user_id for existing user
     def userid(user_name):
-        #POST user_name, return user_id
+        #Submit user_name, return user_id
         user_id = l.get_user_id(user_name, db)
         return json.dumps({'status_code':200, 'user_id': user_id})
     
