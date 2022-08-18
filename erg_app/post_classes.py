@@ -1,7 +1,7 @@
 from datetime import datetime
 from pydantic import BaseModel
 
-# QUESTION: why are the variables class vars not instance cars for pydantic? 
+# QUESTION: why are the variables class vars not instance vars for pydantic? 
 class NewUser(BaseModel):
     user_name:str
     sex:str='F'
