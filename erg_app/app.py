@@ -95,7 +95,7 @@ def create_app(db):
             cur.close()
             conn.close()
             if matching_workouts == None:
-                return json.dumps({'status_code':500, 'message':'error'})
+                return json.dumps({'status_code':500, 'message':[]})
             else: 
                 return json.dumps({'status_code':200, 'message':matching_workouts},default=str)
             
