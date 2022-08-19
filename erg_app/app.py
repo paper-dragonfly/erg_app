@@ -8,6 +8,11 @@ import pdb
 def create_app(db):
     app = Flask(__name__) 
 
+    #TODO: new as of Aug 19, no tests yet
+    @app.route('/username/<id>', methods=['GET'])
+    def get_username(id):
+        user_name = l.get_user_name(id, db)
+        return json.dumps({'status_code': 200, 'user_name': user_name})
 
     @app.route("/userid/<user_name>",methods=["GET"]) #find user_id for existing user
     def userid(user_name):
@@ -166,4 +171,4 @@ def create_app(db):
 
 if __name__ == '__main__':
     app = create_app('erg')
-    app.run(host='localhost', port=5000)
+    app.run(host='localhost', port=5000, debug=True)

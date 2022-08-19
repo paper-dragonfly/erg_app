@@ -42,6 +42,21 @@ def add_new_user(db:str, resp_newuser:NewUser)->int:
         return user_id
 
 
+#Get user_name from ID
+def get_user_name(id, db):
+    try:
+        conn, cur = db_connect(db)
+        cur.execute("SELECT user_name FROM users WHERE user_id=%s",(id,))
+        user_name = cur.fetchone()[0]
+    # exception - no user_name maches given user_name
+    except:  
+        user_name = 'No Match'
+    finally:
+        cur.close()
+        conn.close()
+        return user_name 
+
+
 #Get User id
 def get_user_id(user_name, db='Erg'):
     try:
