@@ -2,7 +2,7 @@ from flask import Flask, request
 from pydantic import ValidationError 
 from apps.api.post_classes import NewInterval, NewUser, NewWorkout
 import json
-from erg_app import logic as l
+from apps.api import logic as l
 import pdb
 
 def create_app(db):

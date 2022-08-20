@@ -321,7 +321,6 @@ def search_log(get=flask_requests_get,get_args={})->List[list]:
         url_string_list.append(f'{key}={get_vars[key]}')
     url_str = '&'.join(url_string_list)
     url = ROOT_URL+f'/logsearch?{url_str}'
-    pdb.set_trace()
     flask_select_workouts:list = get(url, **get_args)['message'] #[[...][...]]
     # if no workouts
     if len(flask_select_workouts) == 0:

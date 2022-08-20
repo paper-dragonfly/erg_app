@@ -1,7 +1,7 @@
 from apps.cli import erg_front as front
-from erg_app.constants import ROOT_URL
-from erg_app.logic import db_connect
-import apps.api.conftest as c 
+from apps.cli.constants import ROOT_URL
+from apps.api.logic import db_connect
+import conftest as c 
 import unittest 
 from unittest.mock import MagicMock, patch 
 import pdb
@@ -25,7 +25,7 @@ def test_duration_to_seconds():
 
 
 ##using decorator##
-@patch('erg_app.erg_front.input', lambda _: 'M')
+@patch('apps.cli.erg_front.input', lambda _: 'M')
 def test_input_sex2():
     assert front.input_sex("") == 'M' 
 
@@ -144,9 +144,9 @@ def patch_create_new_user(**kwargs):
     return (5,'ben')
 
 
-@patch('erg_app.erg_front.login', patch_login)
-@patch('erg_app.erg_front.create_new_user', patch_create_new_user)
-@patch('erg_app.erg_front.input', lambda _: "1")
+@patch('apps.cli.erg_front.login', patch_login)
+@patch('apps.cli.erg_front.create_new_user', patch_create_new_user)
+@patch('apps.cli.erg_front.input', lambda _: "1")
 def test_authenticate2():
     assert front.authenticate() == (6,'dan')
 
@@ -183,17 +183,17 @@ def test_add_workout(client):
         cur.execute("INSERT INTO interval_log(interval_id,workout_id,interval_type,distance,time_sec,split,rest) VALUES(1,2,'distance',500,130,130,60),(2,2,'distance',500,125,125,60),(3,2,'distance',500,115,115,60),(4,2,'distance',500,110,110,60)")
         # create mock values and patches
         mock_workout_dict = {'user_id':8,'date':'2000-01-01','distance':2000,'time_sec':480, 'split':120, 'intervals':1,'comment':'2k' }
-        with patch('erg_app.erg_front.input_int', return_value=2):#single distance
-            with patch('erg_app.erg_front.create_new_workout_dict', return_value=mock_workout_dict):
+        with patch('apps.cli.erg_front.input_int', return_value=2):#single distance
+            with patch('apps.cli.erg_front.create_new_workout_dict', return_value=mock_workout_dict):
                 r_val:dict = front.add_workout(8,post=front.flask_client_post, post_args={'client':client}) 
                 # assert response is as expected
                 assert r_val['status_code'] == 200 
                 assert type(r_val['workout_id']) == int
-        with patch('erg_app.erg_front.input_int',return_value=4): #interval distance
+        with patch('apps.cli.erg_front.input_int',return_value=4): #interval distance
             mock_workout_dict2 = {'user_id':8, 'date':'2000-01-02','distance':2000,'time_sec':480,'split':120,"intervals": 4,'comment':'4x500m'}
-            with patch('erg_app.erg_front.create_new_workout_dict', return_value = mock_workout_dict2): 
-                with patch('erg_app.erg_front.input_interval_type', return_value='distance'): 
-                    with patch('erg_app.erg_front.create_intervals_dict', side_effect=interval_patch):
+            with patch('apps.cli.erg_front.create_new_workout_dict', return_value = mock_workout_dict2): 
+                with patch('apps.cli.erg_front.input_interval_type', return_value='distance'): 
+                    with patch('apps.cli.erg_front.create_intervals_dict', side_effect=interval_patch):
                         r_val = front.add_workout(8,post=front.flask_client_post,post_args={'client':client})
                         assert r_val['status_code'] == 200
                         assert r_val['message'] == [True,True,True,True]   
@@ -232,22 +232,22 @@ def test_search_log(client):
         # TEST WITHOUT INTERVAL DETAILS
         #patch inner func and assert response is as expected
         search_dict = {'date':'2000-01-01', 'distance':2000}
-        with patch('erg_app.erg_front.input_int', return_value=""):#skip looking at interval details
-            with patch('erg_app.erg_front.create_logsearch_dict', return_value=search_dict):
+        with patch('apps.cli.erg_front.input_int', return_value=""):#skip looking at interval details
+            with patch('apps.cli.erg_front.create_logsearch_dict', return_value=search_dict):
                 r_val = front.search_log(get=front.flask_client_get,get_args={'client':client})
                 assert len(r_val) == 2
                 assert '2k' in r_val[1]
             search_dict = {'distance':2000}
-            with patch('erg_app.erg_front.create_logsearch_dict', return_value=search_dict):
+            with patch('apps.cli.erg_front.create_logsearch_dict', return_value=search_dict):
                 r_val = front.search_log(get=front.flask_client_get,get_args={'client':client})
                 assert len(r_val) == 3
             search_dict = {'distance':4000}
-            with patch('erg_app.erg_front.create_logsearch_dict', return_value=search_dict):
+            with patch('apps.cli.erg_front.create_logsearch_dict', return_value=search_dict):
                 r_val = front.search_log(get=front.flask_client_get,get_args={'client':client})
                 assert len(r_val) == 0
         # TEST WITH INTERVAL DETAILS
-        with patch('erg_app.erg_front.create_logsearch_dict', return_value={'distance':2000}):#all workouts
-            with patch('erg_app.erg_front.input_int', return_value=2):#view interval details for workout where workout_id == 2
+        with patch('apps.cli.erg_front.create_logsearch_dict', return_value={'distance':2000}):#all workouts
+            with patch('apps.cli.erg_front.input_int', return_value=2):#view interval details for workout where workout_id == 2
                 r_val = front.search_log(get=front.flask_client_get,get_args={'client':client})
                 assert len(r_val['workout_summary']) == 3
                 assert len(r_val['interval_details']) == 5
