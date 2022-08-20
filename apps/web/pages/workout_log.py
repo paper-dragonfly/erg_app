@@ -3,9 +3,9 @@ import pandas as pd
 import dash_bootstrap_components as dbc
 import requests
 from typing import List
-from constants import ROOT_URL
-from erg_app.dash_fxs import flask_requests_get, flask_requests_post
-from erg_app.dash_fxs import get_name
+from apps.cli.constants import ROOT_URL
+from apps.web.dash_fxs import flask_requests_get, flask_requests_post
+from apps.web.dash_fxs import get_name
 
 register_page(__name__,path_template='/workout_log/<id>')
 

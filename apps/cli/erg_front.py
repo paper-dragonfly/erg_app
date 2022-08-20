@@ -3,7 +3,7 @@ from typing import Dict, List, Tuple, Union
 import pdb
 from tabulate import tabulate
 import re
-from erg_app.constants import CONTENTS, ROOT_URL
+from apps.cli.constants import CONTENTS, ROOT_URL
 import json
 
 def flask_requests_post(url:str,data:dict,):

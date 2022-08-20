@@ -3,4 +3,6 @@ images/*
 sandbox/*
 *.pyc
 .DS_Store
+__pycache__/*
+
 

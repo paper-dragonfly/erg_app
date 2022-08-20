@@ -1,9 +1,9 @@
 import json 
-from erg_app import conftest as c
-from erg_app.logic import add_new_user, db_connect, get_user_id, search_sql_str, add_workout, add_interval
+from apps.api import conftest as c
+from apps.api.logic import add_new_user, db_connect, get_user_id, search_sql_str, add_workout, add_interval
 from pydantic import BaseModel
 import pdb
-from erg_app.post_classes import NewUser, NewInterval, NewWorkout
+from apps.api.post_classes import NewUser, NewInterval, NewWorkout
 
 
 def test_get_user_id():

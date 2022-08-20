@@ -1,5 +1,5 @@
 import pytest
-from erg_app.app import create_app
+from apps.api.app import create_app
 from erg_app.logic import db_connect
 import pdb
 

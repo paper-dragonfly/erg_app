@@ -1,7 +1,7 @@
 from dash import Dash, dcc, html, register_page, page_registry, page_container
 import dash_bootstrap_components as dbc
 from dash.dependencies import Output, Input, State
-from erg_app.constants import ROOT_URL
+from constants import ROOT_URL
 import requests
 import dash_fxs as dfx
 import pdb

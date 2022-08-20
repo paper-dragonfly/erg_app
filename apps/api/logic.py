@@ -1,11 +1,11 @@
 import json
 import yaml
 import psycopg2 
-from erg_app.post_classes import NewInterval, NewUser, NewWorkout
+from apps.api.post_classes import NewInterval, NewUser, NewWorkout
 import pdb 
 
 # get database parameters
-def config(db:str='erg', config_file:str='erg_app/config/config.yaml')-> dict:
+def config(db:str='erg', config_file:str='apps/api/config/config.yaml')-> dict:
     with open(f'{config_file}', 'r') as f:
         config_dict = yaml.safe_load(f) 
     db_params = config_dict[db]

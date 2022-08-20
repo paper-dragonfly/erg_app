@@ -1,7 +1,7 @@
-from erg_app import erg_front as front
+from apps.cli import erg_front as front
 from erg_app.constants import ROOT_URL
 from erg_app.logic import db_connect
-import erg_app.conftest as c 
+import apps.api.conftest as c 
 import unittest 
 from unittest.mock import MagicMock, patch 
 import pdb

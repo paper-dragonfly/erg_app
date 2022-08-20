@@ -1,6 +1,6 @@
 from flask import Flask, request 
 from pydantic import ValidationError 
-from erg_app.post_classes import NewInterval, NewUser, NewWorkout
+from apps.api.post_classes import NewInterval, NewUser, NewWorkout
 import json
 from erg_app import logic as l
 import pdb

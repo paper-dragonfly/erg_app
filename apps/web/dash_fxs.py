@@ -1,6 +1,6 @@
 import requests
 import json
-from erg_app.constants import ROOT_URL
+from constants import ROOT_URL
 import pdb 
 
 
