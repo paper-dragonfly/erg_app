@@ -3,7 +3,7 @@ import pandas as pd
 import dash_bootstrap_components as dbc
 import requests
 from typing import List
-from apps.cli.constants import ROOT_URL
+from constants import ROOT_URL
 from apps.web.dash_fxs import flask_requests_get, flask_requests_post
 from apps.web.dash_fxs import get_name
 

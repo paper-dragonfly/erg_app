@@ -1,4 +1,4 @@
-from dash import Dash, dcc, html, register_page, page_registry, page_container
+from dash import Dash, dcc, html, page_registry, page_container
 import dash_bootstrap_components as dbc
 from dash.dependencies import Output, Input, State
 from constants import ROOT_URL
@@ -32,8 +32,8 @@ def choose_page(username):
     id = dfx.get_id(username.lower())
     pages = [  
         dbc.DropdownMenuItem('Home', href=f'/'),
-        dbc.DropdownMenuItem('Workout Log', href=f'/workout_log/{id}')
-        # dbc.DropdownMenuItem('Pets', href=f'/pets/{name}'),
+        dbc.DropdownMenuItem('Workout Log', href=f'/workout_log/{id}'),
+        dbc.DropdownMenuItem('Add Workout', href=f'/addworkout/{id}')
         # dbc.DropdownMenuItem('Add Pet', href=f'/addpet/{name}')
     ]
     return pages
