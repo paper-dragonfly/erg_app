@@ -11,7 +11,7 @@ app = Dash(__name__,external_stylesheets=[dbc.themes.SANDSTONE], use_pages=True)
 # Components
 user_names = dfx.get_usernames()
 navbar = dbc.NavbarSimple([
-    dcc.Dropdown(options=user_names, value="Guest", id='user_dropdown'),
+    dcc.Dropdown(options=user_names, value="guest", id='user_dropdown'),
     dbc.DropdownMenu(
         children=None,
         id='page_menu',
@@ -33,7 +33,7 @@ def choose_page(username):
     pages = [  
         dbc.DropdownMenuItem('Home', href=f'/'),
         dbc.DropdownMenuItem('Workout Log', href=f'/workout_log/{id}'),
-        dbc.DropdownMenuItem('Add Workout', href=f'/addworkout2/{id}'),
+        dbc.DropdownMenuItem('Add Int', href=f'/addworkout2/{id}'),
         dbc.DropdownMenuItem('Add Workout', href=f'/addworkout/{id}')
         # dbc.DropdownMenuItem('Add Pet', href=f'/addpet/{name}')
     ]

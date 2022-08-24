@@ -24,6 +24,7 @@ def flask_client_get(url:str,client):
 
 def get_usernames():
     names = requests.get(ROOT_URL+'/usernames').json()['user_names']
+    print('NAMES', names)
     name_list = []
     for i in range(len(names)):
         name_list.append(names[i][0].capitalize())

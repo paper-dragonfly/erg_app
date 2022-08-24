@@ -7,16 +7,12 @@ from dash import dcc, html, register_page, callback, Input, Output, State
 
 register_page(__name__,path_template='/addworkout2/<user_id>')
 
-#components
 
-results_table = {'Day':[],'Distance':[], 'Time':[]}
-df = pd.DataFrame(results_table)
-empty_table = dbc.Table.from_dataframe(df, striped=True, bordered=True)
-
-def layout():
+def layout(user_id='1'):
     return html.Div([
         #Radio Select
         html.Div([
+            dcc.Store(id='user_id', data=user_id),
             dcc.Markdown('## Add Workout - Single', id='head_wotype'),
             dcc.RadioItems(options=['Single Time/Distance','Intervals'], value='Single Time/Distance', id='radio_select'),
         # user_input both

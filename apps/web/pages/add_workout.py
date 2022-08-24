@@ -14,7 +14,8 @@ def layout(user_id='1'):
     return dbc.Container([
         dbc.Row(children=dcc.Markdown(id = 'title_addworkout', children = '### Add Workout')),
         dcc.Markdown('Guest', id='user_label2'),
-        dcc.Markdown(f'{user_id}', id="invisible_id", style={'display':'none'}),
+        dcc.Store(id='invisible_id', data=user_id),
+        # dcc.Markdown(f'{user_id}', id="invisible_id", style={'display':'none'}),
         dbc.Row([
             dbc.Col(children=dbc.Label(children='Date (yyyy-mm-dd)', html_for='ui_date'), width=3),
             dbc.Col(children=dcc.Input(id='ui_date', value=""), width=9)]),
@@ -39,7 +40,7 @@ def layout(user_id='1'):
 
 @callback(
     Output('user_label2', 'children'),
-    Input('invisible_id','children')
+    Input('invisible_id','data')
     )
 def display_username(user_id):
     return get_name(user_id).capitalize()
@@ -48,7 +49,7 @@ def display_username(user_id):
     Output('status', 'children'),
     Output('status', 'color'),
     Input('submit_button', 'n_clicks'),
-    State('invisible_id','children'),
+    State('invisible_id','data'),
     State('ui_date','value'),
     State('ui_distance','value'),
     State('ui_time','value'),
