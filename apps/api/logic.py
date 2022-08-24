@@ -78,8 +78,8 @@ def add_workout(db:str, workout_inst:NewWorkout)->int:
         # connect to db
         conn, cur = db_connect(db, True)
         # add workout data to workout_log table
-        sql = "INSERT INTO workout_log(user_id, date, distance, time_sec, split, intervals, comment) VALUES(%s,%s,%s,%s,%s,%s,%s)"
-        subs = (workout_inst.user_id, workout_inst.date, workout_inst.distance, workout_inst.time_sec, workout_inst.split, workout_inst.intervals, workout_inst.comment) 
+        sql = "INSERT INTO workout_log(user_id, workout_date, distance, time_sec, split, sr, hr, intervals, comment) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+        subs = (workout_inst.user_id, workout_inst.workout_date, workout_inst.distance, workout_inst.time_sec, workout_inst.split, workout_inst.sr, workout_inst.hr, workout_inst.intervals, workout_inst.comment) 
         cur.execute(sql, subs)
         cur.execute("SELECT MAX(workout_id) from workout_log")
         workout_id = cur.fetchone()[0]

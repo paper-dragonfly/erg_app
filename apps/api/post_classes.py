@@ -19,19 +19,23 @@ class IntervalWorkout(BaseModel):
 
 class NewWorkout(BaseModel):
     user_id:int
-    date:str = '2000-01-01'
-    distance:int = 0
+    workout_date:str = '2000-01-01'
     time_sec:int = 0
+    distance:int = 0
     split:int = 0
+    sr:int = 0
+    hr:int = 0
     intervals:int = 1
     comment:str = ""
 
 class NewInterval(BaseModel):
     workout_id:int 
-    interval_type:str 
-    distance:int 
     time_sec:int
-    split:int
-    rest:int
+    distance:int 
+    split:int=0
+    sr:int=0
+    hr:int=0
+    rest:int=0
+    comment:str=""
 
 

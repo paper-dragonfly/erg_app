@@ -5,7 +5,7 @@ import dash_bootstrap_components as dbc
 from dash import dcc, html, register_page, Input, Output, callback, State
 import pdb
 import json
-from apps.web.dash_fxs import get_name, post_new_workout, duration_to_seconds, input_duration, input_date
+from apps.web.dash_fxs import get_name, post_new_workout, duration_to_seconds, check_duration, check_date
 
 register_page(__name__, path_template='/addworkout/<user_id>')
   
@@ -59,16 +59,16 @@ def display_username(user_id):
 )
 def submit_workout(n_clicks, user_id, wdate, wdistance, wtime, wsplit, wint, wcom):
     #check formatting of date, time, split
-    date_formatted:dict = input_date(wdate)
+    date_formatted:dict = check_date(wdate)
     print('DATE FORMATTED', date_formatted)
     if not date_formatted['accept']:
         return ('Date Formatting Wrong: '+date_formatted['message']), 'danger'
-    time_formatted = input_duration(wtime)
+    time_formatted = check_duration(wtime)
     if not time_formatted['accept']:
         return 'Time Formatting Wrong: '+time_formatted['message'], 'danger'
     time = duration_to_seconds(wtime)
     wsplit = '00:0'+wsplit 
-    split_formatted = input_duration(wsplit)
+    split_formatted = check_duration(wsplit)
     if not split_formatted['accept']:
         return 'Split Formatting Wrong: '+split_formatted['message'], 'danger'
     split = duration_to_seconds(wsplit)

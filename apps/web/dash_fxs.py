@@ -42,6 +42,8 @@ def post_new_workout(wdict):
 
 def duration_to_seconds(duration:str)->int:
     # (hh:mm:ss.d)
+    if not duration:
+        return 0
     hours_sec = int(duration[0:2])*60*60
     min_sec = int(duration[3:5])*60
     sec = int(duration[6:8])
@@ -49,8 +51,8 @@ def duration_to_seconds(duration:str)->int:
     time_sec = (hours_sec + min_sec + sec + ms_sec)
     return time_sec
 
-def input_duration(user_input:str)->str:
-    if user_input == "":
+def check_duration(user_input:str)->str:
+    if not user_input:
         return {'accept':True, 'message':user_input}
     #hh:mm:ss[.d]
     # if formatting correct
@@ -74,12 +76,12 @@ def input_duration(user_input:str)->str:
         else:
             return {'accept':False, 'message':'hours out of range'}
     else:
-        return {'accept':False, 'message':'Must use hh:mm:ss.d formatting'}
+        return {'accept':False, 'message':'Must use correct formatting'}
 
 
-def input_date(user_input:str)->str:
+def check_date(user_input:str)->str:
     print('USER INPUT ', user_input)
-    if user_input == "":
+    if not user_input:
         return {'accept': True, 'message': user_input}
     #yyyy-mm-dd 
     # if input matches formatting
@@ -118,8 +120,12 @@ def input_date(user_input:str)->str:
 def format_time(h,m,s,t)->str: #hh:mm:ss.d
     d = {'h':h,"m":m,'s':s}
     for key in d:
+        if not d[key]:
+            d[key]='00'
         if len(d[key])==1:
             d[key]='0'+d[key]
+        if not t:
+            t='0'
     time = d['h']+":"+d['m']+":"+d['s']+":"+t
     return time
 
