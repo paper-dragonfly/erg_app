@@ -114,4 +114,13 @@ def input_date(user_input:str)->str:
     else: 
         print('FORMATTING BAD')
         return {'accept':False, 'message':"Must use yyyy-mm-dd formatting"}
+
+def format_time(h,m,s,t)->str: #hh:mm:ss.d
+    d = {'h':h,"m":m,'s':s}
+    for key in d:
+        if len(d[key])==1:
+            d[key]='0'+d[key]
+    time = d['h']+":"+d['m']+":"+d['s']+":"+t
+    return time
+
     

@@ -4,9 +4,11 @@ import pandas as pd
 from constants import ROOT_URL
 import dash_bootstrap_components as dbc
 from dash import dcc, html, register_page, callback, Input, Output, State 
+from apps.web.dash_fxs import format_time
 
 register_page(__name__,path_template='/addworkout2/<user_id>')
 
+empty_intrvl_table = {'Date':[],'Time':[],'Distance':[],'Split':[],'s/m':[],'HR':[],'Rest':[],'Comment':[]}
 
 def layout(user_id='1'):
     return html.Div([
@@ -16,25 +18,37 @@ def layout(user_id='1'):
             dcc.Markdown('## Add Workout - Single', id='head_wotype'),
             dcc.RadioItems(options=['Single Time/Distance','Intervals'], value='Single Time/Distance', id='radio_select'),
         # user_input both
-            dbc.Row(dcc.Markdown('Date')),
-            dbc.Row(dcc.Input('',id="ui_date")),
             dbc.Row([
-                dbc.Col(dcc.Markdown('Time')),
-                dbc.Col(dcc.Input('hours', id='ui_hours')),
-                dbc.Col(dcc.Input('minutes',id='ui_min')),
-                dbc.Col(dcc.Input('seconds',id='ui_sec')),
-                dbc.Col(dcc.Input('tenths',id='ui_ten'))
+                dbc.Col(dbc.Label('Date',html_for='ui_date'), width=2),
+                dbc.Col(dcc.Input('',id="ui_date", size='10'), width=4)
                 ]),
-            dbc.Row(dcc.Markdown('Distance')),
-            dbc.Row(dcc.Input('',id='ui_dist')),
-            dbc.Row(dcc.Markdown('Split')),
-            dbc.Row(dcc.Input('',id='ui_split')),
-            dbc.Row(dcc.Markdown('Stroke Rate')),
-            dbc.Row(dcc.Input('',id='ui_sr')),
-            dbc.Row(dcc.Markdown('Heart Rate')),
-            dbc.Row(dcc.Input('',id='ui_hr')),
-            dbc.Row(dcc.Markdown('Comment')),
-            dbc.Row(dcc.Input('',id='ui_com')),
+            dbc.Row([
+                dbc.Col(dbc.Label('Time',html_for='ui_hours'), width=2),
+                dbc.Col(dcc.Input(placeholder='hours', id='ui_hours', size='10', maxLength=2), width=2),
+                dbc.Col(dcc.Input(placeholder='minutes',id='ui_min',size='10', maxLength=2), width=2),
+                dbc.Col(dcc.Input(placeholder='seconds',id='ui_sec',size='10', maxLength=2), width=2),
+                dbc.Col(dcc.Input(placeholder='tenths',id='ui_ten',size='10', maxLength=1), width=2)
+                ]),
+            dbc.Row([
+                dbc.Col(dbc.Label('Distance',html_for='ui_dist'), width=2),
+                dbc.Col(dcc.Input('',id="ui_dist", size='10'), width=4)
+                ]),
+            dbc.Row([
+                dbc.Col(dbc.Label('Split',html_for='ui_split'), width=2),
+                dbc.Col(dcc.Input('',id="ui_split", size='10'), width=4)
+                ]),
+            dbc.Row([
+                dbc.Col(dbc.Label('Stroke Rate',html_for='ui_sr'), width=2),
+                dbc.Col(dcc.Input('',id="ui_sr", size='10'), width=4)
+                ]),
+            dbc.Row([
+                dbc.Col(dbc.Label('Heart Rate',html_for='ui_hr'), width=2),
+                dbc.Col(dcc.Input('',id="ui_hr", size='10'), width=4)
+                ]),
+            dbc.Row([
+                dbc.Col(dbc.Label('Comment',html_for='ui_com'), width=2),
+                dbc.Col(dcc.Input('',id="ui_com", size='10'), width=4)
+                ]),
                 # pg1 - single specific
             html.Div([
                 dbc.Button('Submit Workout', id='single_submit', n_clicks=0, color='primary'),
@@ -42,10 +56,12 @@ def layout(user_id='1'):
                 ], id='sing_pg', style={'display':'block'}),
             # pg2 - interval specific
             html.Div([
-                dbc.Row(dcc.Markdown('Rest')),
-                dbc.Row(dcc.Input('', id='ui_rest')),
+                dbc.Row([
+                    dbc.Col(dbc.Label('Rest',html_for='ui_rest'), width=2),
+                    dbc.Col(dcc.Input('',id="ui_rest", size='10'), width=4)
+                    ]),
                 dbc.Button('Submit Interval', id='interval_submit', n_clicks=0, color='primary'),
-                dcc.Store(id='interval_data', data={}),
+                dcc.Store(id='int_dict', data={}),
                 dbc.Row(
                     [dbc.Table.from_dataframe(pd.DataFrame({}), striped=True, bordered=True)], 
                     id='interval_table'),
@@ -66,23 +82,37 @@ def choose_page_to_display(choice):
         return {'display':'block'}, {'display':'none'}
     return {'display':'none'}, {'display':'block'}
 
-# # Add intervals to inverval table
-# @callback(
-#     Output('interval_table','children'),
-#     Output('df_dict','data'),
-#     Input('interval_btn', 'n_clicks'),
-#     State('ui_day','value'),
-#     State('ui_dist', 'value'),
-#     State('ui_time', 'value'),
-#     State('df_dict', 'data')
-# )
-# def add_interval(n_clicks, day, dist, time, df):
-#     if n_clicks == 0:
-#         return dbc.Table.from_dataframe(pd.DataFrame({'Day':[],'Distance':[], 'Time':[]}), striped=True, bordered=True), {'Day':[],'Distance':[], 'Time':[]}
-#     df['Day'].append(day)
-#     df['Distance'].append(dist)
-#     df['Time'].append(time)
-#     return dbc.Table.from_dataframe(pd.DataFrame(df), striped=True, bordered=True), df
+# Add intervals to inverval table
+@callback(
+    Output('interval_table','children'),
+    Output('int_dict','data'),
+    Input('interval_submit', 'n_clicks'),
+    State('ui_date','value'),
+    State('ui_hours', 'value'),
+    State('ui_min', 'value'),
+    State('ui_sec', 'value'),
+    State('ui_ten', 'value'),
+    State('ui_dist', 'value'),
+    State('ui_split', 'value'),
+    State('ui_sr', 'value'),
+    State('ui_hr', 'value'),
+    State('ui_rest', 'value'),
+    State('ui_com', 'value'),
+    State('int_dict', 'data')
+)
+def add_interval(n_clicks, date, hours, min, sec, ten, dist, split, sr, hr, rest, com, df):
+    if n_clicks == 0:
+        return dbc.Table.from_dataframe(pd.DataFrame(empty_intrvl_table), striped=True, bordered=True), {'Date':[],'Time':[],'Distance':[],'Split':[],'s/m':[],'HR':[],'Rest':[],'Comment':[]}
+    time = format_time(hours, min, sec, ten)
+    df['Date'].append(date)
+    df['Time'].append(time)
+    df['Distance'].append(dist)
+    df['Split'].append(split)
+    df['s/m'].append(sr)
+    df['HR'].append(hr)
+    df['Rest'].append(rest)
+    df['Comment'].append(com)
+    return dbc.Table.from_dataframe(pd.DataFrame(df), striped=True, bordered=True), df
 
 # # Add workout to db
 # @callback(
