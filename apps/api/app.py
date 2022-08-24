@@ -52,7 +52,7 @@ def create_app(db):
         try:
             conn, cur=l.db_connect(db)
             user_id = int(user_id)
-            sql = "SELECT * FROM workout_log WHERE user_id=%s ORDER BY date"
+            sql = "SELECT * FROM workout_log WHERE user_id=%s ORDER BY workout_date"
             subs = (user_id,)
             cur.execute(sql, subs)
             user_workouts = cur.fetchall() #[(v1,v2,v3),(...)]

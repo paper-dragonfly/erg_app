@@ -1,89 +1,112 @@
+from multiprocessing.sharedctypes import Value
 import requests
-from apps.web.constants import ROOT_URL
-from typing import List, Tuple
+import pandas as pd
+from constants import ROOT_URL
 import dash_bootstrap_components as dbc
-from dash import dcc, html, register_page, Input, Output, callback, State
-import pdb
-import json
-from apps.web.dash_fxs import get_name, post_new_workout, duration_to_seconds, input_duration, input_date
+from dash import dcc, html, register_page, callback, Input, Output, State 
 
-register_page(__name__, path_template='/addworkout2/<user_id>')
+register_page(__name__,path_template='/addworkout2/<user_id>')
 
-# components
-# Single distance
+#components
 
-# Single time
-# Inerval distance
-# Interval time 
+results_table = {'Day':[],'Distance':[], 'Time':[]}
+df = pd.DataFrame(results_table)
+empty_table = dbc.Table.from_dataframe(df, striped=True, bordered=True)
 
+def layout():
+    return html.Div([
+        #Radio Select
+        html.Div([
+            dcc.Markdown('## Add Workout - Single', id='head_wotype'),
+            dcc.RadioItems(options=['Single Time/Distance','Intervals'], value='Single Time/Distance', id='radio_select'),
+        # user_input both
+            dbc.Row(dcc.Markdown('Date')),
+            dbc.Row(dcc.Input('',id="ui_date")),
+            dbc.Row([
+                dbc.Col(dcc.Markdown('Time')),
+                dbc.Col(dcc.Input('hours', id='ui_hours')),
+                dbc.Col(dcc.Input('minutes',id='ui_min')),
+                dbc.Col(dcc.Input('seconds',id='ui_sec')),
+                dbc.Col(dcc.Input('tenths',id='ui_ten'))
+                ]),
+            dbc.Row(dcc.Markdown('Distance')),
+            dbc.Row(dcc.Input('',id='ui_dist')),
+            dbc.Row(dcc.Markdown('Split')),
+            dbc.Row(dcc.Input('',id='ui_split')),
+            dbc.Row(dcc.Markdown('Stroke Rate')),
+            dbc.Row(dcc.Input('',id='ui_sr')),
+            dbc.Row(dcc.Markdown('Heart Rate')),
+            dbc.Row(dcc.Input('',id='ui_hr')),
+            dbc.Row(dcc.Markdown('Comment')),
+            dbc.Row(dcc.Input('',id='ui_com')),
+                # pg1 - single specific
+            html.Div([
+                dbc.Button('Submit Workout', id='single_submit', n_clicks=0, color='primary'),
+                dcc.Store(id='single_data', data={})
+                ], id='sing_pg', style={'display':'block'}),
+            # pg2 - interval specific
+            html.Div([
+                dbc.Row(dcc.Markdown('Rest')),
+                dbc.Row(dcc.Input('', id='ui_rest')),
+                dbc.Button('Submit Interval', id='interval_submit', n_clicks=0, color='primary'),
+                dcc.Store(id='interval_data', data={}),
+                dbc.Row(
+                    [dbc.Table.from_dataframe(pd.DataFrame({}), striped=True, bordered=True)], 
+                    id='interval_table'),
+                dbc.Button('Submit workout', id='intwo_submit', n_clicks=0, color='primary'),
+                ], id='int_pg', style={'display':'none'}), 
+            dcc.Markdown('',id='data_json')],
+            id='pg_box')
+    ])      
 
-def layout(user_id='1'):
-    return dbc.Container([
-        dbc.Row(children=dcc.Markdown(id = 'title_addworkout', children = '### Add Workout')),
-        dcc.Markdown('Guest', id='user_label2'),
-        dcc.Markdown(f'{user_id}', id="invisible_id", style={'display':'none'}),
-        dbc.Row([
-            dbc.Col(children=dbc.Label(children='Date (yyyy-mm-dd)', html_for='ui_date'), width=3),
-            dbc.Col(children=dcc.Input(id='ui_date', value=""), width=9)]),
-        dbc.Row([
-            dbc.Col(children=dbc.Label(children='Distance (m)', html_for='ui_distance'), width=3),
-            dbc.Col(children= dcc.Input(id='ui_distance', value=""), width=9)]),
-        dbc.Row([
-            dbc.Col(children=dbc.Label(children='Time (hh:mm:ss.d)', html_for='ui_time'), width=3),
-            dbc.Col(children= dcc.Input(id='ui_time', value=""), width=9)]),
-        dbc.Row([
-            dbc.Col(children=dbc.Label(children='Split (m:ss.d)',html_for='ui_split'), width=3),
-            dbc.Col(children= dcc.Input(id='ui_split', value=""), width=9)]),
-        dbc.Row([
-            dbc.Col(children=dbc.Label(children='Intervals', html_for='ui_intervals'), width=3),
-            dbc.Col(children= dcc.Input(id='ui_intervals', value=""), width=9)]),
-        dbc.Row([
-            dbc.Col(children=dbc.Label(children='Comment', html_for='ui_comment'), width=3),
-            dbc.Col(children= dcc.Input(id='ui_comment', value=""), width=9)]),
-        dbc.Row(children=dbc.Button(id='submit_button', children='submit', n_clicks=0,color='primary')),
-        dbc.Row(children=dbc.Alert('Pending', id='status',color='secondary'))
-    ])
-
+# Respond to radio selection
 @callback(
-    Output('user_label2', 'children'),
-    Input('invisible_id','children')
-    )
-def display_username(user_id):
-    return get_name(user_id).capitalize()
-
-@callback(
-    Output('status', 'children'),
-    Output('status', 'color'),
-    Input('submit_button', 'n_clicks'),
-    State('invisible_id','children'),
-    State('ui_date','value'),
-    State('ui_distance','value'),
-    State('ui_time','value'),
-    State('ui_split','value'),
-    State('ui_intervals','value'),
-    State('ui_comment','value')
+    Output('sing_pg', 'style'),
+    Output('int_pg', 'style'),
+    Input('radio_select', 'value')
 )
-def submit_workout(n_clicks, user_id, wdate, wdistance, wtime, wsplit, wint, wcom):
-    #check formatting of date, time, split
-    date_formatted:dict = input_date(wdate)
-    print('DATE FORMATTED', date_formatted)
-    if not date_formatted['accept']:
-        return ('Date Formatting Wrong: '+date_formatted['message']), 'danger'
-    time_formatted = input_duration(wtime)
-    if not time_formatted['accept']:
-        return 'Time Formatting Wrong: '+time_formatted['message'], 'danger'
-    time = duration_to_seconds(wtime)
-    wsplit = '00:0'+wsplit 
-    split_formatted = input_duration(wsplit)
-    if not split_formatted['accept']:
-        return 'Split Formatting Wrong: '+split_formatted['message'], 'danger'
-    split = duration_to_seconds(wsplit)
-    # post new_workout_data
-    data = {'user_id':int(user_id), 'date':wdate, 'distance':int(wdistance), 'time_sec':time,'split':split, 'intervals':int(wint), 'comment':wcom}
-    flask_workout_id = post_new_workout(data)
-    print('FLASK RESPONSE', flask_workout_id)
-    if flask_workout_id['status_code'] == 200:
-        return 'Workout Added!','success'
-    else:
-        return 'Fail', 'danger'
+def choose_page_to_display(choice):
+    if choice == 'Single Time/Distance':
+        return {'display':'block'}, {'display':'none'}
+    return {'display':'none'}, {'display':'block'}
 
+# # Add intervals to inverval table
+# @callback(
+#     Output('interval_table','children'),
+#     Output('df_dict','data'),
+#     Input('interval_btn', 'n_clicks'),
+#     State('ui_day','value'),
+#     State('ui_dist', 'value'),
+#     State('ui_time', 'value'),
+#     State('df_dict', 'data')
+# )
+# def add_interval(n_clicks, day, dist, time, df):
+#     if n_clicks == 0:
+#         return dbc.Table.from_dataframe(pd.DataFrame({'Day':[],'Distance':[], 'Time':[]}), striped=True, bordered=True), {'Day':[],'Distance':[], 'Time':[]}
+#     df['Day'].append(day)
+#     df['Distance'].append(dist)
+#     df['Time'].append(time)
+#     return dbc.Table.from_dataframe(pd.DataFrame(df), striped=True, bordered=True), df
+
+# # Add workout to db
+# @callback(
+#     Output('workout_btn', 'children'),
+#     Output('workout_btn', 'color'),
+#     Output('data_json', 'children'),
+#     Input('workout_btn', 'n_clicks'),
+#     State('df_dict', 'data')
+# )
+# def post_interval_workout(n_clicks, data):
+#     if n_clicks == 0:
+#         return 'Submit Workout', 'primary', ""
+#     json_data = f'{data}'
+#     return 'Workout Submitted!', 'success', json_data
+
+
+# # Pg2 output user_input to alert txt
+# @callback(
+#     Output('alert_b2','children'),
+#     Input('ui_b2', 'value')
+# )
+# def b2(b2v):
+#     return b2v

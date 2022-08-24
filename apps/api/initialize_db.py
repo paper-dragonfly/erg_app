@@ -5,10 +5,10 @@ def create_erg_db():
     conn, cur = db_connect('create_dbs', True)
     cur.execute("SELECT datname FROM pg_database")
     db_list = cur.fetchall()
-    if ('Erg',) in db_list:
+    if ('erg',) in db_list:
         print('db exists')
     else:
-        cur.execute("""CREATE DATABASE Erg""")
+        cur.execute("""CREATE DATABASE erg""")
     cur.close()
     conn.close()
 
@@ -37,7 +37,7 @@ def create_users_table(cur):
     cur.execute("""CREATE TABLE IF NOT EXISTS users(
         user_id SERIAL PRIMARY KEY,
         user_name VARCHAR(25) NOT NULL,
-        age INTEGER,
+        dob DATE,
         sex VARCHAR(1),
         team INTEGER,
         FOREIGN KEY (team) REFERENCES team(team_id)
@@ -48,10 +48,12 @@ def create_workout_log_table(cur):
     cur.execute("""CREATE TABLE IF NOT EXISTS workout_log(
         workout_id SERIAL PRIMARY KEY,
         user_id INTEGER, 
-        date DATE,
-        distance INTEGER,
+        workout_date DATE,
         time_sec INTEGER,
+        distance INTEGER,
         split INTEGER,
+        sr INTEGER,
+        hr INTEGER,
         intervals INTEGER,
         comment VARCHAR(255),
         FOREIGN KEY (user_id) REFERENCES users(user_id)
@@ -62,11 +64,13 @@ def create_interval_log_table(cur):
     cur.execute("""CREATE TABLE IF NOT EXISTS interval_log(
         interval_id SERIAL PRIMARY KEY,
         workout_id INTEGER,
-        interval_type VARCHAR(10), 
-        distance INTEGER,
         time_sec INTEGER,
+        distance INTEGER,
         split INTEGER,
+        sr INTEGER,
+        hr INTEGER,
         rest INTEGER,
+        comment VARCHAR(255),
         FOREIGN KEY (workout_id) REFERENCES workout_log(workout_id))"""
     )
 

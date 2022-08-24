@@ -2,7 +2,7 @@
 erg:
   host: localhost
   # port: 5000
-  database: Erg
+  database: erg
   user: katcha
   password: null
 
