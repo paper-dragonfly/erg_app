@@ -198,8 +198,8 @@ def seconds_to_duration(time_sec):
     dur2 = dur[:8]+"."+dur[10] #hh:mm:ss.d
     #eliminate leading zeros
     zero = True
-    while zero:
-        for i in [0,1,3,4,6,7,9]:
+    for i in [0,1,3,4,6,7,9]:
+        if zero:
             if dur2[i] != '0':
                 nonz = i
                 zero = False

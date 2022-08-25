@@ -5,7 +5,7 @@ import requests
 from typing import List
 from constants import ROOT_URL
 from apps.web.dash_fxs import flask_requests_get, flask_requests_post
-from apps.web.dash_fxs import get_name
+from apps.web.dash_fxs import get_name, seconds_to_duration
 
 register_page(__name__,path_template='/workout_log/<user_id>')
 
@@ -24,9 +24,9 @@ def layout(user_id='1'):
         }
     for i in range(len(flash_workouts)):
         workouts['Date'].append(flash_workouts[i][2]),
-        workouts['Time'].append(flash_workouts[i][3]),
+        workouts['Time'].append(seconds_to_duration(flash_workouts[i][3])),
         workouts['Distance'].append(flash_workouts[i][4]),
-        workouts['Split'].append(flash_workouts[i][5]),
+        workouts['Split'].append(seconds_to_duration(flash_workouts[i][5])),
         workouts['Stroke Rate'].append(flash_workouts[i][6]),
         workouts['Heart Rate'].append(flash_workouts[i][7]),
         workouts['Intervals'].append(flash_workouts[i][8]),
