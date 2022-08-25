@@ -40,6 +40,9 @@ def get_name(id):
 def post_new_workout(wdict):
     return requests.post(ROOT_URL+'/addworkout',json=wdict).json()
 
+def post_new_interval(idict):
+    return requests.post(ROOT_URL+'/addinterval',json=idict).json()
+
 def duration_to_seconds(duration:str)->int:
     # (hh:mm:ss.d)
     if not duration:
@@ -128,5 +131,54 @@ def format_time(h,m,s,t)->str: #hh:mm:ss.d
             t='0'
     time = d['h']+":"+d['m']+":"+d['s']+":"+t
     return time
+
+def generate_post_wo_dict(int_dict:dict, user_id:str, wo_dict:dict)->dict:
+    # calculate averages 
+    num_ints = len(int_dict['Date'])
+    tot_time = 0
+    for t in int_dict['Time']:
+        t_sec = duration_to_seconds(t)
+        tot_time += t_sec
+    tot_dist = 0
+    for d in int_dict['Distance']:
+        tot_dist += d
+    tot_split = 0
+    for s in int_dict['Split']:
+        s = '00:0'+s
+        s_sec = duration_to_seconds(s)
+        tot_split += s_sec
+    av_split = tot_split/num_ints 
+    av_sr = sum(int_dict['s/m'])/num_ints
+    av_hr = sum(int_dict['HR'])/num_ints
+    # populate post_dict
+    wo_dict['user_id'] = int(user_id)
+    wo_dict['workout_date'] = int_dict['Date'][0]
+    wo_dict['time_sec']=tot_time
+    wo_dict['distance']=tot_dist
+    wo_dict['split']=av_split
+    wo_dict['sr']=av_sr
+    wo_dict['hr']=av_hr
+    wo_dict['intervals']=num_ints
+    wo_dict['comment']=int_dict['Comment'][0]
+    return wo_dict 
+
+def format_and_post_intervals(wo_id, i_dict):
+    post_intrvl_dict_template = {'workout_id':wo_id,'time_sec':None,'distance':None,'split':None,'sr':None,'hr':None,'rest':None,'comment':None}
+    for i in range(len(i_dict['Date'])):
+        ipost_dict = post_intrvl_dict_template
+        ipost_dict['time_sec'] = duration_to_seconds(i_dict['Time'][i])
+        ipost_dict['distance'] = i_dict['Distance'][i]
+        ipost_dict['split'] = duration_to_seconds("00:0"+i_dict['Split'][i])
+        ipost_dict['sr'] = i_dict['s/m'][i]
+        ipost_dict['hr'] = i_dict['HR'][i]
+        ipost_dict['rest'] = i_dict['Rest'][i]
+        ipost_dict['comment'] = i_dict['Comment'][i]
+        post_new_interval(ipost_dict)    
+    return
+
+# empty_intrvl_table = {'Date':[],'Time':[],'Distance':[],'Split':[],'s/m':[],'HR':[],'Rest':[],'Comment':[]}
+
+
+# empty_post_wo_dict = {'user_id':None, 'workout_date':None,'time_sec':None,'distance':None,'split':None,'sr':None,'hr':None,'intervals':1, 'comment':None}
 
     

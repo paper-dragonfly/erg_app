@@ -5,7 +5,7 @@ import pdb
 from constants import ROOT_URL
 import dash_bootstrap_components as dbc
 from dash import dcc, html, register_page, callback, Input, Output, State 
-from apps.web.dash_fxs import format_time, duration_to_seconds, post_new_workout, check_date, check_duration
+from apps.web.dash_fxs import format_and_post_intervals, format_time, duration_to_seconds, post_new_workout, check_date, check_duration, generate_post_wo_dict, format_and_post_intervals
 from dash.exceptions import PreventUpdate
 
 
@@ -53,7 +53,7 @@ def layout(user_id='1'):
                 ]),
             dbc.Row([
                 dbc.Col(dbc.Label('Comment',html_for='ui_com'), width=2),
-                dbc.Col(dcc.Input('',id="ui_com", size='10'), width=4)
+                dbc.Col(dcc.Input('',id="ui_com", size='20'), width=8)
                 ]),
                 # pg1 - single specific
             html.Div([
@@ -70,12 +70,14 @@ def layout(user_id='1'):
             html.Div([
                 dbc.Row([
                     dbc.Col(dbc.Label('Rest',html_for='ui_rest'), width=2),
-                    dbc.Col(dcc.Input('',id="ui_rest", size='10'), width=4)
+                    dbc.Col(dcc.Input(placeholder='seconds',id="ui_rest", size='10'), width=4)
                     ]),
                 dbc.Button('Submit Interval', id='interval_submit', n_clicks=0, color='primary'),
-                dcc.Store(id='int_dict', data={}),
+                dbc.Alert(id='intrvl_alert', style={'display':'none'},color='warning'),
+                dcc.Store(id='int_dict', data=empty_intrvl_table),
+                dcc.Store(id='intrvl_formatting_approved', data=False),
                 dbc.Row(
-                    [dbc.Table.from_dataframe(pd.DataFrame({}), striped=True, bordered=True)], 
+                    [dbc.Table.from_dataframe(pd.DataFrame(empty_intrvl_table),striped=True,bordered=True)], 
                     id='interval_table'),
                 dbc.Button('Submit workout', id='intwo_submit', n_clicks=0, color='primary'),
                 ], id='int_pg', style={'display':'none'}), 
@@ -187,8 +189,11 @@ def create_data_dict(n_clicks, user_id, date, hours, min, sec,ten,dist,split,sr,
 
 # Add intervals to inverval table
 @callback(
-    Output('interval_table','children'),
-    Output('int_dict','data'),
+    Output('interval_table','children'), #table
+    Output('int_dict','data'), #table contents
+    Output('intrvl_alert','children'), #alert message
+    Output('intrvl_alert', 'style'), #alert visibility
+    Output('intrvl_formatting_approved','data'), #formatting approval 
     Input('interval_submit', 'n_clicks'),
     State('ui_date','value'),
     State('ui_hours', 'value'),
@@ -205,7 +210,23 @@ def create_data_dict(n_clicks, user_id, date, hours, min, sec,ten,dist,split,sr,
 )
 def add_interval(n_clicks, date, hours, min, sec, ten, dist, split, sr, hr, rest, com, df):
     if n_clicks == 0:
-        return dbc.Table.from_dataframe(pd.DataFrame(empty_intrvl_table), striped=True, bordered=True), {'Date':[],'Time':[],'Distance':[],'Split':[],'s/m':[],'HR':[],'Rest':[],'Comment':[]}
+        raise PreventUpdate
+    blank_table=dbc.Table.from_dataframe(pd.DataFrame(df), striped=True, bordered=True)
+    # check inputs format
+    valid_date:dict = check_date(date)
+    if not valid_date['accept']:
+        alert_message = 'Date formatting wrong: '+valid_date['message']
+        return blank_table, df, alert_message, {'display':'block'}, False
+    time:str = format_time(hours, min, sec, ten) #hh:mm:ss.d
+    valid_time = check_duration(time)
+    if not valid_time['accept']:
+        alert_message = 'Time formatting wrong: '+valid_time['message']
+        return blank_table, df, alert_message, {'display':'block'}, False
+    wsplit = '00:0'+split 
+    valid_split = check_duration(wsplit)
+    if not valid_split['accept']:
+        alert_message = 'Split formatting wrong: '+valid_split['message']
+        return blank_table, df, alert_message, {'display':'block'}, False
     time = format_time(hours, min, sec, ten)
     df['Date'].append(date)
     df['Time'].append(time)
@@ -215,6 +236,30 @@ def add_interval(n_clicks, date, hours, min, sec, ten, dist, split, sr, hr, rest
     df['HR'].append(hr)
     df['Rest'].append(rest)
     df['Comment'].append(com)
-    return dbc.Table.from_dataframe(pd.DataFrame(df), striped=True, bordered=True), df
+    return dbc.Table.from_dataframe(pd.DataFrame(df), striped=True, bordered=True), df, None, {'display':'none'}, True
+
+#Create workout summary post_dict and post wo to db 
+@callback(
+    Output('intwo_submit', 'children'),
+    Output('intwo_submit', 'color'),
+    Input('intwo_submit','n_clicks'),
+    State('intrvl_formatting_approved', 'data'),
+    State('int_dict', 'data'),
+    State('user_id', 'data'),
+)
+def post_wo_summary(n_clicks, formatting_approved, int_dict, user_id):
+    if n_clicks==0 or not formatting_approved:
+        raise PreventUpdate
+    wo_dict = generate_post_wo_dict(int_dict, user_id, empty_post_wo_dict)
+    wo_id = post_new_workout(wo_dict)['workout_id']
+    format_and_post_intervals(wo_id, int_dict)
+    return 'Interval Workout Submitted!', 'success'
 
 
+
+
+# empty_post_wo_dict = {'user_id':None, 'workout_date':None,'time_sec':None,'distance':None,'split':None,'sr':None,'hr':None,'intervals':1, 'comment':None}
+
+# empty_intrvl_table = {'Date':[],'Time':[],'Distance':[],'Split':[],'s/m':[],'HR':[],'Rest':[],'Comment':[]}
+
+# empty_post_intrvl_dict = {'workout_id':None,'time_sec':None,'distance':None,'split':None,'sr':None,'hr':None,'rest':None,'comment':None}
