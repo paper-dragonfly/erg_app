@@ -33,8 +33,8 @@ def choose_page(username):
     pages = [  
         dbc.DropdownMenuItem('Home', href=f'/'),
         dbc.DropdownMenuItem('Workout Log', href=f'/workout_log/{id}'),
-        dbc.DropdownMenuItem('Add Int', href=f'/addworkout2/{id}'),
         dbc.DropdownMenuItem('Add Workout', href=f'/addworkout/{id}')
+        # dbc.DropdownMenuItem('Add Int', href=f'/addworkout2/{id}'),
         # dbc.DropdownMenuItem('Add Pet', href=f'/addpet/{name}')
     ]
     return pages

@@ -7,7 +7,7 @@ import pdb
 import json
 from apps.web.dash_fxs import get_name, post_new_workout, duration_to_seconds, check_duration, check_date
 
-register_page(__name__, path_template='/addworkout/<user_id>')
+register_page(__name__, path_template='/addworkout2/<user_id>')
   
 
 def layout(user_id='1'):

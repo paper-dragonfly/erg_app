@@ -176,9 +176,42 @@ def format_and_post_intervals(wo_id, i_dict):
         post_new_interval(ipost_dict)    
     return
 
-# empty_intrvl_table = {'Date':[],'Time':[],'Distance':[],'Split':[],'s/m':[],'HR':[],'Rest':[],'Comment':[]}
+def seconds_to_duration(time_sec):
+    if time_sec == 0:
+        return '0'
+    #seperate time into h,m,s,d
+    hours = time_sec//3600
+    r1 = time_sec%3600
+    mins = r1//60
+    r2 = r1%60
+    secs = r2//1
+    tenths = (r2%1)*10
+    #construct duration string
+    dur = ""
+    for i in [hours, mins, secs,tenths]: #hh:mm:ss:dd:
+        if i == 0:
+            dur += '00:'
+        elif 0 < i < 10:
+            dur += '0'+str(i)+':'
+        else:
+            dur += str(i)+':'
+    dur2 = dur[:8]+"."+dur[10] #hh:mm:ss.d
+    #eliminate leading zeros
+    zero = True
+    while zero:
+        for i in [0,1,3,4,6,7,9]:
+            if dur2[i] != '0':
+                nonz = i
+                zero = False
+    duration = dur2[nonz:]
+    return duration 
+            
 
+   
 
-# empty_post_wo_dict = {'user_id':None, 'workout_date':None,'time_sec':None,'distance':None,'split':None,'sr':None,'hr':None,'intervals':1, 'comment':None}
+    
+
+    
+
 
     
