@@ -43,6 +43,9 @@ def post_new_workout(wdict):
 def post_new_interval(idict):
     return requests.post(ROOT_URL+'/addinterval',json=idict).json()
 
+def post_newuser(newuser_dict):
+    return requests.post(ROOT_URL+'/newuser',json=newuser_dict).json()
+
 def duration_to_seconds(duration:str)->int:
     # (hh:mm:ss.d)
     if not duration:

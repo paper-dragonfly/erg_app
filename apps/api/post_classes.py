@@ -4,8 +4,8 @@ from pydantic import BaseModel
 # QUESTION: why are the variables class vars not instance vars for pydantic? 
 class NewUser(BaseModel):
     user_name:str
-    sex:str='F'
-    age:int=0
+    dob:str
+    sex:str='Female'
     team:str='private'
 
 class IntervalWorkout(BaseModel):

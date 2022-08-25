@@ -145,6 +145,24 @@ def create_app(db):
             conn.close()
             return json.dumps({'status_code':200, 'distance':distance, 'time':time, 'count':count, "user_info": user_info, "user_team":user_team})
 
+    @app.route('/listteams', methods=['GET'])
+    def list_teams():
+        m = 'fail'
+        try:
+            # pdb.set_trace()
+            conn,cur = l.db_connect(db)
+            cur.execute("SELECT team_name FROM team")
+            team_ll = cur.fetchall() #[(t1,),(t2,)]
+            team_names =[]
+            for i in range(len(team_ll)):
+                team_names.append(team_ll[i][0])
+            m = team_names
+        finally:
+            cur.close()
+            conn.close()
+            return json.dumps({'status_code': 200, 'message': m})
+
+
 
     @app.route("/teamlog", methods=['POST'])
     def teamlog():
