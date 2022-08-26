@@ -10,6 +10,7 @@ from dash.exceptions import PreventUpdate
 
 
 register_page(__name__,path_template='/addworkout/<user_id>')
+print('ADD_WORKOUT LOADED')
 
 empty_single_table = {'Date':[],'Time':[],'Distance':[],'Split':[],'s/m':[],'HR':[],'Comment':[]}
 empty_post_wo_dict = {'user_id':None, 'workout_date':None,'time_sec':None,'distance':None,'split':None,'sr':None,'hr':None,'intervals':1, 'comment':None}

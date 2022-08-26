@@ -37,6 +37,9 @@ def get_name(id):
     name = requests.get(ROOT_URL+f'/username/{id}').json()['user_name']
     return name
 
+def get_wo_details(wo_id):
+    return requests.get(ROOT_URL+f'/details?workout_id={wo_id}').json()
+
 def post_new_workout(wdict):
     return requests.post(ROOT_URL+'/addworkout',json=wdict).json()
 
@@ -208,8 +211,37 @@ def seconds_to_duration(time_sec):
                 zero = False
     duration = dur2[nonz:]
     return duration 
-            
 
+def calc_av_rest(idata):
+    sum_rest = 0
+    for i in range(len(idata)):
+        sum_rest += idata[i][7]
+    av_rest = sum_rest/len(idata)
+    return av_rest
+            
+def wo_details_df(wo_id):
+    df= {'Time':[], 'Distance':[], 'Split':[], 's/m':[], 'HR':[], 'Rest':[], 'Comment':[]}
+    flask_wo_details = get_wo_details(wo_id)
+    wo_data = flask_wo_details['workout_summary']
+    intrvl_data = flask_wo_details['intervals'] 
+    av_rest = calc_av_rest(intrvl_data)
+    df['Time'].append(wo_data[3]),
+    df['Distance'].append(wo_data[4]),
+    df['Split'].append(wo_data[5]),
+    df['s/m'].append(wo_data[6]),
+    df['HR'].append(wo_data[7]),
+    df['Rest'].append(av_rest),
+    df['Comment'].append(wo_data[9])
+    for i in range(len(intrvl_data)):
+        df['Time'].append(intrvl_data[i][2]),
+        df['Distance'].append(intrvl_data[i][3]),
+        df['Split'].append(intrvl_data[i][4]),
+        df['s/m'].append(intrvl_data[i][5]),
+        df['HR'].append(intrvl_data[i][6]),
+        df['Rest'].append((intrvl_data[i][7])),
+        df['Comment'].append((intrvl_data[i][8]))
+    date = wo_data[2] 
+    return df, date 
    
 
     

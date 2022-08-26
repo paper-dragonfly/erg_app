@@ -115,7 +115,7 @@ def create_app(db):
             cur.execute("SELECT * FROM interval_log WHERE workout_id=%s",(workout_id,))
             intervals = cur.fetchall()
             cur.execute("SELECT * FROM workout_log WHERE workout_id=%s",(workout_id,))
-            workout_summary = cur.fetchall()
+            workout_summary = cur.fetchone() 
         finally:
             cur.close()
             conn.close() 
