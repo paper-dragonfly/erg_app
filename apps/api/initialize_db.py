@@ -38,7 +38,7 @@ def create_users_table(cur):
         user_id SERIAL PRIMARY KEY,
         user_name VARCHAR(25) NOT NULL,
         dob DATE,
-        sex VARCHAR(1),
+        sex VARCHAR(8),
         team INTEGER,
         FOREIGN KEY (team) REFERENCES team(team_id)
         )""")

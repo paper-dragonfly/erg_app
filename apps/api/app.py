@@ -39,6 +39,7 @@ def create_app(db):
     def newuser():
         # POST new_user info, return: user_id
         try:
+            pdb.set_trace()
             resp_newuser = NewUser.parse_obj(request.get_json())
         except ValidationError() as e:
             return json.dumps({'status_code': 400, 'message': e})

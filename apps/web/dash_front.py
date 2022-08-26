@@ -24,6 +24,7 @@ app.layout = dbc.Container([
 ])
 
 #Callback 
+
 @app.callback(
     Output('page_menu', 'children'),
     Input('user_dropdown','value')

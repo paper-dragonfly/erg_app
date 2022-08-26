@@ -32,7 +32,7 @@ def add_new_user(db:str, resp_newuser:NewUser)->int:
         cur.execute("SELECT team_id FROM team WHERE team_name=%s",(resp_newuser.team,))
         team_id= cur.fetchone()[0]
         # add user 
-        cur.execute("INSERT INTO users(user_name, age, sex, team) VALUES(%s,%s,%s,%s)",(resp_newuser.user_name, resp_newuser.age, resp_newuser.sex,team_id))
+        cur.execute("INSERT INTO users(user_name, dob, sex, team) VALUES(%s,%s,%s,%s)",(resp_newuser.user_name, resp_newuser.dob, resp_newuser.sex,team_id))
         cur.execute("SELECT user_id FROM users WHERE user_name=%s",(resp_newuser.user_name,))
         user_id = cur.fetchone()[0]
         conn.commit()
