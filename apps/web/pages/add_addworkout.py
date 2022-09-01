@@ -18,7 +18,7 @@ empty_intrvl_table = {'Date':[],'Time':[],'Distance':[],'Split':[],'s/m':[],'HR'
 empty_post_intrvl_dict = {'workout_id':None,'time_sec':None,'distance':None,'split':None,'sr':None,'hr':None,'rest':None,'comment':None}
 
 def layout(user_id='1'):
-    return html.Div([
+    return dbc.Container([
         #Radio Select
         html.Div([
             dcc.Store(id='user_id', data=user_id),

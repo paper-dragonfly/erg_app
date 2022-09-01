@@ -33,7 +33,7 @@ def layout(user_id='1'):
         workouts['Comment'].append(flash_workouts[i][9])
 
     df = pd.DataFrame(workouts)
-    return html.Div([
+    return dbc.Container([
         dcc.Markdown('## Workout Summary Log', id='h1'),
         dcc.Markdown('Guest', id='user_label'),
         dcc.Store(id='invisible_id', data=user_id),

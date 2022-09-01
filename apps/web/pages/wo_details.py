@@ -30,7 +30,7 @@ register_page(__name__, path_template='/details/<wo_id>')
 ###########
 def layout(wo_id='9'):
     df, date = wo_details_df(wo_id)
-    return html.Div([
+    return dbc.Container([
         dcc.Store(id='wo_id', data=wo_id),
         dcc.Markdown('## Workout Details'),
         dcc.Markdown(f'{date}', id='wo_label'),
