@@ -1,4 +1,3 @@
-from dash import dcc, html, register_page
 import requests
 from apps.web.constants import ROOT_URL
 from typing import List, Tuple
