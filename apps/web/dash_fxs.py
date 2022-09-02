@@ -223,8 +223,11 @@ def wo_details_df(wo_id):
     df= {'Time':[], 'Distance':[], 'Split':[], 's/m':[], 'HR':[], 'Rest':[], 'Comment':[]}
     flask_wo_details = get_wo_details(wo_id)
     wo_data = flask_wo_details['workout_summary']
-    intrvl_data = flask_wo_details['intervals'] 
-    av_rest = calc_av_rest(intrvl_data)
+    intrvl_data = flask_wo_details['intervals']
+    if intrvl_data:
+        av_rest = calc_av_rest(intrvl_data)
+    else:
+        av_rest = 'N/A'
     df['Time'].append(wo_data[3]),
     df['Distance'].append(wo_data[4]),
     df['Split'].append(wo_data[5]),
@@ -232,14 +235,15 @@ def wo_details_df(wo_id):
     df['HR'].append(wo_data[7]),
     df['Rest'].append(av_rest),
     df['Comment'].append(wo_data[9])
-    for i in range(len(intrvl_data)):
-        df['Time'].append(intrvl_data[i][2]),
-        df['Distance'].append(intrvl_data[i][3]),
-        df['Split'].append(intrvl_data[i][4]),
-        df['s/m'].append(intrvl_data[i][5]),
-        df['HR'].append(intrvl_data[i][6]),
-        df['Rest'].append((intrvl_data[i][7])),
-        df['Comment'].append((intrvl_data[i][8]))
+    if intrvl_data:
+        for i in range(len(intrvl_data)):
+            df['Time'].append(intrvl_data[i][2]),
+            df['Distance'].append(intrvl_data[i][3]),
+            df['Split'].append(intrvl_data[i][4]),
+            df['s/m'].append(intrvl_data[i][5]),
+            df['HR'].append(intrvl_data[i][6]),
+            df['Rest'].append((intrvl_data[i][7])),
+            df['Comment'].append((intrvl_data[i][8]))
     date = wo_data[2] 
     return df, date 
    

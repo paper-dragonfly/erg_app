@@ -10,22 +10,6 @@ from apps.web.dash_fxs import calc_av_rest, flask_requests_get, flask_requests_p
 from apps.web.dash_fxs import get_name, seconds_to_duration
 
 register_page(__name__, path_template='/details/<wo_id>')
-# This Page
-# table with summary (bold or colored) + all intervals 
-# graph perhaps? Stage 2
-
-# def layout(wo_id='9'):
-#     return html.Div([
-#         dcc.Markdown('success',id='txt1'),
-#         dcc.Store(id='id', data=uid)
-#     ])
-
-# @callback(
-#     Output('txt1', 'children'),
-#     Input('id', 'data')
-# )
-# def test(uid):
-#     return f'ID is {uid}'
 
 ###########
 def layout(wo_id='9'):

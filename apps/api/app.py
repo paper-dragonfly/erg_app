@@ -112,10 +112,13 @@ def create_app(db):
         # List all intervals with workout_id 
         try:
             conn, cur = l.db_connect(db)
-            cur.execute("SELECT * FROM interval_log WHERE workout_id=%s",(workout_id,))
-            intervals = cur.fetchall()
             cur.execute("SELECT * FROM workout_log WHERE workout_id=%s",(workout_id,))
-            workout_summary = cur.fetchone() 
+            workout_summary = cur.fetchone()
+            if workout_summary[8]==1:
+                intervals = None
+            else:
+                cur.execute("SELECT * FROM interval_log WHERE workout_id=%s",(workout_id,))
+                intervals = cur.fetchall()
         finally:
             cur.close()
             conn.close() 
