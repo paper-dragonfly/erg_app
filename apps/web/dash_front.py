@@ -40,7 +40,7 @@ def choose_page(username, wo_id):
         dbc.DropdownMenuItem('Add Workout', href=f'/addworkout/{id}'),
         dbc.DropdownMenuItem('sandbox', href='/sandbox'),
         dbc.DropdownMenuItem('Add New User', href='/newuser'),
-        dbc.DropdownMenuItem('interactive table', href=f'/interactive_table/{id}'),
+        dbc.DropdownMenuItem('Log Table', href=f'/log_table/{id}'),
         dbc.DropdownMenuItem('WOD', href=f'/details/{wo_id}')
     ]
     return pages
