@@ -35,14 +35,14 @@ def layout(user_id='1'):
     df = pd.DataFrame(workouts)
     return dbc.Container([
         dcc.Markdown('## Workout Summary Log', id='h1'),
-        dcc.Markdown('Guest', id='user_label'),
-        dcc.Store(id='invisible_id', data=user_id),
+        # dcc.Markdown('Guest', id='user_label'),
+        # dcc.Store(id='invisible_id', data=user_id),
         dbc.Row(children = dbc.Table.from_dataframe(df, striped=True, bordered=True), id = 'log_table')
     ])
 
-@callback(
-    Output('user_label', 'children'),
-    Input('invisible_id','data')
-    )
-def display_username(user_id):
-    return get_name(user_id).capitalize()
+# @callback(
+#     Output('user_label', 'children'),
+#     Input('invisible_id','data')
+#     )
+# def display_username(user_id):
+#     return get_name(user_id).capitalize()

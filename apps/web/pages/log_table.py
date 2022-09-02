@@ -39,6 +39,9 @@ def layout(user_id=1):
     df.set_index('id', inplace=True, drop=False)
 
     return dbc.Container([
+        dcc.Markdown('## Workout Log'),
+        dcc.Markdown('Guest', id='user_label'),
+        dcc.Store(id='invisible_id', data=user_id),
         dash_table.DataTable(
             id='table',
             columns=[{"name": k, "id": k, "deletable": False, "selectable": True} for k in df if k !='id'],
@@ -59,6 +62,13 @@ def layout(user_id=1):
         dbc.Button('Select Row', id='btn_view_details', n_clicks=0,color='secondary', href=None)
     # html.Div(id='datatable-interactivity-container')
     ])
+
+@callback(
+    Output('user_label', 'children'),
+    Input('invisible_id','data')
+    )
+def display_username(user_id):
+    return get_name(user_id).capitalize()
 
 @callback(
     Output('btn_view_details', 'children'),
