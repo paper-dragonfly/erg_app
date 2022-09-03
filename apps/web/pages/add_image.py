@@ -11,14 +11,14 @@ from dash.exceptions import PreventUpdate
 register_page(__name__,path_template='/upload_img/<user_id>')
 
 # upload image
-# crop
+# crop (skip for now)
 # convert to binary/json
+    # uploaded as base64 encoded str, need to convert to
+    # cv2.imread - what is it reading? what format? 
 # send data to img processing pipeline
 # send back results dict
 # populate form with data - make form editable for corrections
 # submit workout
-
-# START plotly tutorial
 
 import datetime
 import base64
@@ -30,41 +30,41 @@ register_page(__name__, path='/upload_image')
 
 def layout():
     return dbc.Container([
-        dcc.Upload(
-            id='upload-image',
-            children=html.Button('Upload Image', id="upload_image"),
-            # Allow multiple files to be uploaded
-            multiple=False
-        ),
-        html.Div(id='output-upload'),
-    ])
-
-def parse_contents(contents, filename, date):
-    return dbc.Container([
-        html.H5(filename),
-        html.H6(datetime.datetime.fromtimestamp(date)),
-
-        # HTML images accept base64 encoded strings in the same format
-        # that is supplied by the upload
-        html.Img(src=contents),
-        html.Hr(),
-        html.Div('Raw Content'),
-        html.Pre(contents[0:200] + '...', style={
-            'whiteSpace': 'pre-wrap',
-            'wordBreak': 'break-all'
-        })
-    ])
+        dbc.Row([
+            dbc.Col([
+                dcc.Upload(
+                    id='upload-image',
+                    children=html.Button('Upload Image', id="upload_image")),
+                dcc.Store(id='raw_data', data=None),
+                html.Div(id='output-upload')]),
+            dbc.Col([
+                dcc.Store(id='ocr_dict', data=None),
+                dcc.Markdown('second col')
+        ])])])
 
 @callback(
     Output('output-upload', 'children'),
+    Output('raw_data', 'data'),
     Input('upload-image', 'contents'),
     State('upload-image', 'filename'),
     State('upload-image', 'last_modified'))
-def update_output(contents, name, date):
+def update_output(contents, filename, date):
     if contents is not None:
-        children = [
-            parse_contents(contents, name, date)]
-        return children
+        data = contents
+        children = dbc.Container([
+            html.H5(filename),
+            html.H6(datetime.datetime.fromtimestamp(date)),
+            # HTML images accept base64 encoded strings in the same format
+            # that is supplied by the upload
+            html.Img(src=contents,id='erg_pic'),
+            html.Hr(),
+            html.Div('Raw Content'),
+            html.Pre(contents[0:200] + '...', style={
+                'whiteSpace': 'pre-wrap',
+                'wordBreak': 'break-all'
+            })
+        ])
+        return children, data
 
 
 ## END TUTORIAL
