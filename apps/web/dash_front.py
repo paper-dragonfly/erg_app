@@ -41,6 +41,7 @@ def choose_page(username, wo_id):
         dbc.DropdownMenuItem('sandbox', href='/sandbox'),
         dbc.DropdownMenuItem('Add New User', href='/newuser'),
         dbc.DropdownMenuItem('Log Table', href=f'/log_table/{id}'),
+        dbc.DropdownMenuItem('Upload Image', href=f'/upload_image'),
         dbc.DropdownMenuItem('WOD', href=f'/details/{wo_id}')
     ]
     return pages
