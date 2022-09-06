@@ -192,16 +192,45 @@ def generate_post_wo_dict(int_dict:dict, user_id:str, wo_dict:dict)->dict:
     wo_dict['comment']=int_dict['Comment'][0]
     return wo_dict 
 
+
+def generate_post_wo_dict2(int_dict:dict, user_id:str, wo_dict:dict, intvl)->dict:
+    num_ints = 1
+    if intvl == True:
+        num_ints = len(int_dict['Date'])-1   
+    s = '00:0'+int_dict['Split'][0]
+    s_sec = duration_to_seconds(s)
+    # populate post_dict
+    wo_dict['user_id'] = int(user_id)
+    wo_dict['workout_date'] = int_dict['Date'][0]
+    wo_dict['time_sec']= duration_to_seconds(int_dict['Time'][0])
+    wo_dict['distance']=int_dict['Distance'][0]
+    wo_dict['split']=s_sec
+    wo_dict['sr']=int_dict['s/m'][0]
+    if int_dict['HR'][0].lower() == 'n/a':
+        wo_dict['hr'] = 0
+    else:
+        wo_dict['hr']=int_dict['HR'][0]
+    wo_dict['intervals']=num_ints
+    wo_dict['comment']=int_dict['Comment'][0]
+    return wo_dict 
+
+
 def format_and_post_intervals(wo_id, i_dict):
     post_intrvl_dict_template = {'workout_id':wo_id,'time_sec':None,'distance':None,'split':None,'sr':None,'hr':None,'rest':None,'comment':None}
-    for i in range(len(i_dict['Date'])):
+    for i in range(1,len(i_dict['Date'])):
         ipost_dict = post_intrvl_dict_template
         ipost_dict['time_sec'] = duration_to_seconds(i_dict['Time'][i])
         ipost_dict['distance'] = i_dict['Distance'][i]
         ipost_dict['split'] = duration_to_seconds("00:0"+i_dict['Split'][i])
         ipost_dict['sr'] = i_dict['s/m'][i]
-        ipost_dict['hr'] = i_dict['HR'][i]
-        ipost_dict['rest'] = i_dict['Rest'][i]
+        if i_dict['HR'][i].lower() == 'n/a':
+            ipost_dict['hr'] = 0
+        else: 
+            ipost_dict['hr'] = i_dict['HR'][i]
+        if i_dict['Rest'][i].lower() == 'n/a':
+            ipost_dict['rest'] = 0
+        else: 
+            ipost_dict['rest'] = i_dict['Rest'][i]
         ipost_dict['comment'] = i_dict['Comment'][i]
         post_new_interval(ipost_dict)    
     return

@@ -5,7 +5,7 @@ from constants import ROOT_URL
 from dash import Dash, dcc, html, register_page, callback, Input, Output, State 
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
-from apps.web.dash_fxs import format_and_post_intervals, format_time, duration_to_seconds, format_time2, post_new_workout, check_date, check_duration, generate_post_wo_dict, format_and_post_intervals, reformat_date
+from apps.web.dash_fxs import format_and_post_intervals, format_time, duration_to_seconds, format_time2, generate_post_wo_dict2, post_new_workout, check_date, check_duration, generate_post_wo_dict, format_and_post_intervals, reformat_date
 from dash.exceptions import PreventUpdate
 import cv2
 import pytesseract
@@ -154,7 +154,7 @@ def layout(user_id=1):
                 dbc.Row(
                     [dbc.Table.from_dataframe(pd.DataFrame(empty_intrvl_table),striped=True,bordered=True)], 
                     id='interval_table2'),
-                dbc.Button('Submit workout', id='intwo_submit2', n_clicks=0, color='primary')
+                dbc.Button('Submit workout', id='btn_submit_workout2', n_clicks=0, color='primary')
                 ], id='form_col')
         ])])
 
@@ -268,8 +268,7 @@ def add_interval(n_clicks, date, time, dist, split, sr, hr, rest, com, df,head):
     if n_clicks == 0:
         raise PreventUpdate
     blank_table=dbc.Table.from_dataframe(pd.DataFrame(df), striped=True, bordered=True)
-    # check inputs format
-    # pdb.set_trace()
+    # check format of inputs
     date = reformat_date(date) #yyyy-mm-dd
     if not date:
         alert_message = 'Date formatting wrong: month incorrect'
@@ -297,3 +296,26 @@ def add_interval(n_clicks, date, time, dist, split, sr, hr, rest, com, df,head):
     df['Rest'].append(rest)
     df['Comment'].append(com)
     return '## Input Interval', dbc.Table.from_dataframe(pd.DataFrame(df), striped=True, bordered=True), df, None, {'display':'none'}, True
+
+
+#Post wo to db 
+@callback(
+    Output('btn_submit_workout2', 'children'),
+    Output('btn_submit_workout2', 'color'),
+    Input('btn_submit_workout2', 'n_clicks'),
+    State('intrvl_formatting_approved2', 'data'),
+    State('int_dict2', 'data'),
+    State('user_id', 'data'),
+    State('radio_select', 'value')
+)
+def post_wo_to_db(n_clicks, formatting_approved, int_dict, user_id, radio):
+    if n_clicks==0 or not formatting_approved:
+        raise PreventUpdate
+    intrvl = False
+    if radio == 'Intervals':
+        intrvl = True
+    wo_dict = generate_post_wo_dict2(int_dict, user_id, empty_post_wo_dict, intrvl)
+    print(wo_dict)
+    wo_id = post_new_workout(wo_dict)['workout_id']
+    format_and_post_intervals(wo_id, int_dict)
+    return 'Interval Workout Submitted!', 'success'

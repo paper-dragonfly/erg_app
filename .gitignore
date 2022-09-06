@@ -4,6 +4,6 @@ sandbox/*
 *.pyc
 .DS_Store
 __pycache__/*
-temp/*
+ocr/temp/*
 
 
