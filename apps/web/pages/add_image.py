@@ -5,7 +5,7 @@ from constants import ROOT_URL
 from dash import Dash, dcc, html, register_page, callback, Input, Output, State 
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
-from apps.web.dash_fxs import format_and_post_intervals, format_time, duration_to_seconds, post_new_workout, check_date, check_duration, generate_post_wo_dict, format_and_post_intervals
+from apps.web.dash_fxs import format_and_post_intervals, format_time, duration_to_seconds, format_time2, post_new_workout, check_date, check_duration, generate_post_wo_dict, format_and_post_intervals, reformat_date
 from dash.exceptions import PreventUpdate
 import cv2
 import pytesseract
@@ -113,6 +113,7 @@ def layout(user_id=1):
         # data form feilds
             dbc.Col([
                 dcc.Store(id='ocr_dict', data=None),
+                dcc.Markdown('## Workout Summery', id='h2_input_form'),
                 dbc.Row([
                     dbc.Col(dbc.Label('Date',html_for='ui_date2'), width=2),
                     dbc.Col(dcc.Input(placeholder='yyyy-mm-dd',id="ui_date2", size='20' ), width=4)
@@ -120,11 +121,6 @@ def layout(user_id=1):
                 dbc.Row([
                     dbc.Col(dbc.Label('Time',html_for='ui_time2'), width=2),
                     dbc.Col(dcc.Input(placeholder='hh:mm:ss.t', id='ui_time2', size='15', maxLength=12), width=4)
-                    # dbc.Col(dbc.Label('Time',html_for='ui_hours2'), width=2),
-                    # dbc.Col(dcc.Input(placeholder='hours', id='ui_hours2', size='10', maxLength=2), width=2),
-                    # dbc.Col(dcc.Input(placeholder='minutes',id='ui_min2',size='10', maxLength=2), width=2),
-                    # dbc.Col(dcc.Input(placeholder='seconds',id='ui_sec2',size='10', maxLength=2), width=2),
-                    # dbc.Col(dcc.Input(placeholder='tenths',id='ui_ten2',size='10', maxLength=1), width=2)
                     ]),
                 dbc.Row([
                     dbc.Col(dbc.Label('Distance',html_for='ui_dist2'), width=2),
@@ -150,15 +146,16 @@ def layout(user_id=1):
                     dbc.Col(dbc.Label('Rest',html_for='ui_rest2'), width=2),
                     dbc.Col(dcc.Input(placeholder='seconds',id="ui_rest2", size='10'), width=4)
                     ]),
-                dbc.Button('Submit Interval', id='interval_submit', n_clicks=0, color='primary'),
-                dbc.Alert(id='intrvl_alert', style={'display':'none'},color='warning'),
-                dcc.Store(id='int_dict', data=empty_intrvl_table),
-                dcc.Store(id='intrvl_formatting_approved', data=False),
+                # End of form
+                dbc.Button('Submit Interval', id='interval_submit2', n_clicks=0, color='primary'),
+                dbc.Alert(id='intrvl_alert2', style={'display':'none'},color='warning'),
+                dcc.Store(id='int_dict2', data=empty_intrvl_table),
+                dcc.Store(id='intrvl_formatting_approved2', data=False),
                 dbc.Row(
                     [dbc.Table.from_dataframe(pd.DataFrame(empty_intrvl_table),striped=True,bordered=True)], 
-                    id='interval_table'),
-                dbc.Button('Submit workout', id='intwo_submit', n_clicks=0, color='primary')
-                ], id='int_pg')
+                    id='interval_table2'),
+                dbc.Button('Submit workout', id='intwo_submit2', n_clicks=0, color='primary')
+                ], id='form_col')
         ])])
 
 #upload pic
@@ -227,23 +224,76 @@ def extract_ocr(image):
 @callback(
     Output('ui_date2', 'value'),
     Output('ui_time2', 'value'),
-    # Output('ui_hours2', 'value'),
-    # Output('ui_min2', 'value'),
-    # Output('ui_sec2', 'value'),
-    # Output('ui_ten2', 'value'),
     Output('ui_dist2', 'value'),
     Output('ui_split2', 'value'),
     Output('ui_sr2', 'value'),
     Output('ui_hr2', 'value'),
+    Output('ui_rest2','value'),
     Input('raw_ocr', 'data'),
-    State('interval_submit', 'n_clicks')
+    State('radio_select','value')
 )
-def fill_form(raw_ocr, n_clicks):
-    if raw_ocr is not None and n_clicks==0: 
-        hr = 'n/a'
-        if len(raw_ocr['summary']) == 5:
-            hr = raw_ocr['summary'][4] 
-        return raw_ocr['date'], raw_ocr['summary'][0], raw_ocr['summary'][1], raw_ocr['summary'][2], raw_ocr['summary'][3], hr
+def fill_form_wo_summary(raw_ocr, radio):
+    if not raw_ocr:
+        raise PreventUpdate 
+    hr = 'n/a'
+    rest = 'n/a'
+    if len(raw_ocr['summary']) == 5:
+        hr = raw_ocr['summary'][4] 
+    if radio == 'Intervals':
+        rest = None        
+    return raw_ocr['date'], raw_ocr['summary'][0], raw_ocr['summary'][1], raw_ocr['summary'][2], raw_ocr['summary'][3], hr, rest
 
 
-## END TUTORIAL
+# Add intervals to inverval table
+@callback(
+    Output('h2_input_form', 'children'), #form title
+    Output('interval_table2','children'), #table
+    Output('int_dict2','data'), #table contents
+    Output('intrvl_alert2','children'), #alert message
+    Output('intrvl_alert2', 'style'), #alert visibility
+    Output('intrvl_formatting_approved2','data'), #formatting approval 
+    Input('interval_submit2', 'n_clicks'),
+    State('ui_date2','value'),
+    State('ui_time2', 'value'),
+    State('ui_dist2', 'value'),
+    State('ui_split2', 'value'),
+    State('ui_sr2', 'value'),
+    State('ui_hr2', 'value'),
+    State('ui_rest2', 'value'),
+    State('ui_com2', 'value'),
+    State('int_dict2', 'data'),
+    State('h2_input_form', 'children')
+)
+def add_interval(n_clicks, date, time, dist, split, sr, hr, rest, com, df,head):
+    if n_clicks == 0:
+        raise PreventUpdate
+    blank_table=dbc.Table.from_dataframe(pd.DataFrame(df), striped=True, bordered=True)
+    # check inputs format
+    # pdb.set_trace()
+    date = reformat_date(date) #yyyy-mm-dd
+    if not date:
+        alert_message = 'Date formatting wrong: month incorrect'
+        return head, blank_table, df, alert_message, {'display':'block'}, False
+    valid_date:dict = check_date(date)
+    if not valid_date['accept']:
+        alert_message = 'Date formatting wrong: '+valid_date['message']
+        return head, blank_table, df, alert_message, {'display':'block'}, False
+    time:str = format_time2(time) #hh:mm:ss.d
+    valid_time = check_duration(time)
+    if not valid_time['accept']:
+        alert_message = 'Time formatting wrong: '+valid_time['message']
+        return head, blank_table, df, alert_message, {'display':'block'}, False
+    wsplit = '00:0'+split 
+    valid_split = check_duration(wsplit)
+    if not valid_split['accept']:
+        alert_message = 'Split formatting wrong: '+valid_split['message']
+        return head, blank_table, df, alert_message, {'display':'block'}, False
+    df['Date'].append(date)
+    df['Time'].append(time)
+    df['Distance'].append(dist)
+    df['Split'].append(split)
+    df['s/m'].append(sr)
+    df['HR'].append(hr)
+    df['Rest'].append(rest)
+    df['Comment'].append(com)
+    return '## Input Interval', dbc.Table.from_dataframe(pd.DataFrame(df), striped=True, bordered=True), df, None, {'display':'none'}, True

@@ -87,6 +87,20 @@ def check_duration(user_input:str)->str:
     else:
         return {'accept':False, 'message':'Must use correct formatting'}
 
+def reformat_date(date:str)->str: #'Apr 01 2022'
+    mm = date[:3].capitalize()
+    dd = date[4:6]
+    yyyy = date[7:]
+    months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+    if not mm in months: #input does not match real month
+        return False
+    for i in range(12):
+        if months[i] == mm:
+            mm = str(i+1)
+    if len(mm) == 1:
+        mm = '0'+mm
+    return yyyy+'-'+mm+'-'+dd  #yyyy-mm-dd
+
 
 def check_date(user_input:str)->str:
     print('USER INPUT ', user_input)
@@ -126,7 +140,8 @@ def check_date(user_input:str)->str:
         print('FORMATTING BAD')
         return {'accept':False, 'message':"Must use yyyy-mm-dd formatting"}
 
-def format_time(h,m,s,t)->str: #hh:mm:ss.d
+
+def format_time(h,m,s,t:str)->str: #hh:mm:ss.d
     d = {'h':h,"m":m,'s':s}
     for key in d:
         if not d[key]:
@@ -137,6 +152,15 @@ def format_time(h,m,s,t)->str: #hh:mm:ss.d
             t='0'
     time = d['h']+":"+d['m']+":"+d['s']+":"+t
     return time
+
+
+def format_time2(time:str)->str: 
+    blank = '00:00:00.0'
+    short = 10 - len(time)
+    time = blank[:short]+time
+    print(time)
+    return time
+
 
 def generate_post_wo_dict(int_dict:dict, user_id:str, wo_dict:dict)->dict:
     # calculate averages 
