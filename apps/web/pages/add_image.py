@@ -11,6 +11,7 @@ import datetime
 import base64
 import numpy as np
 from matplotlib import pyplot as plt
+import re
 
 register_page(__name__,path_template='/upload_image/<user_id>')
 
@@ -243,9 +244,9 @@ def fill_form_wo_summary(raw_ocr, n_clicks, formatted, radio, date, df, alert):
         if len(raw_ocr['summary']) == 5:
             hr = raw_ocr['summary'][4] 
         return raw_ocr['date'], raw_ocr['summary'][0], raw_ocr['summary'][1], raw_ocr['summary'][2], raw_ocr['summary'][3], hr, rest, num_ints
-    if len(df['Time']) == 0:
-        print('blocked by df len')
-        raise PreventUpdate
+    # if len(df['Time']) == 0:
+    #     print('blocked by df len')
+    #     raise PreventUpdate
     if not formatted:
         print('blocked formatted  == False')
         raise PreventUpdate 
@@ -305,6 +306,9 @@ def add_interval(n_clicks, date, time, dist, split, sr, hr, rest, com, df,head, 
     if not valid_split['accept']:
         alert_message = 'Split formatting wrong: '+valid_split['message']
         return head, blank_table, df, alert_message, {'display':'block'}, False,complete_alert
+    if len(re.findall('\A\d\d\Z', sr)) != 1:
+        alert_message = 'Stroke Rate formatting wrong: must be integer'
+        return head, blank_table, df, alert_message, {'display':'block'}, False, complete_alert
     df['Date'].append(date)
     df['Time'].append(time)
     df['Distance'].append(dist)
