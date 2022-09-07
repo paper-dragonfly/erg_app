@@ -214,9 +214,9 @@ def generate_post_wo_dict2(int_dict:dict, user_id:str, wo_dict:dict, intvl)->dic
     wo_dict['comment']=int_dict['Comment'][0]
     return wo_dict 
 
-
-def format_and_post_intervals(wo_id, i_dict):
-    post_intrvl_dict_template = {'workout_id':wo_id,'time_sec':None,'distance':None,'split':None,'sr':None,'hr':None,'rest':None,'comment':None}
+# NOTE: even sinle time/dist wo have multiple entries (eg 2k is broken into 4x500m)
+def format_and_post_intervals(wo_id, i_dict, intrvl_wo=True):
+    post_intrvl_dict_template = {'workout_id':wo_id,'time_sec':None,'distance':None,'split':None,'sr':None,'hr':None,'rest':None,'comment':None, 'intrvl_wo':'true'}
     for i in range(1,len(i_dict['Date'])):
         ipost_dict = post_intrvl_dict_template
         ipost_dict['time_sec'] = duration_to_seconds(i_dict['Time'][i])
@@ -232,6 +232,8 @@ def format_and_post_intervals(wo_id, i_dict):
         else: 
             ipost_dict['rest'] = i_dict['Rest'][i]
         ipost_dict['comment'] = i_dict['Comment'][i]
+        if intrvl_wo == False:
+            ipost_dict['interval'] = 'false'
         post_new_interval(ipost_dict)    
     return
 
@@ -277,7 +279,8 @@ def wo_details_df(wo_id):
     flask_wo_details = get_wo_details(wo_id)
     wo_data = flask_wo_details['workout_summary']
     intrvl_data = flask_wo_details['intervals']
-    if intrvl_data:
+    single_td = flask_wo_details['single'] #check summary for num intervals
+    if not single_td:
         av_rest = calc_av_rest(intrvl_data)
     else:
         av_rest = 'N/A'
@@ -288,15 +291,16 @@ def wo_details_df(wo_id):
     df['HR'].append(wo_data[7]),
     df['Rest'].append(av_rest),
     df['Comment'].append(wo_data[9])
-    if intrvl_data:
-        for i in range(len(intrvl_data)):
-            df['Time'].append(intrvl_data[i][2]),
-            df['Distance'].append(intrvl_data[i][3]),
-            df['Split'].append(intrvl_data[i][4]),
-            df['s/m'].append(intrvl_data[i][5]),
-            df['HR'].append(intrvl_data[i][6]),
-            df['Rest'].append((intrvl_data[i][7])),
-            df['Comment'].append((intrvl_data[i][8]))
+    for i in range(len(intrvl_data)):
+        df['Time'].append(intrvl_data[i][2]),
+        df['Distance'].append(intrvl_data[i][3]),
+        df['Split'].append(intrvl_data[i][4]),
+        df['s/m'].append(intrvl_data[i][5]),
+        df['HR'].append(intrvl_data[i][6]),
+        df['Rest'].append((intrvl_data[i][7])),
+        if df['Rest'][i] == 0:
+            df['Rest'][i] = 'n/a'
+        df['Comment'].append((intrvl_data[i][8]))
     date = wo_data[2] 
     return df, date 
    

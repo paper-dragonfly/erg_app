@@ -114,15 +114,15 @@ def create_app(db):
             conn, cur = l.db_connect(db)
             cur.execute("SELECT * FROM workout_log WHERE workout_id=%s",(workout_id,))
             workout_summary = cur.fetchone()
+            sbool = False
             if workout_summary[8]==1:
-                intervals = None
-            else:
-                cur.execute("SELECT * FROM interval_log WHERE workout_id=%s",(workout_id,))
-                intervals = cur.fetchall()
+                sbool = True
+            cur.execute("SELECT * FROM interval_log WHERE workout_id=%s",(workout_id,))
+            intervals = cur.fetchall()
         finally:
             cur.close()
             conn.close() 
-            return json.dumps({'status_code':200, 'intervals':intervals, 'workout_summary':workout_summary},default=str) 
+            return json.dumps({'status_code':200, 'single': sbool, 'intervals':intervals, 'workout_summary':workout_summary},default=str) 
 
 
     @app.route("/userstats", methods=['GET'])# display summary of all workouts for user

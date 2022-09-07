@@ -83,7 +83,7 @@ def submit_user(n_clicks, name, dob, sex, team):
     if n_clicks == 0:
         raise PreventUpdate
     newuser_post_dict = {'user_name':None, 'dob':None, 'sex':None, 'team':None}
-    newuser_post_dict['user_name'] = name
+    newuser_post_dict['user_name'] = name.lower()
     newuser_post_dict['dob'] = dob
     newuser_post_dict['sex'] = sex
     newuser_post_dict['team'] = team

@@ -1,11 +1,9 @@
-import requests
 import pandas as pd
 import pdb
-from constants import ROOT_URL
 from dash import Dash, dcc, html, register_page, callback, Input, Output, State 
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
-from apps.web.dash_fxs import format_and_post_intervals, format_time, duration_to_seconds, format_time2, generate_post_wo_dict2, post_new_workout, check_date, check_duration, generate_post_wo_dict, format_and_post_intervals, reformat_date
+from apps.web.dash_fxs import format_and_post_intervals, format_time2, generate_post_wo_dict2, post_new_workout, check_date, check_duration, format_and_post_intervals, reformat_date
 from dash.exceptions import PreventUpdate
 import cv2
 import pytesseract
@@ -30,8 +28,6 @@ register_page(__name__,path_template='/upload_image/<user_id>')
 
 ## Image OCR
 
-file_name = 'ocr/temp/cr_erg01.jpg'
-image = cv2.imread(file_name)
 
 def preprocess(image): #image
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -83,7 +79,9 @@ def basic_clean(ocr_dict:dict):
                 s2 += ocr_dict[key][i]
         ocr_dict[key] = s2
         if not key == 'date':
-            ocr_dict[key]=ocr_dict[key].replace("A", '4')
+            ocr_dict[key]=ocr_dict[key].replace("A", '4') 
+        if key != 'date':
+            ocr_dict[key] = ocr_dict[key].split()         
     return ocr_dict
 
 
@@ -149,6 +147,8 @@ def layout(user_id=1):
                 # End of form
                 dbc.Button('Submit Interval', id='interval_submit2', n_clicks=0, color='primary'),
                 dbc.Alert(id='intrvl_alert2', style={'display':'none'},color='warning'),
+                dbc.Alert(id='all_added_alert', children='Full Workout Staged', color='info', style={'display':'none'}),
+                dcc.Store(id='intrvl_count', data=None),
                 dcc.Store(id='int_dict2', data=empty_intrvl_table),
                 dcc.Store(id='intrvl_formatting_approved2', data=False),
                 dbc.Row(
@@ -175,13 +175,8 @@ def upload_img(contents, filename, date):
             # HTML images accept base64 encoded strings in the same format
             # that is supplied by the upload
             html.Img(src=contents,id='erg_pic'),
-            html.Hr(),
-            html.Div('Raw Content'),
-            html.Pre(contents[0:200] + '...', style={
-                'whiteSpace': 'pre-wrap',
-                'wordBreak': 'break-all'
-            })
-        ])
+            html.Hr()
+            ])
         return children, base64_img
 
 
@@ -214,9 +209,6 @@ def extract_ocr(image):
         ocr_dict:dict = extract_data(snips)
         clean_ocr:dict = basic_clean(ocr_dict)
         # clean_ocr = basic_clean(extract_data(snip(preprocess(image))))
-        for k in clean_ocr:
-            if k != 'date':
-                clean_ocr[k] = clean_ocr[k].split()
         print(clean_ocr)
         return clean_ocr 
 
@@ -229,19 +221,41 @@ def extract_ocr(image):
     Output('ui_sr2', 'value'),
     Output('ui_hr2', 'value'),
     Output('ui_rest2','value'),
+    Output('intrvl_count', 'data'),
     Input('raw_ocr', 'data'),
-    State('radio_select','value')
+    Input('interval_submit2', 'n_clicks'),
+    Input('intrvl_formatting_approved2','data'),
+    State('radio_select','value'),
+    State('ui_date2', 'value'),
+    State('int_dict2', 'data'),
+    State('intrvl_alert2', 'style')
 )
-def fill_form_wo_summary(raw_ocr, radio):
+def fill_form_wo_summary(raw_ocr, n_clicks, formatted, radio, date, df, alert):
     if not raw_ocr:
         raise PreventUpdate 
+    # TODO: add ability to draw from OCR for intervals
+    num_ints = len(raw_ocr['time'])
     hr = 'n/a'
     rest = 'n/a'
-    if len(raw_ocr['summary']) == 5:
-        hr = raw_ocr['summary'][4] 
     if radio == 'Intervals':
-        rest = None        
-    return raw_ocr['date'], raw_ocr['summary'][0], raw_ocr['summary'][1], raw_ocr['summary'][2], raw_ocr['summary'][3], hr, rest
+        rest = None  
+    if n_clicks == 0: 
+        if len(raw_ocr['summary']) == 5:
+            hr = raw_ocr['summary'][4] 
+        return raw_ocr['date'], raw_ocr['summary'][0], raw_ocr['summary'][1], raw_ocr['summary'][2], raw_ocr['summary'][3], hr, rest, num_ints
+    if len(df['Time']) == 0:
+        print('blocked by df len')
+        raise PreventUpdate
+    if not formatted:
+        print('blocked formatted  == False')
+        raise PreventUpdate 
+    else:
+        i = len(df['Time'])-1
+        if i < num_ints: 
+            return date, raw_ocr['time'][i], raw_ocr['dist'][i], raw_ocr['split'][i], raw_ocr['sr'][i], hr, rest, num_ints
+        else: 
+            return date, None, None, None, None, None, None, num_ints 
+    
 
 
 # Add intervals to inverval table
@@ -251,7 +265,8 @@ def fill_form_wo_summary(raw_ocr, radio):
     Output('int_dict2','data'), #table contents
     Output('intrvl_alert2','children'), #alert message
     Output('intrvl_alert2', 'style'), #alert visibility
-    Output('intrvl_formatting_approved2','data'), #formatting approval 
+    Output('intrvl_formatting_approved2','data'), #formatting approval
+    Output('all_added_alert', 'style'), 
     Input('interval_submit2', 'n_clicks'),
     State('ui_date2','value'),
     State('ui_time2', 'value'),
@@ -262,31 +277,34 @@ def fill_form_wo_summary(raw_ocr, radio):
     State('ui_rest2', 'value'),
     State('ui_com2', 'value'),
     State('int_dict2', 'data'),
-    State('h2_input_form', 'children')
+    State('h2_input_form', 'children'),
+    State('radio_select', 'value'),
+    State('intrvl_count', 'data')
 )
-def add_interval(n_clicks, date, time, dist, split, sr, hr, rest, com, df,head):
+def add_interval(n_clicks, date, time, dist, split, sr, hr, rest, com, df,head, radio, num_intrvls):
     if n_clicks == 0:
         raise PreventUpdate
+    complete_alert = {'display':'none'}
     blank_table=dbc.Table.from_dataframe(pd.DataFrame(df), striped=True, bordered=True)
     # check format of inputs
     date = reformat_date(date) #yyyy-mm-dd
     if not date:
         alert_message = 'Date formatting wrong: month incorrect'
-        return head, blank_table, df, alert_message, {'display':'block'}, False
+        return head, blank_table, df, alert_message, {'display':'block'}, False, complete_alert
     valid_date:dict = check_date(date)
     if not valid_date['accept']:
         alert_message = 'Date formatting wrong: '+valid_date['message']
-        return head, blank_table, df, alert_message, {'display':'block'}, False
+        return head, blank_table, df, alert_message, {'display':'block'}, False,complete_alert
     time:str = format_time2(time) #hh:mm:ss.d
     valid_time = check_duration(time)
     if not valid_time['accept']:
         alert_message = 'Time formatting wrong: '+valid_time['message']
-        return head, blank_table, df, alert_message, {'display':'block'}, False
+        return head, blank_table, df, alert_message, {'display':'block'}, False,complete_alert
     wsplit = '00:0'+split 
     valid_split = check_duration(wsplit)
     if not valid_split['accept']:
         alert_message = 'Split formatting wrong: '+valid_split['message']
-        return head, blank_table, df, alert_message, {'display':'block'}, False
+        return head, blank_table, df, alert_message, {'display':'block'}, False,complete_alert
     df['Date'].append(date)
     df['Time'].append(time)
     df['Distance'].append(dist)
@@ -295,7 +313,13 @@ def add_interval(n_clicks, date, time, dist, split, sr, hr, rest, com, df,head):
     df['HR'].append(hr)
     df['Rest'].append(rest)
     df['Comment'].append(com)
-    return '## Input Interval', dbc.Table.from_dataframe(pd.DataFrame(df), striped=True, bordered=True), df, None, {'display':'none'}, True
+    if radio == 'Intervals':
+        head = '## Input Interval'
+    else:
+        head = '## Input Sub-Workout'
+    if len(df['Time']) == num_intrvls+1:
+        complete_alert = {'display': 'block'} 
+    return head, dbc.Table.from_dataframe(pd.DataFrame(df), striped=True, bordered=True), df, None, {'display':'none'}, True,complete_alert
 
 
 #Post wo to db 
@@ -317,5 +341,5 @@ def post_wo_to_db(n_clicks, formatting_approved, int_dict, user_id, radio):
     wo_dict = generate_post_wo_dict2(int_dict, user_id, empty_post_wo_dict, intrvl)
     print(wo_dict)
     wo_id = post_new_workout(wo_dict)['workout_id']
-    format_and_post_intervals(wo_id, int_dict)
+    format_and_post_intervals(wo_id, int_dict, intrvl)
     return 'Interval Workout Submitted!', 'success'
