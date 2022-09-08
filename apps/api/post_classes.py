@@ -37,5 +37,6 @@ class NewInterval(BaseModel):
     hr:int=0
     rest:int=0
     comment:str=""
+    intrvl_wo:bool
 
 

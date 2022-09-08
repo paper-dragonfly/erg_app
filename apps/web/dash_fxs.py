@@ -87,6 +87,20 @@ def check_duration(user_input:str)->str:
     else:
         return {'accept':False, 'message':'Must use correct formatting'}
 
+def reformat_date(date:str)->str: #'Apr 01 2022'
+    mm = date[:3].capitalize()
+    dd = date[4:6]
+    yyyy = date[7:]
+    months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+    if not mm in months: #input does not match real month
+        return False
+    for i in range(12):
+        if months[i] == mm:
+            mm = str(i+1)
+    if len(mm) == 1:
+        mm = '0'+mm
+    return yyyy+'-'+mm+'-'+dd  #yyyy-mm-dd
+
 
 def check_date(user_input:str)->str:
     print('USER INPUT ', user_input)
@@ -124,9 +138,10 @@ def check_date(user_input:str)->str:
             return {'accept':False, 'message':"month out of range"}
     else: 
         print('FORMATTING BAD')
-        return {'accept':False, 'message':"Must use yyyy-mm-dd formatting"}
+        return {'accept':False, 'message':"Must use first three letters of month followed by two digit day followed by 4 diget year e.g. Jan 01 2000"}
 
-def format_time(h,m,s,t)->str: #hh:mm:ss.d
+
+def format_time(h,m,s,t:str)->str: #hh:mm:ss.d
     d = {'h':h,"m":m,'s':s}
     for key in d:
         if not d[key]:
@@ -138,6 +153,15 @@ def format_time(h,m,s,t)->str: #hh:mm:ss.d
     time = d['h']+":"+d['m']+":"+d['s']+":"+t
     return time
 
+
+def format_time2(time:str)->str: 
+    blank = '00:00:00.0'
+    short = 10 - len(time)
+    time = blank[:short]+time
+    print(time)
+    return time
+
+# used in add_workout_manually
 def generate_post_wo_dict(int_dict:dict, user_id:str, wo_dict:dict)->dict:
     # calculate averages 
     num_ints = len(int_dict['Date'])
@@ -168,16 +192,45 @@ def generate_post_wo_dict(int_dict:dict, user_id:str, wo_dict:dict)->dict:
     wo_dict['comment']=int_dict['Comment'][0]
     return wo_dict 
 
-def format_and_post_intervals(wo_id, i_dict):
-    post_intrvl_dict_template = {'workout_id':wo_id,'time_sec':None,'distance':None,'split':None,'sr':None,'hr':None,'rest':None,'comment':None}
-    for i in range(len(i_dict['Date'])):
+# used in Add Workout fm Image
+def generate_post_wo_dict2(int_dict:dict, user_id:str, wo_dict:dict, intvl)->dict:
+    num_ints = 1
+    if intvl == True:
+        num_ints = len(int_dict['Date'])-1   
+    s = '00:0'+int_dict['Split'][0]
+    s_sec = duration_to_seconds(s)
+    # populate post_dict
+    wo_dict['user_id'] = int(user_id)
+    wo_dict['workout_date'] = int_dict['Date'][0]
+    wo_dict['time_sec']= duration_to_seconds(int_dict['Time'][0])
+    wo_dict['distance']=int_dict['Distance'][0]
+    wo_dict['split']=s_sec
+    wo_dict['sr']=int_dict['s/m'][0]
+    if int_dict['HR'][0].lower() == 'n/a':
+        wo_dict['hr'] = 0
+    else:
+        wo_dict['hr']=int_dict['HR'][0]
+    wo_dict['intervals']=num_ints
+    wo_dict['comment']=int_dict['Comment'][0]
+    return wo_dict 
+
+# NOTE: even sinle time/dist wo have multiple entries (eg 2k is broken into 4x500m)
+def format_and_post_intervals(wo_id, i_dict, intrvl_wo=True):
+    post_intrvl_dict_template = {'workout_id':wo_id,'time_sec':None,'distance':None,'split':None,'sr':None,'hr':None,'rest':None,'comment':None, 'intrvl_wo':intrvl_wo}
+    for i in range(1,len(i_dict['Date'])):
         ipost_dict = post_intrvl_dict_template
         ipost_dict['time_sec'] = duration_to_seconds(i_dict['Time'][i])
         ipost_dict['distance'] = i_dict['Distance'][i]
         ipost_dict['split'] = duration_to_seconds("00:0"+i_dict['Split'][i])
         ipost_dict['sr'] = i_dict['s/m'][i]
-        ipost_dict['hr'] = i_dict['HR'][i]
-        ipost_dict['rest'] = i_dict['Rest'][i]
+        if i_dict['HR'][i].lower() == 'n/a':
+            ipost_dict['hr'] = 0
+        else: 
+            ipost_dict['hr'] = i_dict['HR'][i]
+        if i_dict['Rest'][i].lower() == 'n/a':
+            ipost_dict['rest'] = 0
+        else: 
+            ipost_dict['rest'] = i_dict['Rest'][i]
         ipost_dict['comment'] = i_dict['Comment'][i]
         post_new_interval(ipost_dict)    
     return
@@ -218,34 +271,61 @@ def calc_av_rest(idata):
         sum_rest += idata[i][7]
     av_rest = sum_rest/len(idata)
     return av_rest
-            
+
+
+def find_wo_name(single:bool, wo_summary, intrvl_data):
+    wo_type = 'time'
+    for i in range(1,len(intrvl_data)):
+        if intrvl_data[i][2] != intrvl_data[i-1][2]:
+            wo_type = 'distance'
+            break 
+    #single time/dist
+    if single: 
+        if wo_type == 'time':
+            name = 'Single Time: ' + str(seconds_to_duration(wo_summary[3])) #get time from wo_summary
+        else:
+            name = 'Single Distance: '+str(wo_summary[4])+'m' #distance from wo_summary in meters 
+        return name
+    # Interval time/dist
+    num_ints = len(intrvl_data)
+    if wo_type == 'time':
+        name = 'Intervals Time: '+str(num_ints)+'x'+str(seconds_to_duration(intrvl_data[0][2]))+'/'+str(intrvl_data[0][7])+'r'
+    else:
+        name = 'Intervals Distance: '+str(num_ints)+'x'+str(intrvl_data[0][3])+'m'+'/'+str(intrvl_data[0][7])+'r'   
+    return name
+
 def wo_details_df(wo_id):
     df= {'Time':[], 'Distance':[], 'Split':[], 's/m':[], 'HR':[], 'Rest':[], 'Comment':[]}
     flask_wo_details = get_wo_details(wo_id)
     wo_data = flask_wo_details['workout_summary']
     intrvl_data = flask_wo_details['intervals']
-    if intrvl_data:
+    single_td:bool = flask_wo_details['single'] 
+    wo_name = find_wo_name(single_td, wo_data, intrvl_data)
+    if not single_td: #interval workout
         av_rest = calc_av_rest(intrvl_data)
     else:
-        av_rest = 'N/A'
-    df['Time'].append(wo_data[3]),
+        av_rest = 'N/A' # single wo - no rest
+    df['Time'].append(seconds_to_duration(wo_data[3])),
     df['Distance'].append(wo_data[4]),
-    df['Split'].append(wo_data[5]),
+    df['Split'].append(seconds_to_duration(wo_data[5])),
     df['s/m'].append(wo_data[6]),
     df['HR'].append(wo_data[7]),
     df['Rest'].append(av_rest),
     df['Comment'].append(wo_data[9])
-    if intrvl_data:
-        for i in range(len(intrvl_data)):
-            df['Time'].append(intrvl_data[i][2]),
-            df['Distance'].append(intrvl_data[i][3]),
-            df['Split'].append(intrvl_data[i][4]),
-            df['s/m'].append(intrvl_data[i][5]),
-            df['HR'].append(intrvl_data[i][6]),
-            df['Rest'].append((intrvl_data[i][7])),
-            df['Comment'].append((intrvl_data[i][8]))
+    for key in ['Time','Distance','Split','s/m','HR','Rest','Comment']:
+        df[key].append(" ")
+    for i in range(len(intrvl_data)):
+        df['Time'].append(seconds_to_duration(intrvl_data[i][2])),
+        df['Distance'].append(intrvl_data[i][3]),
+        df['Split'].append(seconds_to_duration(intrvl_data[i][4])),
+        df['s/m'].append(intrvl_data[i][5]),
+        df['HR'].append(intrvl_data[i][6]),
+        df['Rest'].append((intrvl_data[i][7])),
+        if df['Rest'][i] == 0:
+            df['Rest'][i] = 'n/a'
+        df['Comment'].append((intrvl_data[i][8]))
     date = wo_data[2] 
-    return df, date 
+    return df, date, wo_name
    
 
     

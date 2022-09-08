@@ -9,19 +9,17 @@ import pdb
 app = Dash(__name__,external_stylesheets=[dbc.themes.SANDSTONE], use_pages=True)
 
 user_names = dfx.get_usernames()
-wo_id = 9
 
 # Layout
-app.layout = html.Div([
+app.layout = dbc.Container([
     dbc.NavbarSimple([
-        dcc.Dropdown(options=user_names, value="guest", id='user_dropdown'),
+        dcc.Dropdown(options=user_names, value="guest", id='user_dropdown',),
         dbc.DropdownMenu(
             children=None,
             id='page_menu',
             nav=True,
             label= 'Menu')
         ]),
-    dcc.Store(id='wo_id', data=wo_id),
     page_container 
 ])
 
@@ -29,19 +27,20 @@ app.layout = html.Div([
 
 @app.callback(
     Output('page_menu', 'children'),
-    Input('user_dropdown','value'),
-    State('wo_id', 'data')
+    Input('user_dropdown','value')
 )
-def choose_page(username, wo_id):
+def choose_page(username):
     id = dfx.get_id(username.lower())
+    print('ID', id)
     pages = [  
         dbc.DropdownMenuItem('Home', href=f'/'),
-        dbc.DropdownMenuItem('Workout Log', href=f'/workout_log/{id}'),
-        dbc.DropdownMenuItem('Add Workout', href=f'/addworkout/{id}'),
-        dbc.DropdownMenuItem('sandbox', href='/sandbox'),
+        # dbc.DropdownMenuItem('Workout Log', href=f'/workout_log/{id}'),
+        dbc.DropdownMenuItem('Workout Log', href=f'/log_table/{id}'),
+        dbc.DropdownMenuItem('Add Workout', href=f'/upload_image/{id}'),
+        dbc.DropdownMenuItem('Add Workout Manual', href=f'/addworkout/{id}'),
+        # dbc.DropdownMenuItem('sandbox', href='/sandbox'),
         dbc.DropdownMenuItem('Add New User', href='/newuser'),
-        dbc.DropdownMenuItem('Log Table', href=f'/log_table/{id}'),
-        dbc.DropdownMenuItem('WOD', href=f'/details/{wo_id}')
+        # dbc.DropdownMenuItem('WOD', href=f'/details/{wo_id}')
     ]
     return pages
 

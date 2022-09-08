@@ -13,11 +13,12 @@ register_page(__name__, path_template='/details/<wo_id>')
 
 ###########
 def layout(wo_id='9'):
-    df, date = wo_details_df(wo_id)
+    df, date, wo_name = wo_details_df(wo_id)
     return dbc.Container([
         dcc.Store(id='wo_id', data=wo_id),
         dcc.Markdown('## Workout Details'),
-        dcc.Markdown(f'{date}', id='wo_label'),
+        dcc.Markdown(f'##### {wo_name}', id='wo_label'),
+        dcc.Markdown(f'{date}', id= 'wo_date'),
         dbc.Row([
             dbc.Col(width=1),
             dbc.Col(dbc.Table.from_dataframe(pd.DataFrame(df), striped=True, bordered=True), id="wo_table", align='center'),
