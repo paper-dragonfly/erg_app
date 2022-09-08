@@ -96,8 +96,8 @@ def add_interval(db:str, interval_inst:NewInterval)->bool:
         # connect to db
         conn, cur = db_connect(db, True)
         # add interval data to interval_log table
-        sql = "INSERT INTO interval_log(workout_id, time_sec, distance, split, sr, hr, rest, comment) VALUES(%s,%s,%s,%s,%s,%s,%s,%s)"
-        subs = (interval_inst.workout_id, interval_inst.time_sec, interval_inst.distance, interval_inst.split, interval_inst.sr, interval_inst.hr, interval_inst.rest, interval_inst.comment) 
+        sql = "INSERT INTO interval_log(workout_id, time_sec, distance, split, sr, hr, rest, comment, intrvl_wo) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+        subs = (interval_inst.workout_id, interval_inst.time_sec, interval_inst.distance, interval_inst.split, interval_inst.sr, interval_inst.hr, interval_inst.rest, interval_inst.comment, interval_inst.intrvl_wo) 
         cur.execute(sql, subs)
         added = True
     finally:

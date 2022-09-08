@@ -216,7 +216,7 @@ def generate_post_wo_dict2(int_dict:dict, user_id:str, wo_dict:dict, intvl)->dic
 
 # NOTE: even sinle time/dist wo have multiple entries (eg 2k is broken into 4x500m)
 def format_and_post_intervals(wo_id, i_dict, intrvl_wo=True):
-    post_intrvl_dict_template = {'workout_id':wo_id,'time_sec':None,'distance':None,'split':None,'sr':None,'hr':None,'rest':None,'comment':None, 'intrvl_wo':'true'}
+    post_intrvl_dict_template = {'workout_id':wo_id,'time_sec':None,'distance':None,'split':None,'sr':None,'hr':None,'rest':None,'comment':None, 'intrvl_wo':intrvl_wo}
     for i in range(1,len(i_dict['Date'])):
         ipost_dict = post_intrvl_dict_template
         ipost_dict['time_sec'] = duration_to_seconds(i_dict['Time'][i])
@@ -232,8 +232,6 @@ def format_and_post_intervals(wo_id, i_dict, intrvl_wo=True):
         else: 
             ipost_dict['rest'] = i_dict['Rest'][i]
         ipost_dict['comment'] = i_dict['Comment'][i]
-        if intrvl_wo == False:
-            ipost_dict['interval'] = 'false'
         post_new_interval(ipost_dict)    
     return
 
