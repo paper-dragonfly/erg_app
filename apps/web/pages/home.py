@@ -1,20 +1,17 @@
 from logging import PlaceHolder
 from dash import dcc, html, register_page, Output, Input, State, callback
 import dash_bootstrap_components as dbc
+from PIL import Image
 
 register_page(__name__, path='/')
 
+pil_image = Image.open("/Users/katcha/NiCode_Academy/ErgApp/images/erg_cartoon.png")
+
+
 def layout():
     return dbc.Container([
-        dcc.Markdown('## Welcome to ErgTracker'),
-        dcc.Input(placeholder='wo_id',id='ui_wo_id'),
-        dcc.Link('view workout', id='wo_link', href='/details/1')
+        dcc.Markdown('# Welcome to ErgTracker'),
+        html.Img(src=pil_image)    
     ])
 
-@callback(
-    Output('wo_link', "href"),
-    Input('ui_wo_id', 'value')
-)
-def create_link(wo_id):
-    return f'/details/{wo_id}'
 

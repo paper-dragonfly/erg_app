@@ -1,5 +1,5 @@
 from dash import Dash, dash_table, dcc, html, register_page, callback
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
 import pandas as pd
 import requests
 from typing import List
@@ -7,6 +7,10 @@ from constants import ROOT_URL
 from apps.web.dash_fxs import flask_requests_get, flask_requests_post
 from apps.web.dash_fxs import get_name, seconds_to_duration
 import dash_bootstrap_components as dbc
+import plotly.express as px
+from dash.exceptions import PreventUpdate
+import pdb
+import json
 
 register_page(__name__,path_template='/log_table/<user_id>')
 
@@ -42,6 +46,7 @@ def layout(user_id=1):
         dcc.Markdown('## Workout Log'),
         dcc.Markdown('Guest', id='user_label'),
         dcc.Store(id='invisible_id', data=user_id),
+        dcc.Store(id='df_data', data=df.to_json()),
         dash_table.DataTable(
             id='table',
             columns=[{"name": k, "id": k, "deletable": False, "selectable": True} for k in df if k !='id'],
@@ -50,7 +55,7 @@ def layout(user_id=1):
             sort_action="native",
             sort_mode="multi",
             # column_selectable="single",
-            row_selectable="single",
+            row_selectable="multi",
             # row_deletable=True,
             # selected_columns=[],
             # selected_rows=[],
@@ -59,8 +64,9 @@ def layout(user_id=1):
             page_current= 0,
             page_size= 10
             ),
-        dbc.Button('Select Row', id='btn_view_details', n_clicks=0,color='secondary', href=None)
-    # html.Div(id='datatable-interactivity-container')
+        dbc.Button('Select Row', id='btn_view_details', n_clicks=0,color='secondary', href=None),
+        dbc.Button('Compare', id='btn_compare', style={'display':'none'}, n_clicks=0),
+        html.Div(id='graph_area')
     ])
 
 @callback(
@@ -76,11 +82,33 @@ def display_username(user_id):
     Output('btn_view_details','href'),
     Input('table', 'selected_row_ids')
 )
-def show_id(selected_id):
-    if len(selected_id) == 0:
+def activate_view_details(selected_id):
+    if len(selected_id) != 1:
         return 'Select Row', 'secondary', None
     return 'View Workout Details', 'warning', f'/details/{selected_id[0]}' 
 
+@callback(
+    Output('btn_compare', 'style'),
+    Input('table', 'selected_row_ids')
+)
+def show_compare_btn(selected_rows):
+    if len(selected_rows) > 1:
+        return {'display':'block'}
+    else:
+        return {'display':'none'}
 
-
+@callback(
+    Output('graph_area', 'children'),
+    Input('btn_compare', 'n_clicks'),
+    State('table', 'selected_row_ids'),
+    State('df_data', 'data')
+)
+def make_graph(n_clicks, row_ids, df):
+    if n_clicks == 0:
+        raise PreventUpdate
+    df = json.loads(df)
+    pd_df = pd.DataFrame(df)
+    df_rows = pd_df.loc[pd_df['id'].isin(row_ids)]
+    fig = px.bar(df_rows, x='Date', y='Split')
+    return dcc.Graph(id='comp_graph',figure=fig)
 
