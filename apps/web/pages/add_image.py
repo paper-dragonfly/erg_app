@@ -28,8 +28,6 @@ register_page(__name__,path_template='/upload_image/<user_id>')
 
 
 ## Image OCR
-
-
 def preprocess(image): #image
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     bw_gaussian = cv2.adaptiveThreshold(gray,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,11,6)
@@ -85,6 +83,10 @@ def basic_clean(ocr_dict:dict):
             ocr_dict[key] = ocr_dict[key].split()         
     return ocr_dict
 
+#put ocr extraction into one func
+def clean_ocr(image):
+    return basic_clean(extract_data(snip(preprocess(image))))
+
 
 ### Empty forms 
 empty_single_table = {'Date':[],'Time':[],'Distance':[],'Split':[],'s/m':[],'HR':[],'Comment':[]}
@@ -92,7 +94,6 @@ empty_post_wo_dict = {'user_id':None, 'workout_date':None,'time_sec':None,'dista
 empty_intrvl_table = {'Date':[],'Time':[],'Distance':[],'Split':[],'s/m':[],'HR':[],'Rest':[],'Comment':[]}
 empty_post_intrvl_dict = {'workout_id':None,'time_sec':None,'distance':None,'split':None,'sr':None,'hr':None,'rest':None,'comment':None}
 
-## TEST CONNECT
 
 def layout(user_id=1):
     return dbc.Container([
@@ -190,10 +191,8 @@ def convert_to_cv2_compatible(b64):
         print('run convert to cv2 compatible')
         b64_bytes = b64.encode('ascii')
         im_bytes = base64.b64decode(b64_bytes)
-        print('bytes?', type(im_bytes))
         im_arr = np.frombuffer(im_bytes, dtype=np.uint8) # im_arr is one-dim np array
         img = cv2.imdecode(im_arr, flags=cv2.IMREAD_COLOR)
-        print('img', type(img))
         return img
 
 
@@ -228,13 +227,11 @@ def extract_ocr(image):
     Input('intrvl_formatting_approved2','data'),
     State('radio_select','value'),
     State('ui_date2', 'value'),
-    State('int_dict2', 'data'),
-    State('intrvl_alert2', 'style')
+    State('int_dict2', 'data')
 )
-def fill_form_wo_summary(raw_ocr, n_clicks, formatted, radio, date, df, alert):
+def fill_form(raw_ocr, n_clicks, formatted, radio, date, df):
     if not raw_ocr:
         raise PreventUpdate 
-    # TODO: add ability to draw from OCR for intervals
     num_ints = len(raw_ocr['time'])
     hr = 'n/a'
     rest = 'n/a'
@@ -282,7 +279,7 @@ def fill_form_wo_summary(raw_ocr, n_clicks, formatted, radio, date, df, alert):
     State('radio_select', 'value'),
     State('intrvl_count', 'data')
 )
-def add_interval(n_clicks, date, time, dist, split, sr, hr, rest, com, df,head, radio, num_intrvls):
+def stage_interval(n_clicks, date, time, dist, split, sr, hr, rest, com, df,head, radio, num_intrvls):
     if n_clicks == 0:
         raise PreventUpdate
     complete_alert = {'display':'none'}

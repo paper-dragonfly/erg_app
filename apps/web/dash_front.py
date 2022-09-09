@@ -29,7 +29,7 @@ app.layout = dbc.Container([
     Output('page_menu', 'children'),
     Input('user_dropdown','value')
 )
-def choose_page(username):
+def choose_page(username='kaja'):
     id = dfx.get_id(username.lower())
     print('ID', id)
     pages = [  
