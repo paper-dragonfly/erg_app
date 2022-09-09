@@ -54,13 +54,13 @@ def test_add_new_user():
     THEN assert there is a singel entry in the db that matches that new user
     """
     #create NewUser instance
-    test_user = NewUser(user_name='nico',pw='mypw', sex='M',age=30,team='tumbleweed',weight=180)
+    test_user = NewUser(user_name='nico', dob='1991-12-01', sex='Male',team='tumbleweed')
     #pass to add_new_user()
     user_id = add_new_user('testing',test_user)
     # get test_user data from db 
     try: 
         conn, cur = db_connect('testing')
-        cur.execute("SELECT * FROM users WHERE user_name = %s AND age=%s",('nico',30))
+        cur.execute("SELECT * FROM users WHERE user_name = %s",('nico',))
         nico_data = cur.fetchall()
         assert len(nico_data) == 1
     finally:
@@ -77,7 +77,7 @@ def test_newuser(client):
     WHEN POST submits new user information 
     THEN assert returns user_id and 200 status code
     """
-    response = client.post("/newuser", data=json.dumps({"user_name":'nico',"pw":'mypw', "sex":'M',"age":30,"team":'tumbleweed',"weight":180}), content_type='application/json') 
+    response = client.post("/newuser", data=json.dumps({"user_name":'nico', "dob":"1991-12-01", "sex":'Male',"team":'tumbleweed'}), content_type='application/json') 
     assert response.status_code == 200
     c.clear_test_db()
 
@@ -94,7 +94,7 @@ def test_log(client):
         # add user
         cur.execute("INSERT INTO users(user_id, user_name) VALUES(%s,%s)",(1,'lizzkadoodle'))
         # add workout
-        cur.execute("INSERT INTO workout_log(workout_id, user_id, date, distance, time_sec,split,intervals,comment) VALUES(%s,%s,%s,%s,%s,%s,%s,%s)",(1,1,'2022-01-01', 2000,480,120,1,'PR'))
+        cur.execute("INSERT INTO workout_log(workout_id, user_id, workout_date, distance, time_sec,split,sr,hr,intervals,comment) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",(1,1,'2022-01-01', 2000,480,120,30,155,1,'PR'))
         conn.commit()
         # send GET request with user_id to /log and capture response
         response = client.get("/log/1") 
@@ -135,10 +135,10 @@ def test_logsearch(client):
         cur.execute("INSERT INTO team(team_id, team_name) VALUES(1, 'UtahCrew')")
         cur.execute("INSERT INTO users(user_id, user_name, team) VALUES(%s,%s,%s)",(1,'kaja',1))
         cur.execute("INSERT INTO users(user_id, user_name, team) VALUES(%s,%s,%s)",(2,'Nico',1))
-        cur.execute("INSERT INTO workout_log(workout_id, user_id, date, distance, time_sec, split,intervals,comment) VALUES(%s,%s,%s,%s,%s,%s,%s,%s)",(1,1,'2022-01-01', 2000,480,120,1,'2k PR'))
-        cur.execute("INSERT INTO workout_log(workout_id, user_id, date, distance, time_sec, split,intervals,comment) VALUES(%s,%s,%s,%s,%s,%s,%s,%s)",(2,1,'2022-01-02', 2000,488,122,1,'2k'))
-        cur.execute("INSERT INTO workout_log(workout_id, user_id, date, distance, time_sec, split,intervals,comment) VALUES(%s,%s,%s,%s,%s,%s,%s,%s)",(3,1,'2022-01-05', 6000,1800,130,3,'3x30min'))
-        cur.execute("INSERT INTO workout_log(workout_id, user_id, date, distance, time_sec, split,intervals,comment) VALUES(%s,%s,%s,%s,%s,%s,%s,%s)",(4,2,'2022-01-01', 2000,484,121,1,'Nico 2k'))
+        cur.execute("INSERT INTO workout_log(workout_id, user_id, workout_date, distance, time_sec, split,intervals,comment) VALUES(%s,%s,%s,%s,%s,%s,%s,%s)",(1,1,'2022-01-01', 2000,480,120,1,'2k PR'))
+        cur.execute("INSERT INTO workout_log(workout_id, user_id, workout_date, distance, time_sec, split,intervals,comment) VALUES(%s,%s,%s,%s,%s,%s,%s,%s)",(2,1,'2022-01-02', 2000,488,122,1,'2k'))
+        cur.execute("INSERT INTO workout_log(workout_id, user_id, workout_date, distance, time_sec, split,intervals,comment) VALUES(%s,%s,%s,%s,%s,%s,%s,%s)",(3,1,'2022-01-05', 6000,1800,130,3,'3x30min'))
+        cur.execute("INSERT INTO workout_log(workout_id, user_id, workout_date, distance, time_sec, split,intervals,comment) VALUES(%s,%s,%s,%s,%s,%s,%s,%s)",(4,2,'2022-01-01', 2000,484,121,1,'Nico 2k'))
         conn.commit() 
 
         # GET user_id and capture flask func response
@@ -167,12 +167,12 @@ def test_details(client):
         conn, cur = db_connect('testing',True)
         cur.execute("INSERT INTO workout_log(workout_id,distance,time_sec,split,intervals) VALUES(1,1000,440,110,2)")
         # populate db: interval_log
-        cur.execute("INSERT INTO interval_log(workout_id,interval_type,distance,time_sec,split) VALUES(1,'distance',1000,224,112),(1,'distance',1000,216,108)")
+        cur.execute("INSERT INTO interval_log(workout_id,intrvl_wo,distance,time_sec,split) VALUES(1,True,1000,224,112),(1,True,1000,216,108)")
         # sent GET requ with workout_id to /details capture result
         response = client.get("/details?workout_id=1")
         assert response.status_code == 200
         data_dict = json.loads(response.data.decode("ASCII"))
-        assert len(data_dict['intervals'])==2 and len(data_dict['workout_summary'])==1
+        assert len(data_dict['intervals'])==2 and len(data_dict['workout_summary'])==10 #num cols in wo_log
     finally:
         cur.close()
         conn.close()
@@ -191,10 +191,10 @@ def test_userstats(client):
         cur.execute("INSERT INTO team(team_id, team_name) VALUES(1, 'UtahCrew')")
         cur.execute("INSERT INTO users(user_id, user_name, team) VALUES(%s,%s,%s)",(1,'kaja',1))
         cur.execute("INSERT INTO users(user_id, user_name, team) VALUES(%s,%s,%s)",(2,'Nico',1))
-        cur.execute("INSERT INTO workout_log(workout_id, user_id, date, distance, time_sec, split,intervals,comment) VALUES(%s,%s,%s,%s,%s,%s,%s,%s)",(1,1,'2022-01-01', 2000,480,120,1,'2k PR'))
-        cur.execute("INSERT INTO workout_log(workout_id, user_id, date, distance, time_sec, split,intervals,comment) VALUES(%s,%s,%s,%s,%s,%s,%s,%s)",(2,1,'2022-01-02', 2000,488,122,1,'2k'))
-        cur.execute("INSERT INTO workout_log(workout_id, user_id, date, distance, time_sec,split,intervals,comment) VALUES(%s,%s,%s,%s,%s,%s,%s,%s)",(3,1,'2022-01-05', 18000,1800,130,3,'3x30min'))
-        cur.execute("INSERT INTO workout_log(workout_id, user_id, date, distance, time_sec, split, intervals,comment) VALUES(%s,%s,%s,%s,%s,%s,%s,%s)",(4,2,'2022-01-01', 2000,484,121,1,'Nico 2k'))
+        cur.execute("INSERT INTO workout_log(workout_id, user_id, workout_date, distance, time_sec, split,intervals,comment) VALUES(%s,%s,%s,%s,%s,%s,%s,%s)",(1,1,'2022-01-01', 2000,480,120,1,'2k PR'))
+        cur.execute("INSERT INTO workout_log(workout_id, user_id, workout_date, distance, time_sec, split,intervals,comment) VALUES(%s,%s,%s,%s,%s,%s,%s,%s)",(2,1,'2022-01-02', 2000,488,122,1,'2k'))
+        cur.execute("INSERT INTO workout_log(workout_id, user_id, workout_date, distance, time_sec,split,intervals,comment) VALUES(%s,%s,%s,%s,%s,%s,%s,%s)",(3,1,'2022-01-05', 18000,1800,130,3,'3x30min'))
+        cur.execute("INSERT INTO workout_log(workout_id, user_id, workout_date, distance, time_sec, split, intervals,comment) VALUES(%s,%s,%s,%s,%s,%s,%s,%s)",(4,2,'2022-01-01', 2000,484,121,1,'Nico 2k'))
         conn.commit() 
 
         # pass GET to flask func
@@ -271,7 +271,7 @@ def test_add_interval():
         cur.execute(sql, subs)
         cur.execute("INSERT INTO workout_log(workout_id) VALUES(1)")
         # create test_intervals data
-        test_newinterval = NewInterval(workout_id=1,interval_type='time',distance=6000,time_sec=1800,split=130,rest=180)
+        test_newinterval = NewInterval(workout_id=1,intrvl_wo=True, distance=6000,time_sec=1800,split=130,rest=180)
         # pass test_POST data to function
         added_successfully = add_interval('testing',test_newinterval)
         # assert result
@@ -299,7 +299,7 @@ def test_addinterval(client):
         cur.execute(sql, subs)
         cur.execute("INSERT INTO workout_log(workout_id) VALUES(1)")
         # create interval data POST
-        POST_dict = {'workout_id':1,'interval_type':'time','distance':510,'time_sec':120,'split':125,'rest':60}
+        POST_dict = {'workout_id':1,'intrvl_wo':'True','distance':510,'time_sec':120,'split':125,'rest':60}
         # pass POST to flask func
         response = client.post("/addinterval", data=json.dumps(POST_dict), content_type='application/json')
         data_dict = json.loads(response.data.decode("ASCII")) # status_code, message
