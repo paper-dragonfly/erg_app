@@ -4,23 +4,23 @@ import re
 from constants import ROOT_URL
 import pdb 
 
+def flask_requests_get(url:str):
+    return requests.get(url).json()
+
 
 def flask_requests_post(url:str,data:dict,):
     return requests.post(url, json=data).json()
 
 
-def flask_requests_get(url:str):
-    return requests.get(url).json()
+def flask_client_get(url:str,client):
+    response = client.get(url)
+    return json.loads(response.data.decode("ASCII"))
 
 
 def flask_client_post(url:str, data:dict,client):
     response = client.post(url, data=json.dumps(data), content_type='application/json')
     return json.loads(response.data.decode("ASCII"))
 
-
-def flask_client_get(url:str,client):
-    response = client.get(url)
-    return json.loads(response.data.decode("ASCII"))
 
 def get_usernames(get=flask_requests_get, get_args={}):
     names = get(ROOT_URL+'/usernames', **get_args)['user_names']
@@ -45,8 +45,8 @@ def post_new_workout(wdict):
 def post_new_interval(idict):
     return requests.post(ROOT_URL+'/addinterval',json=idict).json()
 
-def post_newuser(newuser_dict):
-    return requests.post(ROOT_URL+'/newuser',json=newuser_dict).json()
+def post_newuser(newuser_dict, post=flask_requests_post, post_args={}):
+    return post(ROOT_URL+'/newuser',newuser_dict,**post_args)
 
 def duration_to_seconds(duration:str)->int:
     # (hh:mm:ss.d)

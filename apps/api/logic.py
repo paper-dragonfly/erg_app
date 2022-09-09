@@ -26,6 +26,12 @@ def add_new_user(db:str, resp_newuser:NewUser)->int:
     user_id = 0
     try:
         conn, cur = db_connect(db)
+        #check if user already exists
+        cur.execute('SELECT user_name FROM users')
+        usernames = cur.fetchall()
+        for i in range(len(usernames)):
+            if usernames[i][0] == resp_newuser.user_name: 
+                return 0
         # add team to team table if not already in db
         cur.execute("INSERT INTO team(team_name) VALUES(%s) ON CONFLICT DO NOTHING",(resp_newuser.team,))
         #get user's team_id

@@ -29,14 +29,14 @@ def create_test_db():
 def create_team_table(cur):
     cur.execute("""CREATE TABLE IF NOT EXISTS team(
         team_id SERIAL PRIMARY KEY,
-        team_name VARCHAR(50) 
+        team_name VARCHAR(50) UNIQUE 
         ) """)
 
 
 def create_users_table(cur):
     cur.execute("""CREATE TABLE IF NOT EXISTS users(
         user_id SERIAL PRIMARY KEY,
-        user_name VARCHAR(25) NOT NULL,
+        user_name VARCHAR(25) NOT NULL UNIQUE,
         dob DATE,
         sex VARCHAR(8),
         team INTEGER,
