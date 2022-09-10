@@ -285,9 +285,9 @@ def stage_interval(n_clicks, date, time, dist, split, sr, hr, rest, com, df,head
     complete_alert = {'display':'none'}
     blank_table=dbc.Table.from_dataframe(pd.DataFrame(df), striped=True, bordered=True)
     # check format of inputs
-    date = reformat_date(date) #yyyy-mm-dd
+    date, message = reformat_date(date) #yyyy-mm-dd
     if not date:
-        alert_message = 'Date formatting wrong: month incorrect'
+        alert_message = f'Date formatting wrong: {message}'
         return head, blank_table, df, alert_message, {'display':'block'}, False, complete_alert
     valid_date:dict = check_date(date)
     if not valid_date['accept']:

@@ -87,18 +87,20 @@ def check_duration(user_input:str)->str:
         return {'accept':False, 'message':'Must use correct formatting'}
 
 def reformat_date(date:str)->str: #'Apr 01 2022'
+    if len(date) != 11:
+        return False, 'date length incorrect'
     mm = date[:3].capitalize()
     dd = date[4:6]
     yyyy = date[7:]
     months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
     if not mm in months: #input does not match real month
-        return False
+        return False, 'month wrong'
     for i in range(12):
         if months[i] == mm:
             mm = str(i+1)
     if len(mm) == 1:
         mm = '0'+mm
-    return yyyy+'-'+mm+'-'+dd  #yyyy-mm-dd
+    return yyyy+'-'+mm+'-'+dd, 'success'  #yyyy-mm-dd
 
 
 def check_date(user_input:str)->str:

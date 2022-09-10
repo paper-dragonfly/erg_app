@@ -1,12 +1,12 @@
 from conftest import app 
 from dash_front import app as dash_app
 import cv2
-from apps.web.pages.add_image import extract_ocr, fill_form, empty_intrvl_table
+from apps.web.pages.add_image import extract_ocr, fill_form, empty_intrvl_table, stage_interval
 import apps.web.dash_front as dfront
 from pytest import raises
 import dash_bootstrap_components as dbc
 import dash_fxs as dfx
-from apps.web.dash_fxs import flask_client_get as client_get, flask_client_post as client_post
+from apps.web.dash_fxs import flask_client_get as client_get, flask_client_post as client_post, reformat_date
 from apps.api.logic import db_connect
 import apps.web.conftest as c
 import pdb
@@ -86,16 +86,45 @@ ocr_result_erg01 = {'wo': ['4'], 'date': 'soy 19 2021', 'summary': ['h00.0', '10
 
 def test_03_fill_form_wo_summary():
     """
-    GIVEN an ocr_output dict
+    GIVEN a raw_ocr dict
     CONFIRM error is raised if no raw_ocr
     ASSERT form is filled with summary data as expected when img initially uploaded
-
-    ASSERT form not populated with next interval if formatting in incorrect
-    ASSERT form filled with interval1 if summary formatting was correct
-    
+    CONFIRM PreventUpdate raised (form not populated with next interval) if formatting in incorrect
+    GIVEN a 'submit interval' click and properly formatted form
+    ASSERT form filled with next interval
     """
     raw_ocr = ocr_result_erg01
     with raises(PreventUpdate):
         fill_form(None, 0, 'f', 'r', 'd','df')
     output = fill_form(raw_ocr, 0, False, 'Single Time/Distance', None, empty_intrvl_table ) 
     assert output == (raw_ocr['date'], raw_ocr['summary'][0], raw_ocr['summary'][1], raw_ocr['summary'][2], raw_ocr['summary'][3], 'n/a', 'n/a', 4)
+    with raises(PreventUpdate):
+        fill_form(raw_ocr, 1, False, 'r', 'd','df')
+    output = fill_form(raw_ocr, 1, True, 'r','2000-01-01',{'Time':[1]})
+    assert output == ('2000-01-01', 'L000', '263', '1:51.5', '31', 'n/a', 'n/a', 4)
+
+
+def test_03_reformat_date():
+    """
+    GIVEN a user_input date in format 'Jan 01 2000' ASSERT returns date in yyyy-mm-dd 
+    GIVEN a badly formatted user_input
+    ASSERT returns expected error
+    """
+    assert reformat_date('Jan 01 2000') == ('2000-01-01', 'success')
+    assert reformat_date('pottery') == (False, 'date length incorrect')
+    assert reformat_date('joy 01 2000') == (False, 'month wrong')
+
+
+def test_03_stage_interval():
+    """
+    GIVEN 'Submit Interval' btn is clicked 
+    IF formatting is correct 
+    ASSERT df as expected and alert not displayed
+    """
+    output = stage_interval(1, 'Jan 01 2000', '4:00.0', '1048', '1:54.5', '22','n/a','n/a','4min',empty_intrvl_table, 'Title', 'single',4)
+    assert output[2] == {'Date':['2000-01-01'], 'Time':['00:04:00.0'],'Distance':['1048'], 'Split': ['1:54.5'], 's/m':['22'],'HR':['n/a'],'Rest':['n/a'], 'Comment':['4min']}
+    assert output[3] == None
+    assert output[5] == True
+
+
+        
