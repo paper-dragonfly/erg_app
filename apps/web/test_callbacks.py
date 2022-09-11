@@ -4,7 +4,6 @@ import cv2
 from apps.web.pages.add_image import extract_ocr, fill_form, empty_intrvl_table, stage_interval
 import apps.web.dash_front as dfront
 from pytest import raises
-import dash_bootstrap_components as dbc
 import dash_fxs as dfx
 from apps.web.dash_fxs import flask_client_get as client_get, flask_client_post as client_post, reformat_date
 from apps.api.logic import db_connect
@@ -118,13 +117,17 @@ def test_03_reformat_date():
 def test_03_stage_interval():
     """
     GIVEN 'Submit Interval' btn is clicked 
-    IF formatting is correct 
-    ASSERT df as expected and alert not displayed
+    IF for is complete and formatting is correct 
+    ASSERT df is as expected and alert not displayed
     """
     output = stage_interval(1, 'Jan 01 2000', '4:00.0', '1048', '1:54.5', '22','n/a','n/a','4min',empty_intrvl_table, 'Title', 'single',4)
     assert output[2] == {'Date':['2000-01-01'], 'Time':['00:04:00.0'],'Distance':['1048'], 'Split': ['1:54.5'], 's/m':['22'],'HR':['n/a'],'Rest':['n/a'], 'Comment':['4min']}
-    assert output[3] == None
-    assert output[5] == True
+    assert output[3] == None #alert message
+    assert output[5] == True # Formatting correct
 
+
+
+
+# TODO: there are lots of other sub fns...should I write tests for them?? This is probably the most likely place for there to be mistakes. 
 
         

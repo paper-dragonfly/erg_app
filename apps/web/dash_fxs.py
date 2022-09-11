@@ -59,87 +59,85 @@ def duration_to_seconds(duration:str)->int:
     time_sec = (hours_sec + min_sec + sec + ms_sec)
     return time_sec
 
-def check_duration(user_input:str)->str:
-    if not user_input:
-        return {'accept':True, 'message':user_input}
-    #hh:mm:ss[.d]
-    # if formatting correct
-    f = re.findall('[0-2]\d:[0-5]\d:[0-5]\d', user_input)
-    if len(f) == 1:
-        # if hours in range
-        if int(user_input[0:2])<24:
-            # add ms if neccessary
-            if len(user_input) == 8:
-                user_input += '.0'
-                return {'accept':True, 'message':user_input}
-            # if input includes ms
-            elif len(user_input) == 10:
-                #if ms formatting correct
-                if re.findall('.\d$', user_input):
-                    return {'accept':True, 'message':user_input}
-                else:
-                    return {'accept':False, 'message':'ms formatting incorrect'}
-            else:
-                return {'accept':False, 'message':'input length incorrect'}
-        else:
-            return {'accept':False, 'message':'hours out of range'}
-    else:
-        return {'accept':False, 'message':'Must use correct formatting'}
 
-def reformat_date(date:str)->str: #'Apr 01 2022'
-    if len(date) != 11:
-        return False, 'date length incorrect'
+def check_duration(input_dur:str, d_type='Time')->dict: 
+    if not input_dur: #allow empty submission 
+        return {'accept':True, 'message':input_dur}
+    # adjust input_time to full format length
+    blank = '00:00:00.0'
+    short = 10 - len(time)
+    time = blank[:short]+time
+    correct = 'hh:mm:ss.d'
+    if d_type == 'Split':
+       correct = 'm:ss.d' 
+    # check if formatting correct
+    f = re.findall('^([0-1]\d|[2][0-4]):[0-5]\d:[0-5]\d[.]\d$', input_dur)
+    if len(f) != 1:
+        return {'success':False, 'message':f'{d_type} formatting error: must use {correct} formatting'}
+    return {'accept':True, 'message':input_dur}    
+
+
+def check_sr_formatting(stroke_rate):
+    if len(re.findall('^\d*\d$', stroke_rate)) != 1:
+        return {'success':False, "message":'Stroke rate formatting error: must be integer'}
+    return {'success':True, "message":stroke_rate}
+
+def choose_title(radio, num_rows): #No test needed
+    if radio == 'Intervals':
+        head = f'## Input Interval {num_rows-1}'
+    else:
+        head = f'## Input Sub-Workout {num_rows-1}'
+    return head
+        
+def reformat_date(date:str)->dict: #'Apr 01 2022'
+#confirms input_date formatting is (three char abrev of month)+( )+(two digit day)+( )+(four digit year value). Validity of day and year are not checked here
+    if len(re.findall("^[a-zA-Z]{3}\s([0-2][0-9]|[3][0-1])\s\d\d\d\d$",date)) != 1:
+        error_message = 'Date formatting error: Must use first three letters of month followed by two digit day followed by 4 diget year e.g. Jan 01 2000'
+        if len(date) != 11:
+            error_message = 'Date formatting error: date length incorrect'
+        return {'success':False, 'message': error_message}
     mm = date[:3].capitalize()
     dd = date[4:6]
     yyyy = date[7:]
     months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
     if not mm in months: #input does not match real month
-        return False, 'month wrong'
+        return {'success': False, 'message': 'Date formatting error: month wrong'}
     for i in range(12):
         if months[i] == mm:
             mm = str(i+1)
     if len(mm) == 1:
         mm = '0'+mm
-    return yyyy+'-'+mm+'-'+dd, 'success'  #yyyy-mm-dd
+    return {'success':True, 'message':yyyy+'-'+mm+'-'+dd} 
 
 
-def check_date(user_input:str)->str:
-    print('USER INPUT ', user_input)
-    if not user_input:
-        return {'accept': True, 'message': user_input}
-    #yyyy-mm-dd 
-    # if input matches formatting
-    if len(re.findall('\d\d\d\d-[0-1]\d-[0-3]\d', user_input)) == 1:
-        print('FORMATTING CORRECT')
-        # if month a real month 
-        if 0<int(user_input[5:7])<=12:
-            # if month has 31 days
-            if user_input[5:7] in ['01','03','05','07','08','10','12']:
-                #if day valid
-                if 0<int(user_input[8:10])<=31:
-                    return {'accept':True, 'message':user_input}
-                else:
-                    return {'accept':False, 'message':"day out of range"}
-            #if month has 30 days
-            elif user_input[5:7] in ['04','06','09','11']:
-                #if day valid
-                if 0<int(user_input[8:10])<=30:
-                    return {'accept':True, 'message':user_input}
-                else:
-                    return {'accept':False, 'message':"day out of range"}
-            # if febuary
-            elif user_input[5:7] == '02':
-                #if day valid
-                if 0<int(user_input[8:10])<=28:
-                    return {'accept':True, 'message':user_input}
-                else:
-                    return {'accept':False, 'message':"day out of range"}
-        # month not real month
+def check_date(input_date:str)->dict: #yyyy-mm-dd
+    if not input_date: #allow empty submission
+        return {'success':True, 'message': ""}
+    reformat_result = reformat_date(input_date)
+    if not reformat_result['success']:
+        return reformat_result 
+    # if month has 31 days
+    if input_date[5:7] in ['01','03','05','07','08','10','12']:
+        #if day valid
+        if 0<int(input_date[8:10])<=31:
+            return {'success':True, 'message':input_date}
         else:
-            return {'accept':False, 'message':"month out of range"}
-    else: 
-        print('FORMATTING BAD')
-        return {'accept':False, 'message':"Must use first three letters of month followed by two digit day followed by 4 diget year e.g. Jan 01 2000"}
+            return {'success':False, 'message':"Date formatting error: day out of range"}
+    #if month has 30 days
+    elif input_date[5:7] in ['04','06','09','11']:
+        #if day valid
+        if 0<int(input_date[8:10])<=30:
+            return {'accept':True, 'message':input_date}
+        else:
+            return {'accept':False, 'message':"Date formatting error: day out of range"}
+    # if febuary
+    elif input_date[5:7] == '02':
+        #if day valid
+        if 0<int(input_date[8:10])<=28:
+            return {'accept':True, 'message':input_date}
+        else:
+            return {'accept':False, 'message':"Date formatting error: day out of range"}
+    
 
 
 def format_time(h,m,s,t:str)->str: #hh:mm:ss.d
@@ -154,13 +152,6 @@ def format_time(h,m,s,t:str)->str: #hh:mm:ss.d
     time = d['h']+":"+d['m']+":"+d['s']+":"+t
     return time
 
-
-def format_time2(time:str)->str: 
-    blank = '00:00:00.0'
-    short = 10 - len(time)
-    time = blank[:short]+time
-    print(time)
-    return time
 
 # used in add_workout_manually
 def generate_post_wo_dict(int_dict:dict, user_id:str, wo_dict:dict)->dict:

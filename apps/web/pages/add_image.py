@@ -3,7 +3,7 @@ import pdb
 from dash import Dash, dcc, html, register_page, callback, Input, Output, State 
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
-from apps.web.dash_fxs import format_and_post_intervals, format_time2, generate_post_wo_dict2, post_new_workout, check_date, check_duration, format_and_post_intervals, reformat_date
+from apps.web.dash_fxs import check_sr_formatting, choose_title, format_and_post_intervals, format_time2, generate_post_wo_dict2, post_new_workout, check_date, check_duration, format_and_post_intervals, reformat_date
 from dash.exceptions import PreventUpdate
 import cv2
 import pytesseract
@@ -282,30 +282,21 @@ def fill_form(raw_ocr, n_clicks, formatted, radio, date, df):
 def stage_interval(n_clicks, date, time, dist, split, sr, hr, rest, com, df,head, radio, num_intrvls):
     if n_clicks == 0:
         raise PreventUpdate
+    alert_message_display = {'display':'block'}
     complete_alert = {'display':'none'}
     blank_table=dbc.Table.from_dataframe(pd.DataFrame(df), striped=True, bordered=True)
     # check format of inputs
-    date, message = reformat_date(date) #yyyy-mm-dd
-    if not date:
-        alert_message = f'Date formatting wrong: {message}'
-        return head, blank_table, df, alert_message, {'display':'block'}, False, complete_alert
     valid_date:dict = check_date(date)
-    if not valid_date['accept']:
-        alert_message = 'Date formatting wrong: '+valid_date['message']
-        return head, blank_table, df, alert_message, {'display':'block'}, False,complete_alert
-    time:str = format_time2(time) #hh:mm:ss.d
-    valid_time = check_duration(time)
-    if not valid_time['accept']:
-        alert_message = 'Time formatting wrong: '+valid_time['message']
-        return head, blank_table, df, alert_message, {'display':'block'}, False,complete_alert
-    wsplit = '00:0'+split 
-    valid_split = check_duration(wsplit)
-    if not valid_split['accept']:
-        alert_message = 'Split formatting wrong: '+valid_split['message']
-        return head, blank_table, df, alert_message, {'display':'block'}, False,complete_alert
-    if len(re.findall('\A\d\d\Z', sr)) != 1:
-        alert_message = 'Stroke Rate formatting wrong: must be integer'
-        return head, blank_table, df, alert_message, {'display':'block'}, False, complete_alert
+    valid_time:dict = check_duration(time)
+    valid_split:dict = check_duration(split, 'Split')
+    valid_sr = check_sr_formatting(sr)
+    error_messages = []
+    for field in [valid_date, valid_time, valid_split, valid_sr]:
+        if not field['success']:
+            error_messages.append(field['message'])
+    if error_messages:
+        return head, blank_table, df, error_messages, {'display':'block'}, False, complete_alert
+    # formatting good - populate df   
     df['Date'].append(date)
     df['Time'].append(time)
     df['Distance'].append(dist)
@@ -314,12 +305,10 @@ def stage_interval(n_clicks, date, time, dist, split, sr, hr, rest, com, df,head
     df['HR'].append(hr)
     df['Rest'].append(rest)
     df['Comment'].append(com)
-    if radio == 'Intervals':
-        head = '## Input Interval'
-    else:
-        head = '## Input Sub-Workout'
-    if len(df['Time']) == num_intrvls+1:
+    num_rows = df.shape[0]
+    if num_rows == num_intrvls+1:
         complete_alert = {'display': 'block'} 
+    head = choose_title(radio, num_rows)
     return head, dbc.Table.from_dataframe(pd.DataFrame(df), striped=True, bordered=True), df, None, {'display':'none'}, True,complete_alert
 
 
