@@ -8,6 +8,12 @@ import pdb
 def create_app(db):
     app = Flask(__name__) 
 
+    @app.route('/user/<id>', methods=['GET'])
+    def get_user_info(id):
+        user_info:dict = l.get_user_info(id, db)
+        return json.dumps(user_info)
+
+
     #TODO: new as of Aug 19, no tests yet
     @app.route('/username/<id>', methods=['GET'])
     def get_username(id):

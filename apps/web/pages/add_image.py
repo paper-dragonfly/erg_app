@@ -3,15 +3,15 @@ import pdb
 from dash import Dash, dcc, html, register_page, callback, Input, Output, State 
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
-from apps.web.dash_fxs import check_sr_formatting, choose_title, format_and_post_intervals, format_time2, generate_post_wo_dict2, post_new_workout, check_date, check_duration, format_and_post_intervals, reformat_date, validate_form_inputs
+from apps.web.dash_fxs import choose_title, format_and_post_intervals, generate_post_wo_dict2, post_new_workout, format_and_post_intervals, validate_form_inputs
 from dash.exceptions import PreventUpdate
 import cv2
-import pytesseract
 import datetime
 import base64
 import numpy as np
 from matplotlib import pyplot as plt
 import re
+from ocr.pipeline import clean_ocr 
 
 register_page(__name__,path_template='/upload_image/<user_id>')
 
@@ -27,72 +27,11 @@ register_page(__name__,path_template='/upload_image/<user_id>')
 # submit workout
 
 
-## Image OCR
-def preprocess(image): #image
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    bw_gaussian = cv2.adaptiveThreshold(gray,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,11,6)
-    # noise removal
-    image = bw_gaussian
-    kernel = np.ones((2,2), np.uint8)
-    image = cv2.erode(image, kernel, iterations=1)
-    kernel = np.ones((2, 2), np.uint8)
-    image = cv2.dilate(image, kernel, iterations=1)
-    image = cv2.morphologyEx(image, cv2.MORPH_CLOSE, kernel)
-    image = cv2.medianBlur(image, 3)
-    image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
-    return image 
-
-def snip(img)->dict:
-    sr = img[182:400, 380:440]
-    split = img[180:400, 280:385]
-    dist = img[180:400, 180:280]
-    time = img[180:400, 50:180]
-    summary = img[135:175, 50:480]
-    date = img[47:100, 10:225]
-    workout = img[15:55, 10:150]
-    snips = {'wo':workout, 'date':date, 'summary':summary, 'time':time, 'dist':dist, 'split':split, 'sr':sr}
-    return snips
-
-def extract_data(snips:dict)->dict:
-    ocr_dict = {}
-    for s in snips:
-        if s in ['wo', 'date', 'summary']:
-            psm = '--psm 13'
-        else:
-            psm ='--psm 6'
-        gray = cv2.cvtColor(snips[s], cv2.COLOR_BGR2GRAY)
-        blur = cv2.GaussianBlur(gray, (1,1), 0)
-        thresh = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)[1]
-        data = pytesseract.image_to_string(thresh, lang='eng', config=psm)
-        ocr_dict[s] = data
-    return ocr_dict
-
-def basic_clean(ocr_dict:dict):
-    for key in ocr_dict:
-        ocr_dict[key] = ocr_dict[key].strip('\n\'"~|°`‘-!“ [()><')
-        ocr_dict[key]=ocr_dict[key].replace("\n", ' ')
-        ocr_dict[key]=ocr_dict[key].replace(",", '.')
-        s2 = ""
-        for i in range(len(ocr_dict[key])):
-            if not ocr_dict[key][i] in ['\\','|','-', '“']:
-                s2 += ocr_dict[key][i]
-        ocr_dict[key] = s2
-        if not key == 'date':
-            ocr_dict[key]=ocr_dict[key].replace("A", '4') 
-        if key != 'date':
-            ocr_dict[key] = ocr_dict[key].split()         
-    return ocr_dict
-
-#put ocr extraction into one func
-def clean_ocr(image):
-    return basic_clean(extract_data(snip(preprocess(image))))
-
-
 ### Empty forms 
-empty_single_table = {'Date':[],'Time':[],'Distance':[],'Split':[],'s/m':[],'HR':[],'Comment':[]}
-empty_post_wo_dict = {'user_id':None, 'workout_date':None,'time_sec':None,'distance':None,'split':None,'sr':None,'hr':None,'intervals':1, 'comment':None}
-empty_intrvl_table = {'Date':[],'Time':[],'Distance':[],'Split':[],'s/m':[],'HR':[],'Rest':[],'Comment':[]}
-empty_post_intrvl_dict = {'workout_id':None,'time_sec':None,'distance':None,'split':None,'sr':None,'hr':None,'rest':None,'comment':None}
+EMPTY_SINGLE_TABLE = {'Date':[],'Time':[],'Distance':[],'Split':[],'s/m':[],'HR':[],'Comment':[]}
+EMPTY_POST_WO_DICT = {'user_id':None, 'workout_date':None,'time_sec':None,'distance':None,'split':None,'sr':None,'hr':None,'intervals':1, 'comment':None}
+EMPTY_INTERVAL_TABLE = {'Date':[],'Time':[],'Distance':[],'Split':[],'s/m':[],'HR':[],'Rest':[],'Comment':[]}
+EMPTY_POST_INTERVAL_DICT = {'workout_id':None,'time_sec':None,'distance':None,'split':None,'sr':None,'hr':None,'rest':None,'comment':None}
 
 
 def layout(user_id=1):
@@ -151,10 +90,10 @@ def layout(user_id=1):
                 dbc.Alert(id='intrvl_alert2', style={'display':'none'},color='warning'),
                 dbc.Alert(id='all_added_alert', children='Full Workout Staged', color='info', style={'display':'none'}),
                 dcc.Store(id='intrvl_count', data=None),
-                dcc.Store(id='int_dict2', data=empty_intrvl_table),
+                dcc.Store(id='int_dict2', data=EMPTY_INTERVAL_TABLE),
                 dcc.Store(id='intrvl_formatting_approved2', data=False),
                 dbc.Row(
-                    [dbc.Table.from_dataframe(pd.DataFrame(empty_intrvl_table),striped=True,bordered=True)], 
+                    [dbc.Table.from_dataframe(pd.DataFrame(EMPTY_INTERVAL_TABLE),striped=True,bordered=True)], 
                     id='interval_table2'),
                 dbc.Button('Submit workout', id='btn_submit_workout2', n_clicks=0, color='primary')
                 ], id='form_col')
@@ -203,14 +142,9 @@ def convert_to_cv2_compatible(b64):
 def extract_ocr(image):
     if image is not None: 
         image = np.array(image, dtype='uint8')
-        # image = np.uint8(image) WHAT IS A DICT?
-        img = preprocess(image)
-        snips:dict = snip(img)
-        ocr_dict:dict = extract_data(snips)
-        clean_ocr:dict = basic_clean(ocr_dict)
-        # clean_ocr = basic_clean(extract_data(snip(preprocess(image))))
-        print(clean_ocr)
-        return clean_ocr 
+        raw_ocr = clean_ocr(image)
+        print(raw_ocr)
+        return raw_ocr 
 
 
 @callback(
@@ -320,7 +254,7 @@ def post_wo_to_db(n_clicks, formatting_approved, int_dict, user_id, radio):
     intrvl = False
     if radio == 'Intervals':
         intrvl = True
-    wo_dict = generate_post_wo_dict2(int_dict, user_id, empty_post_wo_dict, intrvl)
+    wo_dict = generate_post_wo_dict2(int_dict, user_id, EMPTY_POST_WO_DICT, intrvl)
     print(wo_dict)
     wo_id = post_new_workout(wo_dict)['workout_id']
     format_and_post_intervals(wo_id, int_dict, intrvl)

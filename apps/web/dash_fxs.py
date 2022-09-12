@@ -304,7 +304,6 @@ def check_rest_formatting(rest):
     return {'success':False, 'message':'Rest formatting error'}
 
 
-
 def validate_form_inputs(date, time, dist, split, sr, hr, rest):
     valid_date:dict = check_date(date)
     valid_time:dict = check_duration(time)

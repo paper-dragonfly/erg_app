@@ -1,7 +1,7 @@
 from conftest import app 
 from dash_front import app as dash_app
 import cv2
-from apps.web.pages.add_image import extract_ocr, fill_form, empty_intrvl_table, stage_interval
+from apps.web.pages.add_image import extract_ocr, fill_form, EMPTY_INTERVAL_TABLE, stage_interval
 import apps.web.dash_front as dfront
 from pytest import raises
 import dash_fxs as dfx
@@ -71,12 +71,19 @@ def test_02_display_team_input():
 # fill_form_wo_summary
 # stage_interval 
 
+def test_03_upload_image():
+    pass #not sure how to write a test for this
+
+
+def test_03_convert_to_cv2_compatible():
+    pass 
+
 def test_03_extract_ocr():
     """
     GIVEN a cv2 compatible image
     ASSERT fn returns dict
     """
-    filepath = '/Users/katcha/NiCode_Academy/ErgApp/ocr/temp/cr_erg01.jpg'
+    filepath = '/Users/katcha/NiCode_Academy/ErgApp/apps/web/tests/test_callbacks.py'
     img = cv2.imread(filepath)
     ocr_output = extract_ocr(img)
     assert type(ocr_output) == dict
@@ -95,7 +102,7 @@ def test_03_fill_form_wo_summary():
     raw_ocr = ocr_result_erg01
     with raises(PreventUpdate):
         fill_form(None, 0, 'f', 'r', 'd','df')
-    output = fill_form(raw_ocr, 0, False, 'Single Time/Distance', None, empty_intrvl_table ) 
+    output = fill_form(raw_ocr, 0, False, 'Single Time/Distance', None, EMPTY_INTERVAL_TABLE ) 
     assert output == (raw_ocr['date'], raw_ocr['summary'][0], raw_ocr['summary'][1], raw_ocr['summary'][2], raw_ocr['summary'][3], 'n/a', 'n/a', 4)
     with raises(PreventUpdate):
         fill_form(raw_ocr, 1, False, 'r', 'd','df')
@@ -120,7 +127,7 @@ def test_03_stage_interval():
     IF for is complete and formatting is correct 
     ASSERT df is as expected and alert not displayed
     """
-    output = stage_interval(1, 'Jan 01 2000', '4:00.0', '1048', '1:54.5', '22','n/a','n/a','4min',empty_intrvl_table, 'Title', 'single',4)
+    output = stage_interval(1, 'Jan 01 2000', '4:00.0', '1048', '1:54.5', '22','n/a','n/a','4min',EMPTY_INTERVAL_TABLE, 'Title', 'single',4)
     assert output[2] == {'Date':['2000-01-01'], 'Time':['00:04:00.0'],'Distance':['1048'], 'Split': ['1:54.5'], 's/m':['22'],'HR':['n/a'],'Rest':['n/a'], 'Comment':['4min']}
     assert output[3] == None #alert message
     assert output[5] == True # Formatting correct
