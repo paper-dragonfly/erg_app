@@ -1,6 +1,6 @@
 import pandas as pd
 import pdb
-from dash import Dash, dcc, html, register_page, callback, Input, Output, State 
+from dash import Dash, dcc, html, register_page, callback, Input, Output, State
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
 from apps.web.dash_fxs import check_sr_formatting, choose_title, format_and_post_intervals, format_time2, generate_post_wo_dict2, post_new_workout, check_date, check_duration, format_and_post_intervals, reformat_date
@@ -15,12 +15,12 @@ import re
 
 register_page(__name__,path_template='/upload_image/<user_id>')
 
-## PLAN 
+## PLAN
 # upload image
 # crop (skip for now)
 # convert to binary/json
-    # uploaded as base64 encoded str, need to convert to
-    # cv2.imread - what is it reading? what format? 
+# uploaded as base64 encoded str, need to convert to
+# cv2.imread - what is it reading? what format?
 # send data to img processing pipeline
 # send back results dict
 # populate form with data - make form editable for corrections
@@ -40,7 +40,7 @@ def preprocess(image): #image
     image = cv2.morphologyEx(image, cv2.MORPH_CLOSE, kernel)
     image = cv2.medianBlur(image, 3)
     image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
-    return image 
+    return image
 
 def snip(img)->dict:
     sr = img[182:400, 380:440]
@@ -78,9 +78,9 @@ def basic_clean(ocr_dict:dict):
                 s2 += ocr_dict[key][i]
         ocr_dict[key] = s2
         if not key == 'date':
-            ocr_dict[key]=ocr_dict[key].replace("A", '4') 
+            ocr_dict[key] = ocr_dict[key].replace("A", '4')
         if key != 'date':
-            ocr_dict[key] = ocr_dict[key].split()         
+            ocr_dict[key] = ocr_dict[key].split()
     return ocr_dict
 
 #put ocr extraction into one func
@@ -88,77 +88,163 @@ def clean_ocr(image):
     return basic_clean(extract_data(snip(preprocess(image))))
 
 
-### Empty forms 
-empty_single_table = {'Date':[],'Time':[],'Distance':[],'Split':[],'s/m':[],'HR':[],'Comment':[]}
-empty_post_wo_dict = {'user_id':None, 'workout_date':None,'time_sec':None,'distance':None,'split':None,'sr':None,'hr':None,'intervals':1, 'comment':None}
-empty_intrvl_table = {'Date':[],'Time':[],'Distance':[],'Split':[],'s/m':[],'HR':[],'Rest':[],'Comment':[]}
-empty_post_intrvl_dict = {'workout_id':None,'time_sec':None,'distance':None,'split':None,'sr':None,'hr':None,'rest':None,'comment':None}
+# TODO: constants should be upper case
+### Empty forms
+empty_single_table = {
+    'Date': [],
+    'Time': [],
+    'Distance': [],
+    'Split': [],
+    's/m': [],
+    'HR': [],
+    'Comment': []
+}
+empty_post_wo_dict = {
+    'user_id': None,
+    'workout_date': None,
+    'time_sec': None,
+    'distance': None,
+    'split': None,
+    'sr': None,
+    'hr': None,
+    'intervals': 1,
+    'comment': None
+}
+empty_intrvl_table = {
+    'Date': [],
+    'Time': [],
+    'Distance': [],
+    'Split': [],
+    's/m': [],
+    'HR': [],
+    'Rest': [],
+    'Comment': []
+}
+empty_post_intrvl_dict = {
+    'workout_id': None,
+    'time_sec': None,
+    'distance': None,
+    'split': None,
+    'sr': None,
+    'hr': None,
+    'rest': None,
+    'comment': None
+}
 
 
 def layout(user_id=1):
+    # if user_id is None:
+    #     return dbc.Container()
     return dbc.Container([
         dcc.Store(id='user_id', data=user_id),
         dcc.Markdown('# Add Workout'),
-        dcc.RadioItems(options=['Single Time/Distance','Intervals'], value='Single Time/Distance', id='radio_select'),
+        dcc.RadioItems(options=['Single Time/Distance', 'Intervals'],
+                       value='Single Time/Distance',
+                       id='radio_select'),
         dbc.Row([
-        # Upload + Display image
+            # Upload + Display image
             dbc.Col([
-                dcc.Upload(
-                    id='upload-image',
-                    children=html.Button('Upload Image', id="upload_image")),
+                dcc.Upload(id='upload-image',
+                           children=html.Button('Upload Image',
+                                                id="upload_image")),
                 dcc.Store(id='base64_img', data=None),
                 dcc.Store(id='np_array_img', data=None),
                 dcc.Store(id='raw_ocr', data=None),
-                html.Div(id='output-upload')]),
-        # data form feilds
-            dbc.Col([
-                dcc.Store(id='ocr_dict', data=None),
-                dcc.Markdown('## Workout Summery', id='h2_input_form'),
-                dbc.Row([
-                    dbc.Col(dbc.Label('Date',html_for='ui_date2'), width=2),
-                    dbc.Col(dcc.Input(placeholder='Jan 01 2000',id="ui_date2", size='20' ), width=4)
+                html.Div(id='output-upload')
+            ]),
+            # data form feilds
+            dbc.Col(
+                [
+                    dcc.Store(id='ocr_dict', data=None),
+                    dcc.Markdown('## Workout Summery', id='h2_input_form'),
+                    dbc.Row([
+                        dbc.Col(dbc.Label('Date', html_for='ui_date2'),
+                                width=2),
+                        dbc.Col(dcc.Input(placeholder='Jan 01 2000',
+                                          id="ui_date2",
+                                          size='20'),
+                                width=4)
                     ]),
-                dbc.Row([
-                    dbc.Col(dbc.Label('Time',html_for='ui_time2'), width=2),
-                    dbc.Col(dcc.Input(placeholder='hh:mm:ss.t', id='ui_time2', size='15', maxLength=12), width=4)
+                    dbc.Row([
+                        dbc.Col(dbc.Label('Time', html_for='ui_time2'),
+                                width=2),
+                        dbc.Col(dcc.Input(placeholder='hh:mm:ss.t',
+                                          id='ui_time2',
+                                          size='15',
+                                          maxLength=12),
+                                width=4)
                     ]),
-                dbc.Row([
-                    dbc.Col(dbc.Label('Distance',html_for='ui_dist2'), width=2),
-                    dbc.Col(dcc.Input(placeholder='meters',id="ui_dist2", size='10'), width=4)
+                    dbc.Row([
+                        dbc.Col(dbc.Label('Distance', html_for='ui_dist2'),
+                                width=2),
+                        dbc.Col(dcc.Input(
+                            placeholder='meters', id="ui_dist2", size='10'),
+                                width=4)
                     ]),
-                dbc.Row([
-                    dbc.Col(dbc.Label('Split',html_for='ui_split2'), width=2),
-                    dbc.Col(dcc.Input(placeholder='m:ss.d',id="ui_split2", size='10'), width=4)
+                    dbc.Row([
+                        dbc.Col(dbc.Label('Split', html_for='ui_split2'),
+                                width=2),
+                        dbc.Col(dcc.Input(
+                            placeholder='m:ss.d', id="ui_split2", size='10'),
+                                width=4)
                     ]),
-                dbc.Row([
-                    dbc.Col(dbc.Label('Stroke Rate',html_for='ui_sr2'), width=2),
-                    dbc.Col(dcc.Input(placeholder='s/m',id="ui_sr2", size='10'), width=4)
+                    dbc.Row([
+                        dbc.Col(dbc.Label('Stroke Rate', html_for='ui_sr2'),
+                                width=2),
+                        dbc.Col(dcc.Input(
+                            placeholder='s/m', id="ui_sr2", size='10'),
+                                width=4)
                     ]),
-                dbc.Row([
-                    dbc.Col(dbc.Label('Heart Rate',html_for='ui_hr2'), width=2),
-                    dbc.Col(dcc.Input(placeholder='BPM',id="ui_hr2", size='10'), width=4)
+                    dbc.Row([
+                        dbc.Col(dbc.Label('Heart Rate', html_for='ui_hr2'),
+                                width=2),
+                        dbc.Col(dcc.Input(
+                            placeholder='BPM', id="ui_hr2", size='10'),
+                                width=4)
                     ]),
-                dbc.Row([
-                    dbc.Col(dbc.Label('Comment',html_for='ui_com2'), width=2),
-                    dbc.Col(dcc.Input('',id="ui_com2", size='20'), width=8)
+                    dbc.Row([
+                        dbc.Col(dbc.Label('Comment', html_for='ui_com2'),
+                                width=2),
+                        dbc.Col(dcc.Input('', id="ui_com2", size='20'),
+                                width=8)
                     ]),
-                dbc.Row([
-                    dbc.Col(dbc.Label('Rest',html_for='ui_rest2'), width=2),
-                    dbc.Col(dcc.Input(placeholder='seconds',id="ui_rest2", size='10'), width=4)
+                    dbc.Row([
+                        dbc.Col(dbc.Label('Rest', html_for='ui_rest2'),
+                                width=2),
+                        dbc.Col(dcc.Input(
+                            placeholder='seconds', id="ui_rest2", size='10'),
+                                width=4)
                     ]),
-                # End of form
-                dbc.Button('Submit Interval', id='interval_submit2', n_clicks=0, color='primary'),
-                dbc.Alert(id='intrvl_alert2', style={'display':'none'},color='warning'),
-                dbc.Alert(id='all_added_alert', children='Full Workout Staged', color='info', style={'display':'none'}),
-                dcc.Store(id='intrvl_count', data=None),
-                dcc.Store(id='int_dict2', data=empty_intrvl_table),
-                dcc.Store(id='intrvl_formatting_approved2', data=False),
-                dbc.Row(
-                    [dbc.Table.from_dataframe(pd.DataFrame(empty_intrvl_table),striped=True,bordered=True)], 
-                    id='interval_table2'),
-                dbc.Button('Submit workout', id='btn_submit_workout2', n_clicks=0, color='primary')
-                ], id='form_col')
-        ])])
+                    # End of form
+                    dbc.Button('Submit Interval',
+                               id='interval_submit2',
+                               n_clicks=0,
+                               color='primary'),
+                    dbc.Alert(id='intrvl_alert2',
+                              style={'display': 'none'},
+                              color='warning'),
+                    dbc.Alert(id='all_added_alert',
+                              children='Full Workout Staged',
+                              color='info',
+                              style={'display': 'none'}),
+                    dcc.Store(id='intrvl_count', data=None),
+                    dcc.Store(id='int_dict2', data=empty_intrvl_table),
+                    dcc.Store(id='intrvl_formatting_approved2', data=False),
+                    dbc.Row([
+                        dbc.Table.from_dataframe(
+                            pd.DataFrame(empty_intrvl_table),
+                            striped=True,
+                            bordered=True)
+                    ],
+                            id='interval_table2'),
+                    dbc.Button('Submit workout',
+                               id='btn_submit_workout2',
+                               n_clicks=0,
+                               color='primary')
+                ],
+                id='form_col')
+        ])
+    ])
 
 #upload pic
 @callback(
@@ -201,7 +287,7 @@ def convert_to_cv2_compatible(b64):
     Input('np_array_img', 'data')
 )
 def extract_ocr(image):
-    if image is not None: 
+    if image is not None:
         image = np.array(image, dtype='uint8')
         # image = np.uint8(image) WHAT IS A DICT?
         img = preprocess(image)
@@ -210,7 +296,7 @@ def extract_ocr(image):
         clean_ocr:dict = basic_clean(ocr_dict)
         # clean_ocr = basic_clean(extract_data(snip(preprocess(image))))
         print(clean_ocr)
-        return clean_ocr 
+        return clean_ocr
 
 
 @callback(
@@ -231,42 +317,42 @@ def extract_ocr(image):
 )
 def fill_form(raw_ocr, n_clicks, formatted, radio, date, df):
     if not raw_ocr:
-        raise PreventUpdate 
+        raise PreventUpdate
     num_ints = len(raw_ocr['time'])
     hr = 'n/a'
     rest = 'n/a'
     if radio == 'Intervals':
-        rest = None  
-    if n_clicks == 0: 
+        rest = None
+    if n_clicks == 0:
         if len(raw_ocr['summary']) == 5:
-            hr = raw_ocr['summary'][4] 
+            hr = raw_ocr['summary'][4]
         return raw_ocr['date'], raw_ocr['summary'][0], raw_ocr['summary'][1], raw_ocr['summary'][2], raw_ocr['summary'][3], hr, rest, num_ints
     # if len(df['Time']) == 0:
     #     print('blocked by df len')
     #     raise PreventUpdate
     if not formatted:
         print('blocked formatted  == False')
-        raise PreventUpdate 
+        raise PreventUpdate
     else:
         i = len(df['Time'])-1
-        if i < num_ints: 
+        if i < num_ints:
             return date, raw_ocr['time'][i], raw_ocr['dist'][i], raw_ocr['split'][i], raw_ocr['sr'][i], hr, rest, num_ints
-        else: 
-            return date, None, None, None, None, None, None, num_ints 
-    
+        else:
+            return date, None, None, None, None, None, None, num_ints
+
 
 
 # Add intervals to inverval table
 @callback(
-    Output('h2_input_form', 'children'), #form title
-    Output('interval_table2','children'), #table
-    Output('int_dict2','data'), #table contents
-    Output('intrvl_alert2','children'), #alert message
-    Output('intrvl_alert2', 'style'), #alert visibility
-    Output('intrvl_formatting_approved2','data'), #formatting approval
-    Output('all_added_alert', 'style'), 
+    Output('h2_input_form', 'children'),  #form title
+    Output('interval_table2', 'children'),  #table
+    Output('int_dict2', 'data'),  #table contents
+    Output('intrvl_alert2', 'children'),  #alert message
+    Output('intrvl_alert2', 'style'),  #alert visibility
+    Output('intrvl_formatting_approved2', 'data'),  #formatting approval
+    Output('all_added_alert', 'style'),
     Input('interval_submit2', 'n_clicks'),
-    State('ui_date2','value'),
+    State('ui_date2', 'value'),
     State('ui_time2', 'value'),
     State('ui_dist2', 'value'),
     State('ui_split2', 'value'),
@@ -277,13 +363,12 @@ def fill_form(raw_ocr, n_clicks, formatted, radio, date, df):
     State('int_dict2', 'data'),
     State('h2_input_form', 'children'),
     State('radio_select', 'value'),
-    State('intrvl_count', 'data')
-)
+    State('intrvl_count', 'data'))
 def stage_interval(n_clicks, date, time, dist, split, sr, hr, rest, com, df,head, radio, num_intrvls):
     if n_clicks == 0:
         raise PreventUpdate
-    alert_message_display = {'display':'block'}
-    complete_alert = {'display':'none'}
+    display = {'display': 'block'}
+    dont_display = {'display': 'none'}
     blank_table=dbc.Table.from_dataframe(pd.DataFrame(df), striped=True, bordered=True)
     # check format of inputs
     valid_date:dict = check_date(date)
@@ -295,8 +380,8 @@ def stage_interval(n_clicks, date, time, dist, split, sr, hr, rest, com, df,head
         if not field['success']:
             error_messages.append(field['message'])
     if error_messages:
-        return head, blank_table, df, error_messages, {'display':'block'}, False, complete_alert
-    # formatting good - populate df   
+        return head, blank_table, df, error_messages, display, False, dont_display
+    # formatting good - populate df
     df['Date'].append(date)
     df['Time'].append(time)
     df['Distance'].append(dist)
@@ -306,13 +391,14 @@ def stage_interval(n_clicks, date, time, dist, split, sr, hr, rest, com, df,head
     df['Rest'].append(rest)
     df['Comment'].append(com)
     num_rows = df.shape[0]
-    if num_rows == num_intrvls+1:
-        complete_alert = {'display': 'block'} 
+    complete_alert = display if (num_rows == num_intrvls + 1) else dont_display
     head = choose_title(radio, num_rows)
-    return head, dbc.Table.from_dataframe(pd.DataFrame(df), striped=True, bordered=True), df, None, {'display':'none'}, True,complete_alert
+    return head, dbc.Table.from_dataframe(
+        pd.DataFrame(df), striped=True,
+        bordered=True), df, None, dont_display, True, complete_alert
 
 
-#Post wo to db 
+#Post wo to db
 @callback(
     Output('btn_submit_workout2', 'children'),
     Output('btn_submit_workout2', 'color'),
@@ -325,11 +411,11 @@ def stage_interval(n_clicks, date, time, dist, split, sr, hr, rest, com, df,head
 def post_wo_to_db(n_clicks, formatting_approved, int_dict, user_id, radio):
     if n_clicks==0 or not formatting_approved:
         raise PreventUpdate
-    intrvl = False
+    interval = False
     if radio == 'Intervals':
-        intrvl = True
-    wo_dict = generate_post_wo_dict2(int_dict, user_id, empty_post_wo_dict, intrvl)
+        interval = True
+    wo_dict = generate_post_wo_dict2(int_dict, user_id, empty_post_wo_dict, interval)
     print(wo_dict)
     wo_id = post_new_workout(wo_dict)['workout_id']
-    format_and_post_intervals(wo_id, int_dict, intrvl)
+    format_and_post_intervals(wo_id, int_dict, interval)
     return 'Interval Workout Submitted!', 'success'

@@ -1,15 +1,22 @@
-from flask import Flask, request 
-from pydantic import ValidationError 
+from flask import Flask, request
+from pydantic import ValidationError
 from apps.api.post_classes import NewInterval, NewUser, NewWorkout
 import json
 from apps.api import logic as l
 import pdb
 
+'''
+- each endpoint should be an entity name, like "users"
+- GET should always return the entire entity
+- if you want to do a search, use GET with a `?field=value` query string
+'''
+
+
 def create_app(db):
-    app = Flask(__name__) 
+    app = Flask(__name__)
 
     #TODO: new as of Aug 19, no tests yet
-    @app.route('/username/<id>', methods=['GET'])
+    @app.route('/users/<id>', methods=['GET'])
     def get_username(id):
         user_name = l.get_user_name(id, db)
         return json.dumps({'status_code': 200, 'user_name': user_name})
@@ -19,17 +26,17 @@ def create_app(db):
         #Submit user_name, return user_id
         user_id = l.get_user_id(user_name, db)
         return json.dumps({'status_code':200, 'user_id': user_id})
-    
+
 
     @app.route("/usernames", methods = ['GET'])
     def usernames():
-        # GET, return all user_names 
+        # GET, return all user_names
         user_names = []
-        try: 
+        try:
             conn, cur = l.db_connect(db)
             cur.execute('SELECT user_name FROM users')
             user_names = cur.fetchall() #[["n1"],["n2"]]
-        finally: 
+        finally:
             cur.close()
             conn.close()
             return json.dumps({'status_code': 200, 'user_names': user_names})
@@ -82,33 +89,33 @@ def create_app(db):
             interval_inst = NewInterval.parse_obj(request.get_json())
         except ValidationError() as e:
             return json.dumps({'status_code': 400, 'message': e})
-        add_successful:bool = l.add_interval(db, interval_inst) 
-        return json.dumps({'status_code': 200, 'message':add_successful})    
+        add_successful:bool = l.add_interval(db, interval_inst)
+        return json.dumps({'status_code': 200, 'message':add_successful})
 
 
     @app.route("/logsearch", methods = ['GET']) # returns all workouts that match search results
     def logsearch():
-        workout_search_params:dict = request.args 
+        workout_search_params:dict = request.args
         sql, subs = l.search_sql_str(workout_search_params)
         matching_workouts = None
         try:
             conn, cur = l.db_connect(db)
-            cur.execute(sql, subs) 
+            cur.execute(sql, subs)
             matching_workouts = cur.fetchall()
         finally:
             cur.close()
             conn.close()
             if matching_workouts == None:
                 return json.dumps({'status_code':500, 'message':[]})
-            else: 
+            else:
                 return json.dumps({'status_code':200, 'message':matching_workouts},default=str)
-            
+
 
     @app.route("/details", methods=['GET']) #list summary stats + all interval_log data for a specific workout_id
     def details():
         # retrieve workout_id
         workout_id = request.args["workout_id"]
-        # List all intervals with workout_id 
+        # List all intervals with workout_id
         try:
             conn, cur = l.db_connect(db)
             cur.execute("SELECT * FROM workout_log WHERE workout_id=%s",(workout_id,))
@@ -120,8 +127,8 @@ def create_app(db):
             intervals = cur.fetchall()
         finally:
             cur.close()
-            conn.close() 
-            return json.dumps({'status_code':200, 'single': sbool, 'intervals':intervals, 'workout_summary':workout_summary},default=str) 
+            conn.close()
+            return json.dumps({'status_code':200, 'single': sbool, 'intervals':intervals, 'workout_summary':workout_summary},default=str)
 
 
     @app.route("/userstats", methods=['GET'])# display summary of all workouts for user
@@ -142,7 +149,7 @@ def create_app(db):
             # calculate total distance and time
             for i in range(len(workouts)):
                 distance += (workouts[i][0])
-                time += workouts[i][1]    
+                time += workouts[i][1]
         finally:
             cur.close()
             conn.close()
@@ -170,8 +177,8 @@ def create_app(db):
     @app.route("/teamlog", methods=['POST'])
     def teamlog():
         pass
-        #return all workout descriptions (interval type, distance time num intervals) 
-        # this might be hard. 
+        #return all workout descriptions (interval type, distance time num intervals)
+        # this might be hard.
         # members = SELECT user_id FROM users WHERE team_id = x
         # SELECT * FROM workout_log WHERE user_id in members
 
@@ -187,8 +194,8 @@ def create_app(db):
 #         conn.close()
 #         cur.close()
 #         return json.dumps({'status_code':200, 'message':None})
-    
-    return app 
+
+    return app
 
 if __name__ == '__main__':
     app = create_app('erg')
