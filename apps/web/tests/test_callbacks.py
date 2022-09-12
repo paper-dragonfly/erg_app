@@ -1,11 +1,11 @@
 from conftest import app 
-from dash_front import app as dash_app
+from dash_app import app as dash_app
 import cv2
 from apps.web.pages.add_image import extract_ocr, fill_form, EMPTY_INTERVAL_TABLE, stage_interval
-import apps.web.dash_front as dfront
+import apps.web.dash_app as dfront
 from pytest import raises
-import dash_fxs as dfx
-from apps.web.dash_fxs import flask_client_get as client_get, flask_client_post as client_post, reformat_date
+import dash_fns as dfx
+from apps.web.dash_fns import flask_client_get as client_get, flask_client_post as client_post, reformat_date
 from apps.api.logic import db_connect
 import apps.web.conftest as c
 import pdb
@@ -32,10 +32,7 @@ def test_00_populate_test_db():
         conn.close()
 
 # dash_fxs functions 
-def test_01_A_get_usernames(client):
-    # call fx
-    name_list = dfx.get_usernames(get=client_get,get_args={'client':client} )
-    assert name_list == ['Kaja', 'Moonshine']
+
 
 
 # new_user.py

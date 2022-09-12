@@ -1,9 +1,32 @@
 import json 
 from apps.api import conftest as c
-from apps.api.logic import add_new_user, db_connect, get_user_id, search_sql_str, add_workout, add_interval
+from apps.api.logic import add_new_user, db_connect, get_user_id, search_sql_str, add_workout, add_interval, get_users
 from pydantic import BaseModel
 import pdb
 from apps.api.post_classes import NewUser, NewInterval, NewWorkout
+
+
+def test_01_users(client):
+    """
+    GIVEN a flask app
+    WHEN a GET request is submitted to /users
+    THEN assert return dict includes body key with all user info
+    """
+    try:
+        #populate db with two users
+        conn, cur= db_connect('testing', True)
+        cur.execute("INSERT INTO team(team_id,team_name) VALUES (%s,%s),(%s,%s) ON CONFLICT DO NOTHING", (1,'utah crew', 2, 'tumbleweed'))
+        cur.execute("INSERT INTO users(user_id, user_name, dob, sex, team) VALUES(%s,%s,%s,%s,%s),(%s,%s,%s,%s,%s) ON CONFLICT DO NOTHING", (1,'kaja','1994-12-20','Female',1,2,'moonshine','1991-01-01','Male',2))
+        # mak
+        # send GET request for user_id 
+        response = client.get("/users")
+        assert response.status_code == 200        
+        data_dict = json.loads(response.data.decode("ASCII"))
+        assert data_dict['body']['user_name'] == ['kaja','moonshine']
+    finally:
+        c.clear_test_db
+        cur.close()
+        conn.close()
 
 
 def test_get_user_id():

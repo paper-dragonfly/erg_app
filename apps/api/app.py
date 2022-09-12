@@ -8,10 +8,10 @@ import pdb
 def create_app(db):
     app = Flask(__name__) 
 
-    @app.route('/user/<id>', methods=['GET'])
-    def get_user_info(id):
-        status_code, user_dict = l.get_user_info(id, db)
-        return json.dumps({'status_code':status_code, 'body':user_dict})
+    @app.route('/users', methods=['GET'])
+    def get_users_info():
+        status_code, users_dict = l.get_users(db)
+        return json.dumps({'status_code':status_code, 'body':users_dict})
 
 
     #TODO: new as of Aug 19, no tests yet

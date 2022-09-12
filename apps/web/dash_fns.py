@@ -4,6 +4,7 @@ import re
 from constants import ROOT_URL
 import pdb 
 
+# FLASK get+post for requests/client
 def flask_requests_get(url:str):
     return requests.get(url).json()
 
@@ -21,16 +22,21 @@ def flask_client_post(url:str, data:dict,client):
     response = client.post(url, data=json.dumps(data), content_type='application/json')
     return json.loads(response.data.decode("ASCII"))
 
-
+# GET requests
 def get_usernames(get=flask_requests_get, get_args={}):
-    names = get(ROOT_URL+'/usernames', **get_args)['user_names']
+    names:tuple = get(ROOT_URL+'/users', **get_args)['body'][1]
     name_list = []
     for i in range(len(names)):
-        name_list.append(names[i][0].capitalize())
+        name_list.append(names[i].capitalize())
     return name_list
 
-def get_id(user_name):
-    return requests.get(ROOT_URL+f'/userid/{user_name}').json()['user_id']
+
+def get_id(user_name, get=flask_requests_get, get_args={}):
+    flask_resp_users = get(ROOT_URL+f'/users', **get_args)['body']
+    idx = flask_resp_users[1].index(user_name)
+    user_id = flask_resp_users[0][idx]
+    return user_id 
+    
 
 def get_name(id):
     name = requests.get(ROOT_URL+f'/username/{id}').json()['user_name']
@@ -39,6 +45,7 @@ def get_name(id):
 def get_wo_details(wo_id):
     return requests.get(ROOT_URL+f'/details?workout_id={wo_id}').json()
 
+# POST requests
 def post_new_workout(wdict):
     return requests.post(ROOT_URL+'/addworkout',json=wdict).json()
 
@@ -48,68 +55,8 @@ def post_new_interval(idict):
 def post_newuser(newuser_dict, post=flask_requests_post, post_args={}):
     return post(ROOT_URL+'/newuser',newuser_dict,**post_args)
 
-def duration_to_seconds(duration:str)->int:
-    # (hh:mm:ss.d)
-    if not duration:
-        return 0
-    hours_sec = int(duration[0:2])*60*60
-    min_sec = int(duration[3:5])*60
-    sec = int(duration[6:8])
-    ms_sec = int(duration[9:])/100
-    time_sec = (hours_sec + min_sec + sec + ms_sec)
-    return time_sec
 
-
-def check_duration(input_dur:str, d_type='Time')->dict: 
-    if not input_dur: #allow empty submission 
-        return {'accept':True, 'message':input_dur}
-    # adjust input_time to full format length
-    blank = '00:00:00.0'
-    short = 10 - len(time)
-    time = blank[:short]+time
-    correct = 'hh:mm:ss.d'
-    if d_type == 'Split':
-       correct = 'm:ss.d' 
-    # check if formatting correct
-    f = re.findall('^([0-1]\d|[2][0-4]):[0-5]\d:[0-5]\d[.]\d$', input_dur)
-    if len(f) != 1:
-        return {'success':False, 'message':f'{d_type} formatting error: must use {correct} formatting'}
-    return {'accept':True, 'message':input_dur}    
-
-
-def check_sr_formatting(stroke_rate):
-    if len(re.findall('^\d*\d$', stroke_rate)) != 1:
-        return {'success':False, "message":'Stroke rate formatting error: must be integer'}
-    return {'success':True, "message":stroke_rate}
-
-def choose_title(radio, num_rows): #No test needed
-    if radio == 'Intervals':
-        head = f'## Input Interval {num_rows-1}'
-    else:
-        head = f'## Input Sub-Workout {num_rows-1}'
-    return head
-        
-def reformat_date(date:str)->dict: #'Apr 01 2022'
-#confirms input_date formatting is (three char abrev of month)+( )+(two digit day)+( )+(four digit year value). Validity of day and year are not checked here
-    if len(re.findall("^[a-zA-Z]{3}\s([0-2][0-9]|[3][0-1])\s\d\d\d\d$",date)) != 1:
-        error_message = 'Date formatting error: Must use first three letters of month followed by two digit day followed by 4 diget year e.g. Jan 01 2000'
-        if len(date) != 11:
-            error_message = 'Date formatting error: date length incorrect'
-        return {'success':False, 'message': error_message}
-    mm = date[:3].capitalize()
-    dd = date[4:6]
-    yyyy = date[7:]
-    months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
-    if not mm in months: #input does not match real month
-        return {'success': False, 'message': 'Date formatting error: month wrong'}
-    for i in range(12):
-        if months[i] == mm:
-            mm = str(i+1)
-    if len(mm) == 1:
-        mm = '0'+mm
-    return {'success':True, 'message':yyyy+'-'+mm+'-'+dd} 
-
-
+# Check Formatting 
 def check_date(input_date:str)->dict: #yyyy-mm-dd
     if not input_date: #allow empty submission
         return {'success':True, 'message': ""}
@@ -139,6 +86,127 @@ def check_date(input_date:str)->dict: #yyyy-mm-dd
             return {'accept':False, 'message':"Date formatting error: day out of range"}
 
 
+def check_duration(input_dur:str, d_type='Time')->dict: 
+    if not input_dur: #allow empty submission 
+        return {'accept':True, 'message':input_dur}
+    # adjust input_time to full format length
+    blank = '00:00:00.0'
+    short = 10 - len(time)
+    time = blank[:short]+time
+    correct = 'hh:mm:ss.d'
+    if d_type == 'Split':
+       correct = 'm:ss.d' 
+    # check if formatting correct
+    f = re.findall('^([0-1]\d|[2][0-4]):[0-5]\d:[0-5]\d[.]\d$', input_dur)
+    if len(f) != 1:
+        return {'success':False, 'message':f'{d_type} formatting error: must use {correct} formatting'}
+    return {'accept':True, 'message':input_dur}    
+
+
+def check_sr_formatting(stroke_rate):
+    if len(re.findall('^\d*\d$', stroke_rate)) != 1:
+        return {'success':False, "message":'Stroke rate formatting error: must be integer'}
+    return {'success':True, "message":stroke_rate}
+
+
+def check_dist_formatting(dist):
+    if len(re.findall('^\d+$', dist)):
+        return {'success':True, 'message':dist}
+    return {'success':False, 'message':'Distance formatting error'}
+
+
+def check_hr_formatting(hr):
+    if hr == 'n/a' or len(re.findall('^\d+$',hr)) == 1 or hr == "":
+        return {'success':True, 'message':hr}
+    return {'success':False, 'message':'Heart rate formatting error'}
+
+
+def check_rest_formatting(rest):
+    if rest == "n/a" or rest == "" or len(re.findall('^\d+$', rest)):
+        return {'success':True, 'message':rest}
+    return {'success':False, 'message':'Rest formatting error'}
+
+
+def validate_form_inputs(date, time, dist, split, sr, hr, rest):
+    valid_date:dict = check_date(date)
+    valid_time:dict = check_duration(time)
+    valid_dist:dict = check_dist_formatting(dist)
+    valid_split:dict = check_duration(split, 'Split')
+    valid_sr:dict = check_sr_formatting(sr)
+    valid_hr:dict = check_hr_formatting(hr)
+    valid_rest:dict = check_rest_formatting(rest)
+    error_messages = []
+    for field in [valid_date, valid_time, valid_dist, valid_split, valid_sr, valid_hr,valid_rest]:
+        if not field['success']:
+            error_messages.append(field['message'])
+    return error_messages 
+
+
+## Change Formatting 
+def duration_to_seconds(duration:str)->int:
+    # (hh:mm:ss.d)
+    if not duration:
+        return 0
+    hours_sec = int(duration[0:2])*60*60
+    min_sec = int(duration[3:5])*60
+    sec = int(duration[6:8])
+    ms_sec = int(duration[9:])/100
+    time_sec = (hours_sec + min_sec + sec + ms_sec)
+    return time_sec
+
+
+def seconds_to_duration(time_sec):
+    if time_sec == 0:
+        return '0'
+    #seperate time into h,m,s,d
+    hours = time_sec//3600
+    r1 = time_sec%3600
+    mins = r1//60
+    r2 = r1%60
+    secs = r2//1
+    tenths = (r2%1)*10
+    #construct duration string
+    dur = ""
+    for i in [hours, mins, secs,tenths]: #hh:mm:ss:dd:
+        if i == 0:
+            dur += '00:'
+        elif 0 < i < 10:
+            dur += '0'+str(i)+':'
+        else:
+            dur += str(i)+':'
+    dur2 = dur[:8]+"."+dur[10] #hh:mm:ss.d
+    #eliminate leading zeros
+    zero = True
+    for i in [0,1,3,4,6,7,9]:
+        if zero:
+            if dur2[i] != '0':
+                nonz = i
+                zero = False
+    duration = dur2[nonz:]
+    return duration 
+
+
+def reformat_date(date:str)->dict: #'Apr 01 2022'
+#confirms input_date formatting is (three char abrev of month)+( )+(two digit day)+( )+(four digit year value). Validity of day and year are not checked here
+    if len(re.findall("^[a-zA-Z]{3}\s([0-2][0-9]|[3][0-1])\s\d\d\d\d$",date)) != 1:
+        error_message = 'Date formatting error: Must use first three letters of month followed by two digit day followed by 4 diget year e.g. Jan 01 2000'
+        if len(date) != 11:
+            error_message = 'Date formatting error: date length incorrect'
+        return {'success':False, 'message': error_message}
+    mm = date[:3].capitalize()
+    dd = date[4:6]
+    yyyy = date[7:]
+    months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+    if not mm in months: #input does not match real month
+        return {'success': False, 'message': 'Date formatting error: month wrong'}
+    for i in range(12):
+        if months[i] == mm:
+            mm = str(i+1)
+    if len(mm) == 1:
+        mm = '0'+mm
+    return {'success':True, 'message':yyyy+'-'+mm+'-'+dd} 
+
+
 def format_time(h,m,s,t:str)->str: #hh:mm:ss.d
     d = {'h':h,"m":m,'s':s}
     for key in d:
@@ -152,6 +220,7 @@ def format_time(h,m,s,t:str)->str: #hh:mm:ss.d
     return time
 
 
+## Generate dict 
 # used in add_workout_manually
 def generate_post_wo_dict(int_dict:dict, user_id:str, wo_dict:dict)->dict:
     # calculate averages 
@@ -205,118 +274,6 @@ def generate_post_wo_dict2(int_dict:dict, user_id:str, wo_dict:dict, intvl)->dic
     wo_dict['comment']=int_dict['Comment'][0]
     return wo_dict 
 
-# NOTE: even sinle time/dist wo have multiple entries (eg 2k is broken into 4x500m)
-def format_and_post_intervals(wo_id, i_dict, intrvl_wo=True):
-    post_intrvl_dict_template = {'workout_id':wo_id,'time_sec':None,'distance':None,'split':None,'sr':None,'hr':None,'rest':None,'comment':None, 'intrvl_wo':intrvl_wo}
-    for i in range(1,len(i_dict['Date'])):
-        ipost_dict = post_intrvl_dict_template
-        ipost_dict['time_sec'] = duration_to_seconds(i_dict['Time'][i])
-        ipost_dict['distance'] = i_dict['Distance'][i]
-        ipost_dict['split'] = duration_to_seconds("00:0"+i_dict['Split'][i])
-        ipost_dict['sr'] = i_dict['s/m'][i]
-        if i_dict['HR'][i].lower() == 'n/a':
-            ipost_dict['hr'] = 0
-        else: 
-            ipost_dict['hr'] = i_dict['HR'][i]
-        if i_dict['Rest'][i].lower() == 'n/a':
-            ipost_dict['rest'] = 0
-        else: 
-            ipost_dict['rest'] = i_dict['Rest'][i]
-        ipost_dict['comment'] = i_dict['Comment'][i]
-        post_new_interval(ipost_dict)    
-    return
-
-def seconds_to_duration(time_sec):
-    if time_sec == 0:
-        return '0'
-    #seperate time into h,m,s,d
-    hours = time_sec//3600
-    r1 = time_sec%3600
-    mins = r1//60
-    r2 = r1%60
-    secs = r2//1
-    tenths = (r2%1)*10
-    #construct duration string
-    dur = ""
-    for i in [hours, mins, secs,tenths]: #hh:mm:ss:dd:
-        if i == 0:
-            dur += '00:'
-        elif 0 < i < 10:
-            dur += '0'+str(i)+':'
-        else:
-            dur += str(i)+':'
-    dur2 = dur[:8]+"."+dur[10] #hh:mm:ss.d
-    #eliminate leading zeros
-    zero = True
-    for i in [0,1,3,4,6,7,9]:
-        if zero:
-            if dur2[i] != '0':
-                nonz = i
-                zero = False
-    duration = dur2[nonz:]
-    return duration 
-
-def calc_av_rest(idata):
-    sum_rest = 0
-    for i in range(len(idata)):
-        sum_rest += idata[i][7]
-    av_rest = sum_rest/len(idata)
-    return av_rest
-
-
-def find_wo_name(single:bool, wo_summary, intrvl_data):
-    wo_type = 'time'
-    for i in range(1,len(intrvl_data)):
-        if intrvl_data[i][2] != intrvl_data[i-1][2]:
-            wo_type = 'distance'
-            break 
-    #single time/dist
-    if single: 
-        if wo_type == 'time':
-            name = 'Single Time: ' + str(seconds_to_duration(wo_summary[3])) #get time from wo_summary
-        else:
-            name = 'Single Distance: '+str(wo_summary[4])+'m' #distance from wo_summary in meters 
-        return name
-    # Interval time/dist
-    num_ints = len(intrvl_data)
-    if wo_type == 'time':
-        name = 'Intervals Time: '+str(num_ints)+'x'+str(seconds_to_duration(intrvl_data[0][2]))+'/'+str(intrvl_data[0][7])+'r'
-    else:
-        name = 'Intervals Distance: '+str(num_ints)+'x'+str(intrvl_data[0][3])+'m'+'/'+str(intrvl_data[0][7])+'r'   
-    return name
-
-
-def check_dist_formatting(dist):
-    if len(re.findall('^\d+$', dist)):
-        return {'success':True, 'message':dist}
-    return {'success':False, 'message':'Distance formatting error'}
-
-
-def check_hr_formatting(hr):
-    if hr == 'n/a' or len(re.findall('^\d+$',hr)) == 1 or hr == "":
-        return {'success':True, 'message':hr}
-    return {'success':False, 'message':'Heart rate formatting error'}
-
-
-def check_rest_formatting(rest):
-    if rest == "n/a" or rest == "" or len(re.findall('^\d+$', rest)):
-        return {'success':True, 'message':rest}
-    return {'success':False, 'message':'Rest formatting error'}
-
-
-def validate_form_inputs(date, time, dist, split, sr, hr, rest):
-    valid_date:dict = check_date(date)
-    valid_time:dict = check_duration(time)
-    valid_dist:dict = check_dist_formatting(dist)
-    valid_split:dict = check_duration(split, 'Split')
-    valid_sr:dict = check_sr_formatting(sr)
-    valid_hr:dict = check_hr_formatting(hr)
-    valid_rest:dict = check_rest_formatting(rest)
-    error_messages = []
-    for field in [valid_date, valid_time, valid_dist, valid_split, valid_sr, valid_hr,valid_rest]:
-        if not field['success']:
-            error_messages.append(field['message'])
-    return error_messages 
 
 def wo_details_df(wo_id):
     df= {'Time':[], 'Distance':[], 'Split':[], 's/m':[], 'HR':[], 'Rest':[], 'Comment':[]}
@@ -351,8 +308,65 @@ def wo_details_df(wo_id):
     date = wo_data[2] 
     return df, date, wo_name
    
+## OTHER
+def choose_title(radio, num_rows): #No test needed
+    if radio == 'Intervals':
+        head = f'## Input Interval {num_rows-1}'
+    else:
+        head = f'## Input Sub-Workout {num_rows-1}'
+    return head  
 
-    
+
+def calc_av_rest(idata):
+    sum_rest = 0
+    for i in range(len(idata)):
+        sum_rest += idata[i][7]
+    av_rest = sum_rest/len(idata)
+    return av_rest
+
+
+# NOTE: even sinle time/dist wo have multiple entries (eg 2k is broken into 4x500m)
+def format_and_post_intervals(wo_id, i_dict, intrvl_wo=True):
+    post_intrvl_dict_template = {'workout_id':wo_id,'time_sec':None,'distance':None,'split':None,'sr':None,'hr':None,'rest':None,'comment':None, 'intrvl_wo':intrvl_wo}
+    for i in range(1,len(i_dict['Date'])):
+        ipost_dict = post_intrvl_dict_template
+        ipost_dict['time_sec'] = duration_to_seconds(i_dict['Time'][i])
+        ipost_dict['distance'] = i_dict['Distance'][i]
+        ipost_dict['split'] = duration_to_seconds("00:0"+i_dict['Split'][i])
+        ipost_dict['sr'] = i_dict['s/m'][i]
+        if i_dict['HR'][i].lower() == 'n/a':
+            ipost_dict['hr'] = 0
+        else: 
+            ipost_dict['hr'] = i_dict['HR'][i]
+        if i_dict['Rest'][i].lower() == 'n/a':
+            ipost_dict['rest'] = 0
+        else: 
+            ipost_dict['rest'] = i_dict['Rest'][i]
+        ipost_dict['comment'] = i_dict['Comment'][i]
+        post_new_interval(ipost_dict)    
+    return
+
+
+def find_wo_name(single:bool, wo_summary, intrvl_data):
+    wo_type = 'time'
+    for i in range(1,len(intrvl_data)):
+        if intrvl_data[i][2] != intrvl_data[i-1][2]:
+            wo_type = 'distance'
+            break 
+    #single time/dist
+    if single: 
+        if wo_type == 'time':
+            name = 'Single Time: ' + str(seconds_to_duration(wo_summary[3])) #get time from wo_summary
+        else:
+            name = 'Single Distance: '+str(wo_summary[4])+'m' #distance from wo_summary in meters 
+        return name
+    # Interval time/dist
+    num_ints = len(intrvl_data)
+    if wo_type == 'time':
+        name = 'Intervals Time: '+str(num_ints)+'x'+str(seconds_to_duration(intrvl_data[0][2]))+'/'+str(intrvl_data[0][7])+'r'
+    else:
+        name = 'Intervals Distance: '+str(num_ints)+'x'+str(intrvl_data[0][3])+'m'+'/'+str(intrvl_data[0][7])+'r'   
+    return name
 
     
 

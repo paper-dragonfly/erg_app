@@ -3,7 +3,7 @@ import dash_bootstrap_components as dbc
 from dash.dependencies import Output, Input, State
 from constants import ROOT_URL
 import requests
-import dash_fxs as dfx
+import dash_fns as dfx
 import pdb
 
 app = Dash(__name__,external_stylesheets=[dbc.themes.SANDSTONE], use_pages=True)

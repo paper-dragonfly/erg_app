@@ -49,21 +49,22 @@ def add_new_user(db:str, resp_newuser:NewUser)->int:
 
 
 #Get user info given ID
-def get_user_info(id:int, db:str)->tuple:
-    user_dict={}
+def get_users(db:str)->tuple:
+    user_dict={'user_id':[], 'user_name':[], 'dob':[],'sex':[],'team':[]}
     try:
         conn, cur = db_connect(db)
-        cur.execute("SELECT * FROM users WHERE user_id=%s",(id,))
-        uinfo = cur.fetchone()
+        cur.execute("SELECT * FROM users")
+        uinfo = cur.fetchall()
         # if no user_name maches given user_id
         if not uinfo:
             status_code = 404
         else:  
-            user_dict['user_id'] = uinfo[0]
-            user_dict['user_name'] = uinfo[1]
-            user_dict['dob'] = uinfo[2]
-            user_dict['sex'] = uinfo[3]
-            user_dict['team'] = uinfo[4]
+            for i in range(len(uinfo)): 
+                user_dict['user_id'].append(uinfo[i][0])
+                user_dict['user_name'].append(uinfo[i][1])
+                user_dict['dob'] .append(str(uinfo[i][2]))
+                user_dict['sex'].append(uinfo[i][3])
+                user_dict['team'].append(uinfo[i][4])
             status_code = 200
     finally:
         cur.close()
