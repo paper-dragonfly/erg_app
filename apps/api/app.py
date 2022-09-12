@@ -14,42 +14,15 @@ def create_app(db):
         return json.dumps({'status_code':status_code, 'body':users_dict})
 
 
-    #TODO: new as of Aug 19, no tests yet
-    # @app.route('/username/<id>', methods=['GET'])
-    # def get_username(id):
-    #     user_name = l.get_user_name(id, db)
-    #     return json.dumps({'status_code': 200, 'user_name': user_name})
-
-    # @app.route("/userid/<user_name>",methods=["GET"]) #find user_id for existing user
-    # def userid(user_name):
-    #     #Submit user_name, return user_id
-    #     user_id = l.get_user_id(user_name, db)
-    #     return json.dumps({'status_code':200, 'user_id': user_id})
-    
-
-    @app.route("/usernames", methods = ['GET'])
-    def usernames():
-        # GET, return all user_names 
-        user_names = []
-        try: 
-            conn, cur = l.db_connect(db)
-            cur.execute('SELECT user_name FROM users')
-            user_names = cur.fetchall() #[["n1"],["n2"]]
-        finally: 
-            cur.close()
-            conn.close()
-            return json.dumps({'status_code': 200, 'user_names': user_names})
-
-
     @app.route("/newuser", methods=['POST']) # create new user
     def newuser():
         # POST new_user info, return: user_id
         try:
             resp_newuser = NewUser.parse_obj(request.get_json())
         except ValidationError() as e:
-            return json.dumps({'status_code': 400, 'message': e})
+            return json.dumps({'status_code': 400, 'message': e, 'body':None})
         user_id = l.add_new_user(db, resp_newuser)
-        return json.dumps({'status_code': 200, 'user_id': user_id})
+        return json.dumps({'status_code': 200, 'body': user_id})
 
 
     @app.route("/log/<user_id>", methods = ['GET']) #list all workouts for user
@@ -70,7 +43,7 @@ def create_app(db):
             return json.dumps({'status_code':200, 'message':user_workouts}, default=str) #datetime not json serializable so use defualt=str to convert non-serializable values to strings
 
 
-    @app.route('/addworkout', methods=['POST'])
+    @app.route('/addworkout', methods=['POST']) #TODO: should this be '/log' POST? 
     def addworkout():
         # POST user_id, date, distance, time_sec, split, intervals, comment | return: workout_id
         try:
@@ -89,25 +62,7 @@ def create_app(db):
         except ValidationError() as e:
             return json.dumps({'status_code': 400, 'message': e})
         add_successful:bool = l.add_interval(db, interval_inst) 
-        return json.dumps({'status_code': 200, 'message':add_successful})    
-
-
-    @app.route("/logsearch", methods = ['GET']) # returns all workouts that match search results
-    def logsearch():
-        workout_search_params:dict = request.args 
-        sql, subs = l.search_sql_str(workout_search_params)
-        matching_workouts = None
-        try:
-            conn, cur = l.db_connect(db)
-            cur.execute(sql, subs) 
-            matching_workouts = cur.fetchall()
-        finally:
-            cur.close()
-            conn.close()
-            if matching_workouts == None:
-                return json.dumps({'status_code':500, 'message':[]})
-            else: 
-                return json.dumps({'status_code':200, 'message':matching_workouts},default=str)
+        return json.dumps({'status_code': 200, 'message':None, 'success':add_successful})    
             
 
     @app.route("/details", methods=['GET']) #list summary stats + all interval_log data for a specific workout_id
@@ -154,22 +109,20 @@ def create_app(db):
             conn.close()
             return json.dumps({'status_code':200, 'distance':distance, 'time':time, 'count':count, "user_info": user_info, "user_team":user_team})
 
-    @app.route('/listteams', methods=['GET'])
+    @app.route('/teams', methods=['GET'])
     def list_teams():
-        m = 'fail'
         try:
-            # pdb.set_trace()
             conn,cur = l.db_connect(db)
             cur.execute("SELECT team_name FROM team")
-            team_ll = cur.fetchall() #[(t1,),(t2,)]
+            team_lt = cur.fetchall() #[(t1,),(t2,)]
             team_names =[]
-            for i in range(len(team_ll)):
-                team_names.append(team_ll[i][0])
-            m = team_names
+            for i in range(len(team_lt)):
+                team_names.append(team_lt[i][0])
+            teams = team_names
         finally:
             cur.close()
             conn.close()
-            return json.dumps({'status_code': 200, 'message': m})
+            return json.dumps({'status_code': 200, 'body': teams})
 
 
 

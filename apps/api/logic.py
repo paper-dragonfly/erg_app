@@ -71,35 +71,6 @@ def get_users(db:str)->tuple:
         conn.close()
         return status_code, user_dict
 
-#Get user_name from ID
-def get_user_name(id, db):
-    try:
-        conn, cur = db_connect(db)
-        cur.execute("SELECT user_name FROM users WHERE user_id=%s",(id,))
-        user_name = cur.fetchone()[0]
-    # exception - no user_name maches given user_name
-    except:  
-        user_name = 'No Match'
-    finally:
-        cur.close()
-        conn.close()
-        return user_name 
-
-
-#Get User id
-def get_user_id(user_name, db='Erg'):
-    try:
-        conn, cur = db_connect(db)
-        cur.execute("SELECT user_id FROM users WHERE user_name=%s",(user_name,))
-        user_id = cur.fetchone()[0]
-    # exception - no user_name maches given user_name
-    except:  
-        user_id = 0
-    finally:
-        cur.close()
-        conn.close()
-        return user_id 
-
 
 # add workout to workout_log
 def add_workout(db:str, workout_inst:NewWorkout)->int:
@@ -125,8 +96,8 @@ def add_interval(db:str, interval_inst:NewInterval)->bool:
         # connect to db
         conn, cur = db_connect(db, True)
         # add interval data to interval_log table
-        sql = "INSERT INTO interval_log(workout_id, time_sec, distance, split, sr, hr, rest, comment, intrvl_wo) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s)"
-        subs = (interval_inst.workout_id, interval_inst.time_sec, interval_inst.distance, interval_inst.split, interval_inst.sr, interval_inst.hr, interval_inst.rest, interval_inst.comment, interval_inst.intrvl_wo) 
+        sql = "INSERT INTO interval_log(workout_id, time_sec, distance, split, sr, hr, rest, comment, interval_wo) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+        subs = (interval_inst.workout_id, interval_inst.time_sec, interval_inst.distance, interval_inst.split, interval_inst.sr, interval_inst.hr, interval_inst.rest, interval_inst.comment, interval_inst.interval_wo) 
         cur.execute(sql, subs)
         added = True
     finally:
@@ -134,23 +105,6 @@ def add_interval(db:str, interval_inst:NewInterval)->bool:
         conn.close()
         return added  
 
-
-def search_sql_str(workout_search_params:dict)-> str:
-    sql = 'SELECT * FROM workout_log WHERE '
-    subs = []
-    l = len(workout_search_params) 
-    i = 1
-    for key in workout_search_params:
-        if i < l:
-            sql+= key
-            sql+= '=%s AND '
-            subs.append(workout_search_params[key])
-        else:
-            sql+= key
-            sql+= '=%s'
-            subs.append(workout_search_params[key])
-        i += 1
-    return sql, subs 
         
 
 

@@ -6,7 +6,7 @@ from dash import dcc, html, register_page, Input, Output, callback, State
 import pdb
 import json
 from dash.exceptions import PreventUpdate
-from apps.web.dash_fxs import get_name, post_new_workout, duration_to_seconds, check_duration, check_date, post_newuser, flask_requests_get as rget, flask_requests_post as rpost
+from apps.web.dash_fns import get_name, post_new_workout, duration_to_seconds, check_duration, check_date, post_newuser, flask_requests_get as rget, flask_requests_post as rpost
 
 
 register_page(__name__, path='/newuser')
@@ -46,7 +46,7 @@ def layout(user_id='1'):
     Input('dd_team', 'options')
 )
 def populate_team_dropdown(init_option,get=rget, get_args={}):
-    team_list = get(ROOT_URL+'/listteams',**get_args)['message']
+    team_list = get(ROOT_URL+'/teams',**get_args)['body']
     team_list.append(init_option) #'None'
     team_list.append('Other')
     return team_list 
@@ -90,7 +90,7 @@ def submit_user(n_clicks, name, dob, sex, team, post=rpost, post_args={}):
     newuser_post_dict['dob'] = dob
     newuser_post_dict['sex'] = sex
     newuser_post_dict['team'] = team
-    user_id = post_newuser(newuser_post_dict,post,post_args)['user_id']
+    user_id = post_newuser(newuser_post_dict,post,post_args)['body']
     if user_id == 0:
         return 'Submit User','primary', {'display':'block'},user_id
     return 'User Added', 'success', {'display':'none'}, user_id

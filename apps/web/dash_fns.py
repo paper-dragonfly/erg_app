@@ -1,7 +1,7 @@
 import requests
 import json
 import re
-from constants import ROOT_URL
+from apps.web.constants import ROOT_URL
 import pdb 
 
 # FLASK get+post for requests/client
@@ -24,7 +24,7 @@ def flask_client_post(url:str, data:dict,client):
 
 # GET requests
 def get_usernames(get=flask_requests_get, get_args={}):
-    names:tuple = get(ROOT_URL+'/users', **get_args)['body'][1]
+    names:tuple = get(ROOT_URL+'/users', **get_args)['body']['user_name']
     name_list = []
     for i in range(len(names)):
         name_list.append(names[i].capitalize())
@@ -33,17 +33,20 @@ def get_usernames(get=flask_requests_get, get_args={}):
 
 def get_id(user_name, get=flask_requests_get, get_args={}):
     flask_resp_users = get(ROOT_URL+f'/users', **get_args)['body']
-    idx = flask_resp_users[1].index(user_name)
-    user_id = flask_resp_users[0][idx]
+    idx = flask_resp_users['user_name'].index(user_name)
+    user_id = flask_resp_users['user_id'][idx]
     return user_id 
     
 
-def get_name(id):
-    name = requests.get(ROOT_URL+f'/username/{id}').json()['user_name']
-    return name
+def get_name(id, get=flask_requests_get, get_args={}):
+    flask_resp_users = get(ROOT_URL+f'/users', **get_args)['body']
+    idx = flask_resp_users['user_id'].index(id)
+    user_name = flask_resp_users['user_name'][idx]
+    return user_name
 
-def get_wo_details(wo_id):
-    return requests.get(ROOT_URL+f'/details?workout_id={wo_id}').json()
+
+def get_wo_details(wo_id, get=flask_requests_get, get_args={}):
+    return get(ROOT_URL+f'/details?workout_id={wo_id}',**get_args)
 
 # POST requests
 def post_new_workout(wdict):

@@ -3,7 +3,7 @@ import pdb
 from dash import Dash, dcc, html, register_page, callback, Input, Output, State 
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
-from apps.web.dash_fxs import choose_title, format_and_post_intervals, generate_post_wo_dict2, post_new_workout, format_and_post_intervals, validate_form_inputs
+from apps.web.dash_fns import choose_title, format_and_post_intervals, generate_post_wo_dict2, post_new_workout, format_and_post_intervals, validate_form_inputs
 from dash.exceptions import PreventUpdate
 import cv2
 import datetime

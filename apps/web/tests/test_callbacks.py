@@ -7,7 +7,7 @@ from pytest import raises
 import dash_fns as dfx
 from apps.web.dash_fns import flask_client_get as client_get, flask_client_post as client_post, reformat_date
 from apps.api.logic import db_connect
-import apps.web.conftest as c
+import apps.web.tests.conftest as c
 import pdb
 from apps.web.pages.new_user import populate_team_dropdown, display_team_input, set_user_team, submit_user
 from dash.exceptions import PreventUpdate

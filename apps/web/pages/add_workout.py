@@ -5,7 +5,7 @@ import pdb
 from constants import ROOT_URL
 import dash_bootstrap_components as dbc
 from dash import dcc, html, register_page, callback, Input, Output, State 
-from apps.web.dash_fxs import format_and_post_intervals, format_time, duration_to_seconds, post_new_workout, check_date, check_duration, generate_post_wo_dict, format_and_post_intervals
+from apps.web.dash_fns import format_and_post_intervals, format_time, duration_to_seconds, post_new_workout, check_date, check_duration, generate_post_wo_dict, format_and_post_intervals
 from dash.exceptions import PreventUpdate
 import json 
 

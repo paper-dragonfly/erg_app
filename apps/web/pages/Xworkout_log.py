@@ -4,8 +4,8 @@ import dash_bootstrap_components as dbc
 import requests
 from typing import List
 from constants import ROOT_URL
-from apps.web.dash_fxs import flask_requests_get, flask_requests_post
-from apps.web.dash_fxs import get_name, seconds_to_duration
+from apps.web.dash_fns import flask_requests_get, flask_requests_post
+from apps.web.dash_fns import get_name, seconds_to_duration
 
 register_page(__name__,path_template='/workout_log/<user_id>')
 

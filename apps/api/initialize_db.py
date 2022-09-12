@@ -71,7 +71,7 @@ def create_interval_log_table(cur):
         hr INTEGER,
         rest INTEGER,
         comment VARCHAR(255),
-        intrvl_wo BOOLEAN, 
+        interval_wo BOOLEAN, 
         FOREIGN KEY (workout_id) REFERENCES workout_log(workout_id))"""
     )
 

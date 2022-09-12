@@ -5,7 +5,7 @@ import dash_bootstrap_components as dbc
 from dash import dcc, html, register_page, Input, Output, callback, State
 import pdb
 import json
-from apps.web.dash_fxs import get_name, post_new_workout, duration_to_seconds, check_duration, check_date
+from apps.web.dash_fns import get_name, post_new_workout, duration_to_seconds, check_duration, check_date
 
 register_page(__name__, path_template='/addworkout2/<user_id>')
   

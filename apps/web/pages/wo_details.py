@@ -6,8 +6,8 @@ import requests
 import pdb
 from typing import List
 from constants import ROOT_URL
-from apps.web.dash_fxs import calc_av_rest, flask_requests_get, flask_requests_post, get_wo_details, wo_details_df
-from apps.web.dash_fxs import get_name, seconds_to_duration
+from apps.web.dash_fns import calc_av_rest, flask_requests_get, flask_requests_post, get_wo_details, wo_details_df
+from apps.web.dash_fns import get_name, seconds_to_duration
 
 register_page(__name__, path_template='/details/<wo_id>')
 
