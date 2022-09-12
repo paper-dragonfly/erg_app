@@ -1,4 +1,4 @@
-from apps.web.dash_fns import get_name, get_wo_details
+from apps.web.dash_fns import get_name, get_wo_details, post_newuser, check_date, reformat_date
 from apps.web.dash_fns import get_usernames, flask_client_get as client_get, flask_client_post as client_post, get_id
 from apps.api.logic import db_connect
 from apps.web.tests.conftest import clear_test_db
@@ -44,6 +44,84 @@ def test_04_get_wo_details(client): ##come back
     assert flask_resp_details['single'] == True 
     assert len(flask_resp_details['workout_summary']) == 10
     
-# def test_clear_testdb():
-#     clear_test_db()
+
+def test_05_post_newuser(client):
+    newuser_post_dict = {'user_name':'fox', 'dob':'2000-01-01', 'sex':'Male', 'team':'utah crew'}
+    flask_resp = post_newuser(newuser_post_dict,client_post,{'client':client})
+    assert flask_resp['status_code'] == 200 
+    assert type(flask_resp['body']) == int
+
+
+def test_06_check_date():
+    assert check_date('Jan 01 2000') == {'success':True, 'message':'2000-01-01'}  
+
+
+def test_check_duration():
+    pass
+
+
+def test_check_sr_formatting():
+    pass 
+
+
+def test_check_hr_formatting():
+    pass
+
+
+def test_rest_formatting():
+    pass
+
+
+def test_validate_form_inputs():
+    pass 
+
+
+def test_duration_to_seconds():
+    pass 
+
+
+def test_seconds_to_duration():
+    pass 
+
+
+def test_reformat_date():
+    pass 
+
+
+def test_format_time():
+    pass 
+
+
+def test_generate_post_wo_dict():
+    pass # skip - for manual entry which is depricated
+
+
+def test_generate_post_wo_dict2():
+    pass 
+
+
+def test_wo_details_df():
+    pass
+
+
+def test_choose_title():
+    pass # Simple - no test needed
+
+
+def test_calc_av_rest():
+    pass 
+
+
+def test_format_and_post_intervals():
+    pass
+
+
+def test_find_wo_name():
+    pass 
+
+
+def test_clear_testdb():
+    clear_test_db()
+    
+
     

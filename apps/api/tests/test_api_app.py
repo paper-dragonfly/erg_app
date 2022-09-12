@@ -70,7 +70,7 @@ def test_addworkout(client):
     """
     GIVEN a flask app 
     WHEN POST with workout info submitted to /addworkout
-    THEN workout is added to db and workout_id is returned
+    THEN assert workout is added to db and workout_id is returned
     """
     try:
         # populate db - user

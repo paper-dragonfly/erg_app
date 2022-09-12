@@ -49,42 +49,43 @@ def get_wo_details(wo_id, get=flask_requests_get, get_args={}):
     return get(ROOT_URL+f'/details?workout_id={wo_id}',**get_args)
 
 # POST requests
-def post_new_workout(wdict):
-    return requests.post(ROOT_URL+'/addworkout',json=wdict).json()
-
-def post_new_interval(idict):
-    return requests.post(ROOT_URL+'/addinterval',json=idict).json()
-
 def post_newuser(newuser_dict, post=flask_requests_post, post_args={}):
     return post(ROOT_URL+'/newuser',newuser_dict,**post_args)
 
+def post_new_workout(wdict, post=flask_requests_post, post_args={}):
+    return post(ROOT_URL+'/addworkout',wdict, **post_args)
+
+def post_new_interval(idict, post=flask_requests_post, post_args={}):
+    return post(ROOT_URL+'/addinterval',idict,**post_args)
+
 
 # Check Formatting 
-def check_date(input_date:str)->dict: #yyyy-mm-dd
+def check_date(input_date:str)->dict: #'Jan 01 2000' -> yyyy-mm-dd
     if not input_date: #allow empty submission
         return {'success':True, 'message': ""}
     reformat_result = reformat_date(input_date)
     if not reformat_result['success']:
-        return reformat_result 
+        return reformat_result #keys: success , message
+    date = reformat_result['message']
     # if month has 31 days
-    if input_date[5:7] in ['01','03','05','07','08','10','12']:
+    if date[5:7] in ['01','03','05','07','08','10','12']:
         #if day valid
-        if 0<int(input_date[8:10])<=31:
-            return {'success':True, 'message':input_date}
+        if 0<int(date[8:10])<=31:
+            return {'success':True, 'message':date}
         else:
             return {'success':False, 'message':"Date formatting error: day out of range"}
     #if month has 30 days
-    elif input_date[5:7] in ['04','06','09','11']:
+    elif date[5:7] in ['04','06','09','11']:
         #if day valid
-        if 0<int(input_date[8:10])<=30:
-            return {'accept':True, 'message':input_date}
+        if 0<int(date[8:10])<=30:
+            return {'accept':True, 'message':date}
         else:
             return {'accept':False, 'message':"Date formatting error: day out of range"}
     # if febuary
-    elif input_date[5:7] == '02':
+    elif date[5:7] == '02':
         #if day valid
-        if 0<int(input_date[8:10])<=28:
-            return {'accept':True, 'message':input_date}
+        if 0<int(date[8:10])<=28:
+            return {'accept':True, 'message':date}
         else:
             return {'accept':False, 'message':"Date formatting error: day out of range"}
 
