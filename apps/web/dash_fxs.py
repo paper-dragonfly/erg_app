@@ -137,7 +137,6 @@ def check_date(input_date:str)->dict: #yyyy-mm-dd
             return {'accept':True, 'message':input_date}
         else:
             return {'accept':False, 'message':"Date formatting error: day out of range"}
-    
 
 
 def format_time(h,m,s,t:str)->str: #hh:mm:ss.d
@@ -285,6 +284,40 @@ def find_wo_name(single:bool, wo_summary, intrvl_data):
     else:
         name = 'Intervals Distance: '+str(num_ints)+'x'+str(intrvl_data[0][3])+'m'+'/'+str(intrvl_data[0][7])+'r'   
     return name
+
+
+def check_dist_formatting(dist):
+    if len(re.findall('^\d+$', dist)):
+        return {'success':True, 'message':dist}
+    return {'success':False, 'message':'Distance formatting error'}
+
+
+def check_hr_formatting(hr):
+    if hr == 'n/a' or len(re.findall('^\d+$',hr)) == 1 or hr == "":
+        return {'success':True, 'message':hr}
+    return {'success':False, 'message':'Heart rate formatting error'}
+
+
+def check_rest_formatting(rest):
+    if rest == "n/a" or rest == "" or len(re.findall('^\d+$', rest)):
+        return {'success':True, 'message':rest}
+    return {'success':False, 'message':'Rest formatting error'}
+
+
+
+def validate_form_inputs(date, time, dist, split, sr, hr, rest):
+    valid_date:dict = check_date(date)
+    valid_time:dict = check_duration(time)
+    valid_dist:dict = check_dist_formatting(dist)
+    valid_split:dict = check_duration(split, 'Split')
+    valid_sr:dict = check_sr_formatting(sr)
+    valid_hr:dict = check_hr_formatting(hr)
+    valid_rest:dict = check_rest_formatting(rest)
+    error_messages = []
+    for field in [valid_date, valid_time, valid_dist, valid_split, valid_sr, valid_hr,valid_rest]:
+        if not field['success']:
+            error_messages.append(field['message'])
+    return error_messages 
 
 def wo_details_df(wo_id):
     df= {'Time':[], 'Distance':[], 'Split':[], 's/m':[], 'HR':[], 'Rest':[], 'Comment':[]}
