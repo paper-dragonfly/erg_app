@@ -49,7 +49,7 @@ def add_new_user(db:str, resp_newuser:NewUser)->int:
 
 
 #Get user info given ID
-def get_user_info(id:int, db:str)->dict:
+def get_user_info(id:int, db:str)->tuple:
     user_dict={}
     try:
         conn, cur = db_connect(db)
@@ -57,18 +57,18 @@ def get_user_info(id:int, db:str)->dict:
         uinfo = cur.fetchone()
         # if no user_name maches given user_id
         if not uinfo:
-            code = 404
+            status_code = 404
         else:  
             user_dict['user_id'] = uinfo[0]
             user_dict['user_name'] = uinfo[1]
             user_dict['dob'] = uinfo[2]
             user_dict['sex'] = uinfo[3]
             user_dict['team'] = uinfo[4]
-            code = 200
+            status_code = 200
     finally:
         cur.close()
         conn.close()
-        return {'status_code': code, 'message':user_dict} 
+        return status_code, user_dict
 
 #Get user_name from ID
 def get_user_name(id, db):

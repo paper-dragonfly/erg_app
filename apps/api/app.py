@@ -10,21 +10,21 @@ def create_app(db):
 
     @app.route('/user/<id>', methods=['GET'])
     def get_user_info(id):
-        user_info:dict = l.get_user_info(id, db)
-        return json.dumps(user_info)
+        status_code, user_dict = l.get_user_info(id, db)
+        return json.dumps({'status_code':status_code, 'body':user_dict})
 
 
     #TODO: new as of Aug 19, no tests yet
-    @app.route('/username/<id>', methods=['GET'])
-    def get_username(id):
-        user_name = l.get_user_name(id, db)
-        return json.dumps({'status_code': 200, 'user_name': user_name})
+    # @app.route('/username/<id>', methods=['GET'])
+    # def get_username(id):
+    #     user_name = l.get_user_name(id, db)
+    #     return json.dumps({'status_code': 200, 'user_name': user_name})
 
-    @app.route("/userid/<user_name>",methods=["GET"]) #find user_id for existing user
-    def userid(user_name):
-        #Submit user_name, return user_id
-        user_id = l.get_user_id(user_name, db)
-        return json.dumps({'status_code':200, 'user_id': user_id})
+    # @app.route("/userid/<user_name>",methods=["GET"]) #find user_id for existing user
+    # def userid(user_name):
+    #     #Submit user_name, return user_id
+    #     user_id = l.get_user_id(user_name, db)
+    #     return json.dumps({'status_code':200, 'user_id': user_id})
     
 
     @app.route("/usernames", methods = ['GET'])
