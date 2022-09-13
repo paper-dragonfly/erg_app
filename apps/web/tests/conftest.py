@@ -9,7 +9,6 @@ app = create_app('testing')
 def client():
     return app.test_client()
 
-    
 def clear_test_db():
     try: 
         conn, cur = db_connect('testing', True)

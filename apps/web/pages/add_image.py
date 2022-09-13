@@ -251,11 +251,11 @@ def stage_interval(n_clicks, date, time, dist, split, sr, hr, rest, com, df,head
 def post_wo_to_db(n_clicks, formatting_approved, int_dict, user_id, radio):
     if n_clicks==0 or not formatting_approved:
         raise PreventUpdate
-    intrvl = False
+    interval = False
     if radio == 'Intervals':
-        intrvl = True
-    wo_dict = generate_post_wo_dict2(int_dict, user_id, EMPTY_POST_WO_DICT, intrvl)
+        interval = True
+    wo_dict = generate_post_wo_dict2(int_dict, user_id, EMPTY_POST_WO_DICT, interval)
     print(wo_dict)
     wo_id = post_new_workout(wo_dict)['workout_id']
-    format_and_post_intervals(wo_id, int_dict, intrvl)
+    format_and_post_intervals(wo_id, int_dict, interval)
     return 'Interval Workout Submitted!', 'success'

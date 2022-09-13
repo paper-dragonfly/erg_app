@@ -111,25 +111,27 @@ def check_duration(input_dur:str, d_type='Time')->dict:
     return {'success':True, 'body':dur}    
 
 
-def check_sr_formatting(stroke_rate):
+def check_sr_formatting(stroke_rate:str)->dict:
+    if not stroke_rate:
+        return {'success':True, "message":stroke_rate}
     if len(re.findall('^\d*\d$', stroke_rate)) != 1:
         return {'success':False, "message":'Stroke rate formatting error: must be integer'}
     return {'success':True, "message":stroke_rate}
 
 
-def check_dist_formatting(dist):
+def check_dist_formatting(dist:str)->dict:
     if len(re.findall('^\d+$', dist)):
         return {'success':True, 'message':dist}
     return {'success':False, 'message':'Distance formatting error'}
 
 
-def check_hr_formatting(hr):
+def check_hr_formatting(hr:str)->dict:
     if hr == 'n/a' or len(re.findall('^\d+$',hr)) == 1 or hr == "":
         return {'success':True, 'message':hr}
     return {'success':False, 'message':'Heart rate formatting error'}
 
 
-def check_rest_formatting(rest):
+def check_rest_formatting(rest:str)->dict:
     if rest == "n/a" or rest == "" or len(re.findall('^\d+$', rest)):
         return {'success':True, 'message':rest}
     return {'success':False, 'message':'Rest formatting error'}
@@ -163,15 +165,15 @@ def duration_to_seconds(duration:str)->int:
     return time_sec
 
 
-def seconds_to_duration(time_sec):
+def seconds_to_duration(time_sec:float):
     if time_sec == 0:
         return '0'
     #seperate time into h,m,s,d
-    hours = time_sec//3600
+    hours = int(time_sec//3600)
     r1 = time_sec%3600
-    mins = r1//60
+    mins = int(r1//60)
     r2 = r1%60
-    secs = r2//1
+    secs = int(r2//1)
     tenths = (r2%1)*10
     #construct duration string
     dur = ""
@@ -261,9 +263,9 @@ def generate_post_wo_dict(int_dict:dict, user_id:str, wo_dict:dict)->dict:
     return wo_dict 
 
 # used in Add Workout fm Image
-def generate_post_wo_dict2(int_dict:dict, user_id:str, wo_dict:dict, intvl)->dict:
+def generate_post_wo_dict2(int_dict:dict, user_id:str, wo_dict:dict, interval)->dict:
     num_ints = 1
-    if intvl == True:
+    if interval == True:
         num_ints = len(int_dict['Date'])-1   
     s = '00:0'+int_dict['Split'][0]
     s_sec = duration_to_seconds(s)
@@ -283,10 +285,32 @@ def generate_post_wo_dict2(int_dict:dict, user_id:str, wo_dict:dict, intvl)->dic
     return wo_dict 
 
 
+# NOTE: even sinle time/dist wo have multiple entries (eg 2k is broken into 4x500m)
+def format_and_post_intervals(wo_id, i_dict, intrvl_wo=True):
+    post_intrvl_dict_template = {'workout_id':wo_id,'time_sec':None,'distance':None,'split':None,'sr':None,'hr':None,'rest':None,'comment':None, 'intrvl_wo':intrvl_wo}
+    for i in range(1,len(i_dict['Date'])):
+        ipost_dict = post_intrvl_dict_template
+        ipost_dict['time_sec'] = duration_to_seconds(i_dict['Time'][i])
+        ipost_dict['distance'] = i_dict['Distance'][i]
+        ipost_dict['split'] = duration_to_seconds("00:0"+i_dict['Split'][i])
+        ipost_dict['sr'] = i_dict['s/m'][i]
+        if i_dict['HR'][i].lower() == 'n/a':
+            ipost_dict['hr'] = 0
+        else: 
+            ipost_dict['hr'] = i_dict['HR'][i]
+        if i_dict['Rest'][i].lower() == 'n/a':
+            ipost_dict['rest'] = 0
+        else: 
+            ipost_dict['rest'] = i_dict['Rest'][i]
+        ipost_dict['comment'] = i_dict['Comment'][i]
+        post_new_interval(ipost_dict)    
+    return
+
+
 def wo_details_df(wo_id):
     df= {'Time':[], 'Distance':[], 'Split':[], 's/m':[], 'HR':[], 'Rest':[], 'Comment':[]}
     flask_wo_details = get_wo_details(wo_id)
-    wo_data = flask_wo_details['workout_summary']
+    wo_data = flask_wo_details['workout_summary'][0]
     intrvl_data = flask_wo_details['intervals']
     single_td:bool = flask_wo_details['single'] 
     wo_name = find_wo_name(single_td, wo_data, intrvl_data)
@@ -294,6 +318,7 @@ def wo_details_df(wo_id):
         av_rest = calc_av_rest(intrvl_data)
     else:
         av_rest = 'N/A' # single wo - no rest
+    # add summary info
     df['Time'].append(seconds_to_duration(wo_data[3])),
     df['Distance'].append(wo_data[4]),
     df['Split'].append(seconds_to_duration(wo_data[5])),
@@ -301,8 +326,10 @@ def wo_details_df(wo_id):
     df['HR'].append(wo_data[7]),
     df['Rest'].append(av_rest),
     df['Comment'].append(wo_data[9])
+    # add blank line after summary
     for key in ['Time','Distance','Split','s/m','HR','Rest','Comment']:
         df[key].append(" ")
+    # add sub-workout/interval
     for i in range(len(intrvl_data)):
         df['Time'].append(seconds_to_duration(intrvl_data[i][2])),
         df['Distance'].append(intrvl_data[i][3]),
@@ -331,28 +358,6 @@ def calc_av_rest(idata):
         sum_rest += idata[i][7]
     av_rest = sum_rest/len(idata)
     return av_rest
-
-
-# NOTE: even sinle time/dist wo have multiple entries (eg 2k is broken into 4x500m)
-def format_and_post_intervals(wo_id, i_dict, intrvl_wo=True):
-    post_intrvl_dict_template = {'workout_id':wo_id,'time_sec':None,'distance':None,'split':None,'sr':None,'hr':None,'rest':None,'comment':None, 'intrvl_wo':intrvl_wo}
-    for i in range(1,len(i_dict['Date'])):
-        ipost_dict = post_intrvl_dict_template
-        ipost_dict['time_sec'] = duration_to_seconds(i_dict['Time'][i])
-        ipost_dict['distance'] = i_dict['Distance'][i]
-        ipost_dict['split'] = duration_to_seconds("00:0"+i_dict['Split'][i])
-        ipost_dict['sr'] = i_dict['s/m'][i]
-        if i_dict['HR'][i].lower() == 'n/a':
-            ipost_dict['hr'] = 0
-        else: 
-            ipost_dict['hr'] = i_dict['HR'][i]
-        if i_dict['Rest'][i].lower() == 'n/a':
-            ipost_dict['rest'] = 0
-        else: 
-            ipost_dict['rest'] = i_dict['Rest'][i]
-        ipost_dict['comment'] = i_dict['Comment'][i]
-        post_new_interval(ipost_dict)    
-    return
 
 
 def find_wo_name(single:bool, wo_summary, intrvl_data):
