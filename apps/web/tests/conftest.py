@@ -9,6 +9,14 @@ app = create_app('testing')
 def client():
     return app.test_client()
 
+def delete_entry(table,id_col,id):
+    try:
+        conn, cur = db_connect('testing', True)
+        cur.execute(f"DELETE FROM {table} * WHERE {id_col}='{id}' ")
+    finally:
+        conn.close()
+        cur.close()
+
 def clear_test_db():
     try: 
         conn, cur = db_connect('testing', True)

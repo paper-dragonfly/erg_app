@@ -1,10 +1,10 @@
 from conftest import app 
-from dash_app import app as dash_app
+from apps.web.dash_app import app as dash_app
 import cv2
 from apps.web.pages.add_image import extract_ocr, fill_form, EMPTY_INTERVAL_TABLE, stage_interval
 import apps.web.dash_app as dfront
 from pytest import raises
-import dash_fns as dfx
+import apps.web.dash_fns as dfx
 from apps.web.dash_fns import flask_client_get as client_get, flask_client_post as client_post, reformat_date
 from apps.api.logic import db_connect
 import apps.web.tests.conftest as c
@@ -17,6 +17,9 @@ from dash.exceptions import PreventUpdate
 # 01 : dash_front.py
 # 02 : new_user.py
 # 03 : add_image.py
+# 04 : wo_details.py
+# 05 : workout_log.py
+
 
 def test_00_populate_test_db():
     """
@@ -31,9 +34,6 @@ def test_00_populate_test_db():
         cur.close()
         conn.close()
 
-# dash_fxs functions 
-
-
 
 # new_user.py
 def test_02_populate_team_dropdown(client):
@@ -47,33 +47,26 @@ def test_02_display_team_input():
         display_team_input('fish')
 
 #post
-# def test_submit_user(client):
-#     with raises(PreventUpdate):
-#         submit_user(0,'name','dob','sex','t','p','pa')
-#     output = submit_user(1,'jam','2000-01-01','Female','tumbleweed',client_post, {'client':client})
-#     assert output[0] == 'User Added'
-#     assert output[3] != 0
-#     output2 = submit_user(1,'jam','2000-01-01','Female','tumbleweed',client_post, {'client':client})
-#     assert output2[0] == 'Submit User'
-#     assert output2[2] == {'display':'block'}
-#     assert output2[3] == 0
+def test_02_submit_user(client):
+    with raises(PreventUpdate):
+        submit_user(0,'name','dob','sex','t','p','pa')
+    output = submit_user(1,'jam','2000-01-01','Female','tumbleweed',client_post, {'client':client})
+    assert output[0] == 'User Added'
+    assert output[3] != 0 #user_id
+    output2 = submit_user(1,'jam','2000-01-01','Female','tumbleweed',client_post, {'client':client})
+    assert output2[0] == 'Submit User'
+    assert output2[2] == {'display':'block'} #alert - user_name taken
+    assert output2[3] == 0 #user_id
+    c.delete_entry("users","user_id",1) 
 
-## PAGE: add_image.py
-# TODO: callbacks
-# upload_img #skip imgs too complicated
-# convert_to_cv2_compatible #skip imgs too complicated
-# post_wo_to_db # skip post
-
-# extract_ocr 
-# fill_form_wo_summary
-# stage_interval 
+## PAGE: add_image.py 
 
 def test_03_upload_image():
     pass #not sure how to write a test for this
 
 
 def test_03_convert_to_cv2_compatible():
-    pass 
+    pass # not sure how to start with b64 img
 
 def test_03_extract_ocr():
     """

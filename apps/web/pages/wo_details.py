@@ -5,7 +5,7 @@ import dash_bootstrap_components as dbc
 import requests
 import pdb
 from typing import List
-from constants import ROOT_URL
+from apps.web.constants import ROOT_URL
 from apps.web.dash_fns import calc_av_rest, flask_requests_get, flask_requests_post, get_wo_details, wo_details_df
 from apps.web.dash_fns import get_name, seconds_to_duration
 

@@ -3,7 +3,7 @@ import pandas as pd
 import dash_bootstrap_components as dbc
 import requests
 from typing import List
-from constants import ROOT_URL
+from apps.web.constants import ROOT_URL
 from apps.web.dash_fns import flask_requests_get, flask_requests_post
 from apps.web.dash_fns import get_name, seconds_to_duration
 
