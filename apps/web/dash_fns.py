@@ -78,33 +78,37 @@ def check_date(input_date:str)->dict: #'Jan 01 2000' -> yyyy-mm-dd
     elif date[5:7] in ['04','06','09','11']:
         #if day valid
         if 0<int(date[8:10])<=30:
-            return {'accept':True, 'message':date}
+            return {'success':True, 'message':date}
         else:
-            return {'accept':False, 'message':"Date formatting error: day out of range"}
-    # if febuary
+            return {'success':False, 'message':"Date formatting error: day out of range"}
+    # if febuary NOTE: doesn't account for leap years
     elif date[5:7] == '02':
         #if day valid
         if 0<int(date[8:10])<=28:
-            return {'accept':True, 'message':date}
+            return {'success':True, 'message':date}
         else:
-            return {'accept':False, 'message':"Date formatting error: day out of range"}
+            # leap year 
+            if date[8:10] == 29 and date[0:4]%4==0:
+                return {'success':True, 'message':date}
+            return {'success':False, 'message':"Date formatting error: day out of range"}
 
 
 def check_duration(input_dur:str, d_type='Time')->dict: 
     if not input_dur: #allow empty submission 
-        return {'accept':True, 'message':input_dur}
+        return {'success':True, 'body':input_dur}
     # adjust input_time to full format length
+    # pdb.set_trace()
     blank = '00:00:00.0'
-    short = 10 - len(time)
-    time = blank[:short]+time
+    short = 10 - len(input_dur)
+    dur = blank[:short]+input_dur
     correct = 'hh:mm:ss.d'
     if d_type == 'Split':
        correct = 'm:ss.d' 
     # check if formatting correct
-    f = re.findall('^([0-1]\d|[2][0-4]):[0-5]\d:[0-5]\d[.]\d$', input_dur)
+    f = re.findall('^([0-1]\d|[2][0-4]):[0-5]\d:[0-5]\d[.]\d$', dur)
     if len(f) != 1:
-        return {'success':False, 'message':f'{d_type} formatting error: must use {correct} formatting'}
-    return {'accept':True, 'message':input_dur}    
+        return {'success':False, 'body':f'{d_type} formatting error: must use {correct} formatting'}
+    return {'success':True, 'body':dur}    
 
 
 def check_sr_formatting(stroke_rate):

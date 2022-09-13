@@ -1,4 +1,5 @@
-from apps.web.dash_fns import get_name, get_wo_details, post_newuser, check_date, reformat_date
+from apps.web.dash_fns import get_name, get_wo_details, post_newuser, check_date, check_duration, reformat_date
+import pdb
 from apps.web.dash_fns import get_usernames, flask_client_get as client_get, flask_client_post as client_post, get_id
 from apps.api.logic import db_connect
 from apps.web.tests.conftest import clear_test_db
@@ -53,11 +54,18 @@ def test_05_post_newuser(client):
 
 
 def test_06_check_date():
-    assert check_date('Jan 01 2000') == {'success':True, 'message':'2000-01-01'}  
+    assert check_date('Jan 01 2000') == {'success':True, 'message':'2000-01-01'}
+    assert check_date('Jan 55 2000')['success'] ==False 
+    assert check_date('Feb 31 2000')['success'] == False 
+    assert check_date('Apr 31 2000')['success']==False 
+    assert check_date('')['success']==True
 
 
 def test_check_duration():
-    pass
+    assert check_duration('00:45:00.0')['success']==True 
+    assert check_duration('1:50.2','Split')['success'] == True
+    assert check_duration('fire')['success']==False 
+    assert check_duration('00:99:88.8')['success']== False 
 
 
 def test_check_sr_formatting():
@@ -85,7 +93,10 @@ def test_seconds_to_duration():
 
 
 def test_reformat_date():
-    pass 
+    assert reformat_date('Jan 01 2000')['message'] == '2000-01-01' 
+    assert reformat_date('fire')['success'] == False 
+    assert reformat_date('Jan 01 2000 ')['success'] == False 
+    assert reformat_date('Her 01 2000')['success'] == False
 
 
 def test_format_time():
