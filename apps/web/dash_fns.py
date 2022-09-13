@@ -153,14 +153,14 @@ def validate_form_inputs(date, time, dist, split, sr, hr, rest):
 
 
 ## Change Formatting 
-def duration_to_seconds(duration:str)->int:
+def duration_to_seconds(duration:str)->float:
     # (hh:mm:ss.d)
     if not duration:
         return 0
     hours_sec = int(duration[0:2])*60*60
     min_sec = int(duration[3:5])*60
     sec = int(duration[6:8])
-    ms_sec = int(duration[9:])/100
+    ms_sec = float(duration[9])/10
     time_sec = (hours_sec + min_sec + sec + ms_sec)
     return time_sec
 
@@ -304,7 +304,7 @@ def format_and_post_intervals(wo_id, i_dict, intrvl_wo=True):
             ipost_dict['rest'] = i_dict['Rest'][i]
         ipost_dict['comment'] = i_dict['Comment'][i]
         post_new_interval(ipost_dict)    
-    return
+    return ipost_dict #for testing return last interval
 
 
 def wo_details_df(wo_id):

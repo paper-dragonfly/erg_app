@@ -1,4 +1,4 @@
-from apps.web.dash_fns import calc_av_rest, check_hr_formatting, check_rest_formatting, check_sr_formatting, find_wo_name, generate_post_wo_dict2, get_name, get_wo_details, post_newuser, check_date, check_duration, reformat_date, seconds_to_duration, validate_form_inputs, duration_to_seconds, wo_details_df
+from apps.web.dash_fns import calc_av_rest, check_hr_formatting, check_rest_formatting, check_sr_formatting, find_wo_name, format_and_post_intervals, generate_post_wo_dict2, get_name, get_wo_details, post_newuser, check_date, check_duration, reformat_date, seconds_to_duration, validate_form_inputs, duration_to_seconds, wo_details_df
 import pdb
 from apps.web.dash_fns import get_usernames, flask_client_get as client_get, flask_client_post as client_post, get_id
 from apps.api.logic import db_connect
@@ -103,6 +103,7 @@ def test_11_validate_form_inputs():
 def test_12_duration_to_seconds():
     assert duration_to_seconds('00:01:40.0') == 100
     assert duration_to_seconds('') == 0
+    assert duration_to_seconds('00:07:21.3')== 441.3
 
 
 def test_13_seconds_to_duration():
@@ -134,21 +135,24 @@ def test_15_generate_post_wo_dict2():
     assert generate_post_wo_dict2(int_dict, user_id, wo_dict, interval)== {'user_id':1, 'workout_date':'2000-01-01','time_sec':480.0,'distance':'2000','split':120.0,'sr':'22','hr':'155','intervals':2, 'comment':"2x1k"}
     
 
-def test_16_format_and_post_intervals():
-    pass 
+def test_16_format_and_post_intervals(mocker):
+    int_dict = {'Date':['2000-01-01','2000-01-01','2000-01-01'],'Time':['00:08:00.0','00:05:00.0','00:03:00.0'],'Distance':['2000','1000','1000'],'Split':['2:00.0','2:30.0','1:30.0'],'s/m':['22','20','24'],'HR':['155','155','155'],'Rest':['60','60','60'],'Comment':["2x1k","slow","fast"]}
+    mocker.patch('apps.web.dash_fns.post_new_interval',return_value=True)
+    expected_result = {'workout_id':'10','time_sec':180,'distance':'1000','split':90,'sr':'24','hr':'155','rest':'60','comment':'fast', 'intrvl_wo':True}
+    assert format_and_post_intervals('10', int_dict, True)== expected_result
 
 
 def test_17_wo_details_df(mocker):
     """
     WHEN fn is passed a wo_id
     THEN assert returns df with summary and interval data for wo AND date And wo_name"""
-    # mock internal fns
     workout_summary= [(1,1,'2000-01-01',480.0,2000,120.0,22,155,2,"2x1k"),]
 
     intervals = [(1,1,499,1000,150,20,155,60,"slow",True),(2,1,360,1000,90,24,155,60,'fast',True)]
-    # {'interval_id':[1,2],'workout_id':[1,1], 'time_sec':[400,360],'distance':[1000,1000],'split':[150,90],'sr':[20,24],'hr':[155,155],'rest':[60,60],'comment':["slow","fast"], 'interval_wo': [True, True]}
 
     flask_wo_details = {'status_code':200, 'single': False, 'intervals':intervals, 'workout_summary':workout_summary}
+
+    # mock internal fns
     mocker.patch('apps.web.dash_fns.get_wo_details', return_value=flask_wo_details)
 
     assert wo_details_df('1')[1] == '2000-01-01'
