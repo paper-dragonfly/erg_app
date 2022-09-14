@@ -8,21 +8,19 @@ import pdb
 def create_app(db):
     app = Flask(__name__) 
 
-    @app.route('/users', methods=['GET'])
-    def get_users_info():
-        status_code, users_dict = l.get_users(db)
-        return json.dumps({'status_code':status_code, 'body':users_dict})
-
-
-    @app.route("/newuser", methods=['POST']) # create new user
-    def newuser():
+    @app.route('/users', methods=['GET', 'POST'])
+    def users():
+        if request.method == 'GET': #get user info
+            status_code, users_dict = l.get_users(db)
+            return json.dumps({'status_code':status_code, 'body':users_dict})
         # POST new_user info, return: user_id
-        try:
-            resp_newuser = NewUser.parse_obj(request.get_json())
-        except ValidationError() as e:
-            return json.dumps({'status_code': 400, 'message': e, 'body':None})
-        user_id = l.add_new_user(db, resp_newuser)
-        return json.dumps({'status_code': 200, 'body': user_id})
+        elif request.method == 'POST':
+            try:
+                resp_newuser = NewUser.parse_obj(request.get_json())
+            except ValidationError() as e:
+                return json.dumps({'status_code': 400, 'message': e, 'body':None})
+            user_id = l.add_new_user(db, resp_newuser)
+            return json.dumps({'status_code': 200, 'body': user_id})
 
 
     @app.route("/log/<user_id>", methods = ['GET']) #list all workouts for user

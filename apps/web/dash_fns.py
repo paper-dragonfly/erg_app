@@ -50,7 +50,7 @@ def get_wo_details(wo_id, get=flask_requests_get, get_args={}):
 
 # POST requests
 def post_newuser(newuser_dict, post=flask_requests_post, post_args={}):
-    return post(ROOT_URL+'/newuser',newuser_dict,**post_args)
+    return post(ROOT_URL+'/users',newuser_dict,**post_args)
 
 def post_new_workout(wdict, post=flask_requests_post, post_args={}):
     return post(ROOT_URL+'/addworkout',wdict, **post_args)
