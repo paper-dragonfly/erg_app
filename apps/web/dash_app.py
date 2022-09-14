@@ -34,13 +34,11 @@ def choose_page(username='kaja'):
     print('ID', id)
     pages = [  
         dbc.DropdownMenuItem('Home', href=f'/'),
-        # dbc.DropdownMenuItem('Workout Log', href=f'/workout_log/{id}'),
         dbc.DropdownMenuItem('Workout Log', href=f'/log_table/{id}'),
         dbc.DropdownMenuItem('Add Workout', href=f'/upload_image/{id}'),
         dbc.DropdownMenuItem('Add Workout Manual', href=f'/addworkout/{id}'),
         # dbc.DropdownMenuItem('sandbox', href='/sandbox'),
         dbc.DropdownMenuItem('Add New User', href='/newuser'),
-        # dbc.DropdownMenuItem('WOD', href=f'/details/{wo_id}')
     ]
     return pages
 

@@ -314,7 +314,7 @@ def format_and_post_intervals(wo_id, i_dict, intrvl_wo=True):
 def wo_details_df(wo_id):
     df= {'Time':[], 'Distance':[], 'Split':[], 's/m':[], 'HR':[], 'Rest':[], 'Comment':[]}
     flask_wo_details = get_wo_details(wo_id)
-    wo_data = flask_wo_details['workout_summary'][0]
+    wo_data = flask_wo_details['workout_summary']
     intrvl_data = flask_wo_details['intervals']
     single_td:bool = flask_wo_details['single'] 
     wo_name = find_wo_name(single_td, wo_data, intrvl_data)

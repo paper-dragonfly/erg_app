@@ -216,7 +216,7 @@ def test_17_wo_details_df(mocker):
     WHEN fn is passed a wo_id
     THEN assert returns df with summary and interval data for wo AND date And wo_name
     """
-    workout_summary= [(1,1,'2000-01-01',480.0,2000,120.0,22,155,2,"2x1k"),]
+    workout_summary= [1,1,'2000-01-01',480.0,2000,120.0,22,155,2,"2x1k"]
     intervals = [(1,1,499,1000,150,20,155,60,"slow",True),(2,1,360,1000,90,24,155,60,'fast',True)]
     flask_wo_details = {'status_code':200, 'single': False, 'intervals':intervals, 'workout_summary':workout_summary}
     # mock internal fns
@@ -251,7 +251,6 @@ def test_19_find_wo_name():
     assert find_wo_name(single,workout_summary,idata) == 'Intervals Distance: 2x1000m/60r'
 
 def test_20_find_team_id(client):
-    # mocker.patch('apps.web.dash_fns.find_team_id.post_new_team',return_value={'body':'25'})
     assert find_team_id('tumbleweed',client_get,{'client':client}, client_post, {'client':client}) == 2
     new_id = find_team_id('firecrew',client_get,{'client':client}, client_post, {'client':client})
     assert type(new_id) == int

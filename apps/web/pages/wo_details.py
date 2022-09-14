@@ -12,8 +12,12 @@ from apps.web.dash_fns import get_name, seconds_to_duration
 register_page(__name__, path_template='/details/<wo_id>')
 
 ###########
-def layout(wo_id='9'):
-    df, date, wo_name = wo_details_df(wo_id)
+def layout(wo_id=False):
+    df = []
+    date = ''
+    wo_name = ''
+    if wo_id:
+        df, date, wo_name = wo_details_df(wo_id)
     return dbc.Container([
         dcc.Store(id='wo_id', data=wo_id),
         dcc.Markdown('## Workout Details'),

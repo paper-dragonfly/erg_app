@@ -17,7 +17,9 @@ register_page(__name__, path='/newuser')
 # sex
 # team
 
-def layout(user_id='1'):
+# TODO add new user page team element not working
+
+def layout():
     return dbc.Container([
         dbc.Row(children=dcc.Markdown(id = 'title_newuser', children = '### Add New User')),
         dcc.Store('new_user_id', data=None),
