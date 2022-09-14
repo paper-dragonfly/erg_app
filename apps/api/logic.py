@@ -32,13 +32,8 @@ def add_new_user(db:str, resp_newuser:NewUser)->int:
         for i in range(len(usernames)):
             if usernames[i][0] == resp_newuser.user_name: 
                 return 0
-        # add team to team table if not already in db
-        cur.execute("INSERT INTO team(team_name) VALUES(%s) ON CONFLICT DO NOTHING",(resp_newuser.team,))
-        #get user's team_id
-        cur.execute("SELECT team_id FROM team WHERE team_name=%s",(resp_newuser.team,))
-        team_id= cur.fetchone()[0]
         # add user 
-        cur.execute("INSERT INTO users(user_name, dob, sex, team) VALUES(%s,%s,%s,%s)",(resp_newuser.user_name, resp_newuser.dob, resp_newuser.sex,team_id))
+        cur.execute("INSERT INTO users(user_name, dob, sex, team) VALUES(%s,%s,%s,%s)",(resp_newuser.user_name, resp_newuser.dob, resp_newuser.sex,resp_newuser.team_id))
         cur.execute("SELECT user_id FROM users WHERE user_name=%s",(resp_newuser.user_name,))
         user_id = cur.fetchone()[0]
         conn.commit()

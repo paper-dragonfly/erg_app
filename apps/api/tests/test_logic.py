@@ -1,7 +1,8 @@
-from apps.api.logic import add_new_user, db_connect, get_user_id, search_sql_str, add_workout, add_interval, get_users
+from apps.api.logic import add_new_user, db_connect, add_workout, add_interval, get_users
 from pydantic import BaseModel
 from apps.api.post_classes import NewUser, NewInterval, NewWorkout
 import json
+import pdb
 from apps.api import conftest as c
 
 
@@ -12,12 +13,20 @@ def test_add_new_user():
     THEN assert there is a singel entry in the db that matches that new user
     """
     #create NewUser instance
-    test_user = NewUser(user_name='nico', dob='1991-12-01', sex='Male',team='tumbleweed')
-    #pass to add_new_user()
-    user_id = add_new_user('testing',test_user)
-    # get test_user data from db 
+    test_user = NewUser(user_name='nico', dob='1991-12-01', sex='Male',team_id='1')
     try: 
         conn, cur = db_connect('testing')
+        # populate team table with team
+        cur.execute("INSERT INTO team(team_id, team_name) VALUES(%s,%s) ON CONFLICT DO NOTHING",('1','tumbleweed'))
+        conn.commit()
+    finally:
+        cur.close()
+        conn.close()
+    #pass to add_new_user()
+    user_id = add_new_user('testing',test_user)
+    try:
+        conn, cur = db_connect('testing')
+        # get test_user data from db 
         cur.execute("SELECT * FROM users WHERE user_name = %s",('nico',))
         nico_data = cur.fetchall()
         assert len(nico_data) == 1
@@ -67,7 +76,7 @@ def test_add_interval():
         cur.execute(sql, subs)
         cur.execute("INSERT INTO workout_log(workout_id) VALUES(1)")
         # create test_intervals data
-        test_newinterval = NewInterval(workout_id=1,intrvl_wo=True, distance=6000,time_sec=1800,split=130,rest=180)
+        test_newinterval = NewInterval(workout_id=1,interval_wo=True, distance=6000,time_sec=1800,split=130,rest=180)
         # pass test_POST data to function
         added_successfully = add_interval('testing',test_newinterval)
         # assert result

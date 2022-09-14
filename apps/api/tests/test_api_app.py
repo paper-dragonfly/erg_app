@@ -35,7 +35,7 @@ def test_users_POST(client):
     WHEN POST submits new user information 
     THEN assert returns user_id and 200 status code
     """
-    response = client.post("/users", data=json.dumps({"user_name":'nico', "dob":"1991-12-01", "sex":'Male',"team":'tumbleweed'}), content_type='application/json') 
+    response = client.post("/users", data=json.dumps({"user_name":'nico', "dob":"1991-12-01", "sex":'Male',"team_id":'2'}), content_type='application/json') 
     assert response.status_code == 200
     c.clear_test_db()
 
@@ -50,12 +50,12 @@ def test_workoutlog_GET(client):
     try:
         conn, cur = db_connect('testing',True)
         # add user
-        cur.execute("INSERT INTO users(user_id, user_name) VALUES(%s,%s)",(1,'lizzkadoodle'))
+        cur.execute("INSERT INTO users(user_id, user_name) VALUES(%s,%s)",(4,'lizzkadoodle'))
         # add workout
-        cur.execute("INSERT INTO workout_log(workout_id, user_id, workout_date, distance, time_sec,split,sr,hr,intervals,comment) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",(1,1,'2022-01-01', 2000,480,120,30,155,1,'PR'))
+        cur.execute("INSERT INTO workout_log(workout_id, user_id, workout_date, distance, time_sec,split,sr,hr,intervals,comment) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",(1,4,'2022-01-01', 2000,480,120,30,155,1,'PR'))
         conn.commit()
         # send GET request with user_id to /workoutlog and capture response
-        response = client.get("/workoutlog?user_id=1") 
+        response = client.get("/workoutlog?user_id=4") 
         # confirm request was successful
         assert response.status_code == 200
         # Confirm content is as expected

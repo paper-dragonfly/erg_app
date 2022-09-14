@@ -1,4 +1,4 @@
-from apps.web.dash_fns import calc_av_rest, check_hr_formatting, check_rest_formatting, check_sr_formatting, find_wo_name, format_and_post_intervals, generate_post_wo_dict2, get_name, get_wo_details, post_newuser, check_date, check_duration, reformat_date, seconds_to_duration, validate_form_inputs, duration_to_seconds, wo_details_df
+from apps.web.dash_fns import calc_av_rest, check_hr_formatting, check_rest_formatting, check_sr_formatting, find_team_id, find_wo_name, format_and_post_intervals, generate_post_wo_dict2, get_name, get_wo_details, post_new_team, post_newuser, check_date, check_duration, reformat_date, seconds_to_duration, validate_form_inputs, duration_to_seconds, wo_details_df
 import pdb
 from apps.web.dash_fns import get_usernames, flask_client_get as client_get, flask_client_post as client_post, get_id
 from apps.api.logic import db_connect
@@ -61,13 +61,21 @@ def test_04_get_wo_details(client):
     assert flask_resp_details['single'] == True 
     assert len(flask_resp_details['workout_summary']) == 10
     
+def test_041_post_new_team(client):
+    """
+    WHEN team name is passed to fn
+    ASSERT POST successful AND returns int (team_id)
+    """
+    flask_resp = post_new_team('atomic',client_post,{'client':client})
+    assert flask_resp['status_code'] == 200 
+    assert type(flask_resp['body']) == int 
 
 def test_05_post_newuser(client):
     """
     WHEN newuser info is passed to fn
-    ASSERT POST successful
+    ASSERT POST successful AND returns int (user_id)
     """
-    newuser_post_dict = {'user_name':'fox', 'dob':'2000-01-01', 'sex':'Male', 'team':'utah crew'}
+    newuser_post_dict = {'user_name':'fox', 'dob':'2000-01-01', 'sex':'Male', 'team_id':'1'}
     flask_resp = post_newuser(newuser_post_dict,client_post,{'client':client})
     assert flask_resp['status_code'] == 200 
     assert type(flask_resp['body']) == int
@@ -241,6 +249,13 @@ def test_19_find_wo_name():
     idata = [(1,1,499,1000,150,20,155,60,"slow",True),(2,1,360,1000,90,24,155,60,'fast',True)]
     single = False 
     assert find_wo_name(single,workout_summary,idata) == 'Intervals Distance: 2x1000m/60r'
+
+def test_20_find_team_id(client):
+    # mocker.patch('apps.web.dash_fns.find_team_id.post_new_team',return_value={'body':'25'})
+    assert find_team_id('tumbleweed',client_get,{'client':client}, client_post, {'client':client}) == 2
+    new_id = find_team_id('firecrew',client_get,{'client':client}, client_post, {'client':client})
+    assert type(new_id) == int
+    assert new_id > 2
 
 
 def test_clear_testdb():

@@ -106,20 +106,31 @@ def create_app(db):
             conn.close()
             return json.dumps({'status_code':200, 'distance':distance, 'time':time, 'count':count, "user_info": user_info, "user_team":user_team})
 
-    @app.route('/teams', methods=['GET'])
-    def list_teams():
-        try:
-            conn,cur = l.db_connect(db)
-            cur.execute("SELECT team_name FROM team")
-            team_lt = cur.fetchall() #[(t1,),(t2,)]
-            team_names =[]
-            for i in range(len(team_lt)):
-                team_names.append(team_lt[i][0])
-            teams = team_names
-        finally:
-            cur.close()
-            conn.close()
-            return json.dumps({'status_code': 200, 'body': teams})
+    @app.route('/teams', methods=['GET','POST'])
+    def teams(): ##need updatte test
+        if request.method == 'GET':
+            try:
+                conn,cur = l.db_connect(db)
+                cur.execute("SELECT * FROM team")
+                team_lt = cur.fetchall() #[(t1id,t1nm),(t2id,t2nm)]
+            finally:
+                cur.close()
+                conn.close()
+                return json.dumps({'status_code': 200, 'body': team_lt})
+        elif request.method == 'POST':
+            newteam = request.get_json()['name']
+            try:
+                conn,cur = l.db_connect(db)
+                # add team to team table if not already in db
+                cur.execute("INSERT INTO team(team_name) VALUES(%s) ON CONFLICT DO NOTHING",(newteam,))
+                conn.commit()
+                cur.execute("SELECT team_id FROM team WHERE team_name=%s",(newteam,))
+                newteam_id = cur.fetchone()[0] 
+            finally:
+                cur.close()
+                conn.close()
+                return json.dumps({'status_code': 200, 'body': newteam_id})
+
 
 
 

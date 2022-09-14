@@ -52,14 +52,21 @@ def test_022_display_team_input():
 def test_023_submit_user(client):
     with raises(PreventUpdate):
         submit_user(0,'name','dob','sex','t','p','pa')
-    output = submit_user(1,'jam','2000-01-01','Female','tumbleweed',client_post, {'client':client})
+    #new user, existing team
+  
+    output = submit_user(1,'jam','2000-01-01','Female','tumbleweed',client_get, {'client':client}, client_post, {'client':client})
     assert output[0] == 'User Added'
     assert output[3] != 0 #user_id
-    output2 = submit_user(1,'jam','2000-01-01','Female','tumbleweed',client_post, {'client':client})
+    # existing user
+    output2 = submit_user(1,'jam','2000-01-01','Female','tumbleweed',client_get, {'client':client},client_post, {'client':client})
     assert output2[0] == 'Submit User'
     assert output2[2] == {'display':'block'} #alert - user_name taken
     assert output2[3] == 0 #user_id
-    c.delete_entry("users","user_id",1) 
+    # new user, new team 
+    output3 = submit_user(1,'falcon','2000-01-01','Female','newteam',client_get, {'client':client},client_post, {'client':client})
+    assert output3[0] == 'User Added'
+    assert output3[3] != 0 
+
 
 ## PAGE: add_image.py 
 

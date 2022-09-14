@@ -6,7 +6,7 @@ class NewUser(BaseModel):
     user_name:str
     dob:str
     sex:str='Female'
-    team:str='private'
+    team_id:str
 
 class IntervalWorkout(BaseModel):
     user_id:str = 'guest'

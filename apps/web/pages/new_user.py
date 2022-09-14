@@ -6,7 +6,7 @@ from dash import dcc, html, register_page, Input, Output, callback, State
 import pdb
 import json
 from dash.exceptions import PreventUpdate
-from apps.web.dash_fns import get_name, post_new_workout, duration_to_seconds, check_duration, check_date, post_newuser, flask_requests_get as rget, flask_requests_post as rpost
+from apps.web.dash_fns import find_team_id, get_name, post_new_team, post_new_workout, duration_to_seconds, check_duration, check_date, post_newuser, flask_requests_get as rget, flask_requests_post as rpost
 
 
 register_page(__name__, path='/newuser')
@@ -46,10 +46,13 @@ def layout(user_id='1'):
     Input('dd_team', 'options')
 )
 def populate_team_dropdown(init_option,get=rget, get_args={}):
-    team_list = get(ROOT_URL+'/teams',**get_args)['body']
-    team_list.append(init_option) #'None'
-    team_list.append('Other')
-    return team_list 
+    team_info = get(ROOT_URL+'/teams',**get_args)['body']
+    team_names =[]
+    for i in range(len(team_info)):
+        team_names.append(team_info[i][1])
+    team_names.append(init_option) #'None'
+    team_names.append('Other')
+    return team_names
 
 @callback(
     Output('ui_team', 'style'),
@@ -82,14 +85,16 @@ def set_user_team(dd, ui):
     State('ri_sex', 'value'),
     State('user_team','data')
 )
-def submit_user(n_clicks, name, dob, sex, team, post=rpost, post_args={}):
+def submit_user(n_clicks, name, dob, sex, team_name, get=rget, get_args={}, post=rpost, post_args={}):
     if n_clicks == 0:
         raise PreventUpdate
-    newuser_post_dict = {'user_name':None, 'dob':None, 'sex':None, 'team':None}
+    newuser_post_dict = {'user_name':None, 'dob':None, 'sex':None, 'team_id':None}
+    team_id = find_team_id(team_name, get, get_args, post, post_args)
+    # generate newuser dict
     newuser_post_dict['user_name'] = name.lower()
     newuser_post_dict['dob'] = dob
     newuser_post_dict['sex'] = sex
-    newuser_post_dict['team'] = team
+    newuser_post_dict['team_id'] = team_id
     user_id = post_newuser(newuser_post_dict,post,post_args)['body']
     if user_id == 0:
         return 'Submit User','primary', {'display':'block'},user_id

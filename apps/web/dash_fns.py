@@ -49,6 +49,10 @@ def get_wo_details(wo_id, get=flask_requests_get, get_args={}):
     return get(ROOT_URL+f'/details?workout_id={wo_id}',**get_args)
 
 # POST requests
+def post_new_team(team, post=flask_requests_post, post_args={}):
+    team_dict = {'name':team}
+    return post(ROOT_URL+f'/teams', team_dict,**post_args) ##need tests
+
 def post_newuser(newuser_dict, post=flask_requests_post, post_args={}):
     return post(ROOT_URL+'/users',newuser_dict,**post_args)
 
@@ -381,6 +385,17 @@ def find_wo_name(single:bool, wo_summary, intrvl_data):
         name = 'Intervals Distance: '+str(num_ints)+'x'+str(intrvl_data[0][3])+'m'+'/'+str(intrvl_data[0][7])+'r'   
     return name
 
+
+def find_team_id(team_name,get=flask_requests_get, get_args ={}, post=flask_requests_post, post_args={}):
+    #get team id
+    team_info = get(ROOT_URL+'/teams',**get_args)['body']
+    team_id = False 
+    for i in range(len(team_info)):
+        if team_name in team_info[i]:
+            team_id = team_info[i][0]
+    if not team_id:
+        team_id = post_new_team(team_name,post, post_args)['body']
+    return team_id 
     
 
 
