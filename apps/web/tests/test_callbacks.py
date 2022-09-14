@@ -1,7 +1,7 @@
 from conftest import app 
 from apps.web.dash_app import app as dash_app
 import cv2
-from apps.web.pages.add_image import extract_ocr, fill_form, EMPTY_INTERVAL_TABLE, stage_interval
+from apps.web.pages.add_image import extract_ocr, fill_form, EMPTY_INTERVAL_TABLE, post_wo_to_db, stage_interval
 import apps.web.dash_app as dfront
 from pytest import raises
 import apps.web.dash_fns as dfx
@@ -36,18 +36,18 @@ def test_00_populate_test_db():
 
 
 # new_user.py
-def test_02_populate_team_dropdown(client):
+def test_021_populate_team_dropdown(client):
     team_list = populate_team_dropdown('None', client_get, {'client':client})
     assert team_list == ['utah crew', 'tumbleweed', 'None', 'Other']
 
 
-def test_02_display_team_input():
+def test_022_display_team_input():
     assert display_team_input('Other') == {'display':'block'}
     with raises(PreventUpdate):
         display_team_input('fish')
 
 #post
-def test_02_submit_user(client):
+def test_023_submit_user(client):
     with raises(PreventUpdate):
         submit_user(0,'name','dob','sex','t','p','pa')
     output = submit_user(1,'jam','2000-01-01','Female','tumbleweed',client_post, {'client':client})
@@ -61,14 +61,14 @@ def test_02_submit_user(client):
 
 ## PAGE: add_image.py 
 
-def test_03_upload_image():
+def test_031_upload_image():
     pass #not sure how to write a test for this
 
 
-def test_03_convert_to_cv2_compatible():
+def test_032_convert_to_cv2_compatible():
     pass # not sure how to start with b64 img
 
-def test_03_extract_ocr():
+def test_033_extract_ocr():
     """
     GIVEN a cv2 compatible image
     ASSERT fn returns dict
@@ -78,18 +78,18 @@ def test_03_extract_ocr():
     ocr_output = extract_ocr(img)
     assert type(ocr_output) == dict
 
-ocr_result_erg01 = {'wo': ['4'], 'date': 'soy 19 2021', 'summary': ['h00.0', '1048', '1545', '21'], 'time': ['L000', '2:00.0', 'B00.0', '4.00.0'], 'dist': ['263', '263', '258', '26u'], 'split': ['1:51.5', '1:54.0', '1:56.2', '1:55.3'], 'sr': ['31', '30', '31']}
+OCR_RESULT_ERG01 = {'wo': ['4'], 'date': 'soy 19 2021', 'summary': ['h00.0', '1048', '1545', '21'], 'time': ['L000', '2:00.0', 'B00.0', '4.00.0'], 'dist': ['263', '263', '258', '26u'], 'split': ['1:51.5', '1:54.0', '1:56.2', '1:55.3'], 'sr': ['31', '30', '31']}
 
-def test_03_fill_form_wo_summary():
+def test_034_fill_form_wo_summary():
     """
     GIVEN a raw_ocr dict
     CONFIRM error is raised if no raw_ocr
     ASSERT form is filled with summary data as expected when img initially uploaded
-    CONFIRM PreventUpdate raised (form not populated with next interval) if formatting in incorrect
-    GIVEN a 'submit interval' click and properly formatted form
+    CONFIRM PreventUpdate raised (form not populated with next interval) if formatting is incorrect
+    GIVEN a 'submit interval' click AND properly formatted form
     ASSERT form filled with next interval
     """
-    raw_ocr = ocr_result_erg01
+    raw_ocr = OCR_RESULT_ERG01
     with raises(PreventUpdate):
         fill_form(None, 0, 'f', 'r', 'd','df')
     output = fill_form(raw_ocr, 0, False, 'Single Time/Distance', None, EMPTY_INTERVAL_TABLE ) 
@@ -100,27 +100,40 @@ def test_03_fill_form_wo_summary():
     assert output == ('2000-01-01', 'L000', '263', '1:51.5', '31', 'n/a', 'n/a', 4)
 
 
-def test_03_reformat_date():
-    """
-    GIVEN a user_input date in format 'Jan 01 2000' ASSERT returns date in yyyy-mm-dd 
-    GIVEN a badly formatted user_input
-    ASSERT returns expected error
-    """
-    assert reformat_date('Jan 01 2000') == ('2000-01-01', 'success')
-    assert reformat_date('pottery') == (False, 'date length incorrect')
-    assert reformat_date('joy 01 2000') == (False, 'month wrong')
-
-
-def test_03_stage_interval():
+def test_035_stage_interval():
     """
     GIVEN 'Submit Interval' btn is clicked 
-    IF for is complete and formatting is correct 
-    ASSERT df is as expected and alert not displayed
+    IF form formatting correct 
+    ASSERT df is as expected AND alert not displayed
+    IF formatting incorrect
+    ASSERT returns error messages
     """
     output = stage_interval(1, 'Jan 01 2000', '4:00.0', '1048', '1:54.5', '22','n/a','n/a','4min',EMPTY_INTERVAL_TABLE, 'Title', 'single',4)
-    assert output[2] == {'Date':['2000-01-01'], 'Time':['00:04:00.0'],'Distance':['1048'], 'Split': ['1:54.5'], 's/m':['22'],'HR':['n/a'],'Rest':['n/a'], 'Comment':['4min']}
+    assert output[2] == {'Date':['Jan 01 2000'], 'Time':['4:00.0'],'Distance':['1048'], 'Split': ['1:54.5'], 's/m':['22'],'HR':['n/a'],'Rest':['n/a'], 'Comment':['4min']}
     assert output[3] == None #alert message
     assert output[5] == True # Formatting correct
+    # Formatting incorrect 
+    output=stage_interval(1, 'fire 01 2000', '4:000', '1048d', '1:54.45', '22','n/a','n/a','4min',EMPTY_INTERVAL_TABLE, 'Title', 'single',4)
+    assert output[5] == False 
+    assert output[3] == ['Date formatting error: date length incorrect','Time formatting error: must use hh:mm:ss.d formatting','Distance formatting error','Split formatting error: must use m:ss.d formatting']
+
+
+def test_036_post_wo_to_db(mocker):
+    """
+    GIVEN 'Submit Workout' btn is clicked 
+    IF formatting approved 
+    ASSERT returns expected
+    IF btn not yet clicked OR formatting wrong
+    CONFIRM raises error 
+    """
+    mocker.patch('apps.web.pages.add_image.generate_post_wo_dict2', return_value={})
+    mocker.patch('apps.web.pages.add_image.post_new_workout', return_value={'workout_id':0})
+    mocker.patch('apps.web.pages.add_image.format_and_post_intervals', return_value=None)
+    assert post_wo_to_db(1,True,{}, 0, 'Intervals') == ('Workout Submitted!', 'success')
+    with raises(PreventUpdate):
+        assert post_wo_to_db(0,True,{},0,'Intervals')
+        assert post_wo_to_db(1,False,{},0,'Intervals')
+    
 
 
 

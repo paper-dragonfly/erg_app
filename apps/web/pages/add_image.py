@@ -232,10 +232,11 @@ def stage_interval(n_clicks, date, time, dist, split, sr, hr, rest, com, df,head
     df['HR'].append(hr)
     df['Rest'].append(rest)
     df['Comment'].append(com)
-    num_rows = df.shape[0]
+    # df = pd.DataFrame(df)
+    num_rows = len(df['Date'])
     complete_alert = display if (num_rows == num_intrvls + 1) else dont_display
     head = choose_title(radio, num_rows)
-    return head, dbc.Table.from_dataframe(pd.DataFrame(df), striped=True, bordered=True), df, None, {'display':'none'}, True, complete_alert
+    return head, dbc.Table.from_dataframe(pd.DataFrame(df), striped=True, bordered=True), df, None, dont_display, True, complete_alert
 
 
 #Post wo to db 
@@ -258,4 +259,4 @@ def post_wo_to_db(n_clicks, formatting_approved, int_dict, user_id, radio):
     print(wo_dict)
     wo_id = post_new_workout(wo_dict)['workout_id']
     format_and_post_intervals(wo_id, int_dict, interval)
-    return 'Interval Workout Submitted!', 'success'
+    return 'Workout Submitted!', 'success'

@@ -95,7 +95,7 @@ def check_date(input_date:str)->dict: #'Jan 01 2000' -> yyyy-mm-dd
 
 def check_duration(input_dur:str, d_type='Time')->dict: 
     if not input_dur: #allow empty submission 
-        return {'success':True, 'body':input_dur}
+        return {'success':True, 'message':input_dur}
     # adjust input_time to full format length
     # pdb.set_trace()
     blank = '00:00:00.0'
@@ -107,8 +107,8 @@ def check_duration(input_dur:str, d_type='Time')->dict:
     # check if formatting correct
     f = re.findall('^([0-1]\d|[2][0-4]):[0-5]\d:[0-5]\d[.]\d$', dur)
     if len(f) != 1:
-        return {'success':False, 'body':f'{d_type} formatting error: must use {correct} formatting'}
-    return {'success':True, 'body':dur}    
+        return {'success':False, 'message':f'{d_type} formatting error: must use {correct} formatting'}
+    return {'success':True, 'message':dur}    
 
 
 def check_sr_formatting(stroke_rate:str)->dict:
