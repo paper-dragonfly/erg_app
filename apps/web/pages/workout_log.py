@@ -16,7 +16,7 @@ register_page(__name__,path_template='/log_table/<user_id>')
 
 
 def layout(user_id=1):
-    flash_workouts:List[List] = requests.get(ROOT_URL+f'/log/{user_id}').json()['message']
+    flash_workouts:List[List] = requests.get(ROOT_URL+f'/workoutlog?user_id={user_id}').json()['message']
     workouts = {
         'id' : [],
         'Date':[],

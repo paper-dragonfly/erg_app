@@ -53,7 +53,7 @@ def post_newuser(newuser_dict, post=flask_requests_post, post_args={}):
     return post(ROOT_URL+'/users',newuser_dict,**post_args)
 
 def post_new_workout(wdict, post=flask_requests_post, post_args={}):
-    return post(ROOT_URL+'/addworkout',wdict, **post_args)
+    return post(ROOT_URL+'/workoutlog',wdict, **post_args)
 
 def post_new_interval(idict, post=flask_requests_post, post_args={}):
     return post(ROOT_URL+'/addinterval',idict,**post_args)

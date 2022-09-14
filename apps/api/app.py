@@ -23,33 +23,32 @@ def create_app(db):
             return json.dumps({'status_code': 200, 'body': user_id})
 
 
-    @app.route("/log/<user_id>", methods = ['GET']) #list all workouts for user
-    def log(user_id):
+    @app.route("/workoutlog", methods = ['GET', 'POST']) #list all workouts for user
+    def workoutlog():
+        if request.method == 'GET':
+            user_id = request.args["user_id"]
         # submit GET request with user_id -> all workouts listed by date for specific user. Fields: date, distance, time, av split, intervals
-        try:
-            conn, cur=l.db_connect(db)
-            user_id = int(user_id)
-            sql = "SELECT * FROM workout_log WHERE user_id=%s ORDER BY workout_date"
-            subs = (user_id,)
-            cur.execute(sql, subs)
-            user_workouts = cur.fetchall() #[(v1,v2,v3),(...)]
-        except ValueError:
-            return json.dumps({'status_code':400, 'message':'user_id must be integer'})
-        finally:
-            conn.close()
-            cur.close()
-            return json.dumps({'status_code':200, 'message':user_workouts}, default=str) #datetime not json serializable so use defualt=str to convert non-serializable values to strings
-
-
-    @app.route('/addworkout', methods=['POST']) #TODO: should this be '/log' POST? 
-    def addworkout():
-        # POST user_id, date, distance, time_sec, split, intervals, comment | return: workout_id
-        try:
-            workout_inst = NewWorkout.parse_obj(request.get_json())
-        except ValidationError() as e:
-            return json.dumps({'status_code': 400, 'message': e})
-        workout_id = l.add_workout(db, workout_inst)
-        return json.dumps({'status_code': 200, 'workout_id': workout_id})
+            try:
+                conn, cur=l.db_connect(db)
+                user_id = int(user_id)
+                sql = "SELECT * FROM workout_log WHERE user_id=%s ORDER BY workout_date"
+                subs = (user_id,)
+                cur.execute(sql, subs)
+                user_workouts = cur.fetchall() #[(v1,v2,v3),(...)]
+            except ValueError:
+                return json.dumps({'status_code':400, 'message':'user_id must be integer'})
+            finally:
+                conn.close()
+                cur.close()
+                return json.dumps({'status_code':200, 'message':user_workouts}, default=str) #datetime not json serializable so use defualt=str to convert non-serializable values to strings
+        elif request.method == 'POST':
+                # POST user_id, date, distance, time_sec, split, intervals, comment | return: workout_id
+            try:
+                workout_inst = NewWorkout.parse_obj(request.get_json())
+            except ValidationError() as e:
+                return json.dumps({'status_code': 400, 'message': e})
+            workout_id = l.add_workout(db, workout_inst)
+            return json.dumps({'status_code': 200, 'workout_id': workout_id})
 
 
     @app.route('/addinterval', methods=['POST'])

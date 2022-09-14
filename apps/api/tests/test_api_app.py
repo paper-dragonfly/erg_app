@@ -6,7 +6,7 @@ import pdb
 from apps.api.post_classes import NewUser, NewInterval, NewWorkout
 
 
-def test_01_users(client):
+def test_01_users_GET(client):
     """
     GIVEN a flask app
     WHEN a GET request is submitted to /users
@@ -29,18 +29,18 @@ def test_01_users(client):
         conn.close()
 
 
-def test_newuser(client):
+def test_users_POST(client):
     """
     GIVEN a flask app
     WHEN POST submits new user information 
     THEN assert returns user_id and 200 status code
     """
-    response = client.post("/newuser", data=json.dumps({"user_name":'nico', "dob":"1991-12-01", "sex":'Male',"team":'tumbleweed'}), content_type='application/json') 
+    response = client.post("/users", data=json.dumps({"user_name":'nico', "dob":"1991-12-01", "sex":'Male',"team":'tumbleweed'}), content_type='application/json') 
     assert response.status_code == 200
     c.clear_test_db()
 
 
-def test_log(client):
+def test_workoutlog_GET(client):
     """
     GIVEN a flask app
     WHEN GET submits user_id
@@ -54,8 +54,8 @@ def test_log(client):
         # add workout
         cur.execute("INSERT INTO workout_log(workout_id, user_id, workout_date, distance, time_sec,split,sr,hr,intervals,comment) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",(1,1,'2022-01-01', 2000,480,120,30,155,1,'PR'))
         conn.commit()
-        # send GET request with user_id to /log and capture response
-        response = client.get("/log/1") 
+        # send GET request with user_id to /workoutlog and capture response
+        response = client.get("/workoutlog?user_id=1") 
         # confirm request was successful
         assert response.status_code == 200
         # Confirm content is as expected
@@ -66,7 +66,7 @@ def test_log(client):
         # clear db
         c.clear_test_db()
 
-def test_addworkout(client):
+def test_workoutlog_POST(client):
     """
     GIVEN a flask app 
     WHEN POST with workout info submitted to /addworkout
@@ -80,7 +80,7 @@ def test_addworkout(client):
         cur.execute(sql, subs)
         POST_dict = {'user_id':1,'date':'2022-06-14','distance':500,'time_sec':110, 'split':110, 'intervals':4,'comment':'4x500m'}
         # pass POST to flask func
-        response = client.post("/addworkout", data=json.dumps(POST_dict), content_type='application/json')
+        response = client.post("/workoutlog", data=json.dumps(POST_dict), content_type='application/json')
         data_dict = json.loads(response.data.decode("ASCII")) # status_code, workout_id
         assert response.status_code == 200
         assert type(data_dict['workout_id']) == int
