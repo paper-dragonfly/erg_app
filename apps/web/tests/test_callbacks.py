@@ -1,5 +1,6 @@
-from conftest import app 
+from conftest import app
 from apps.web.dash_app import app as dash_app
+from apps.web.pages.workout_log import activate_view_details
 import cv2
 from apps.web.pages.add_image import extract_ocr, fill_form, EMPTY_INTERVAL_TABLE, post_wo_to_db, stage_interval
 import apps.web.dash_app as dfront
@@ -17,8 +18,9 @@ from dash.exceptions import PreventUpdate
 # 01 : dash_front.py
 # 02 : new_user.py
 # 03 : add_image.py
-# 04 : wo_details.py
-# 05 : workout_log.py
+# 04 : workout_log.py
+# 05 : wo_details.py
+
 
 
 def test_00_populate_test_db():
@@ -73,7 +75,7 @@ def test_033_extract_ocr():
     GIVEN a cv2 compatible image
     ASSERT fn returns dict
     """
-    filepath = '/Users/katcha/NiCode_Academy/ErgApp/apps/web/tests/test_callbacks.py'
+    filepath = '/Users/katcha/NiCode_Academy/ErgApp/apps/web/tests/test_erg01.jpg'
     img = cv2.imread(filepath)
     ocr_output = extract_ocr(img)
     assert type(ocr_output) == dict
@@ -134,10 +136,37 @@ def test_036_post_wo_to_db(mocker):
         assert post_wo_to_db(0,True,{},0,'Intervals')
         assert post_wo_to_db(1,False,{},0,'Intervals')
     
+def test_041_display_username():
+    """
+    WHEN user_id passed to fn
+    ASSERT returns capitalized user_names"""
+    pass #skip - simple
 
+def test_042_activate_view_details():
+    """
+    WHEN user selects a single row
+    ASSERT btn changes to become link to view detials of that wo
+    WHEN user selects no rows or >1 rows 
+    ASSERT btn remains in original form 
+    """
+    assert activate_view_details([1])[1]=='warning'
+    assert activate_view_details([])[1] == 'secondary'
+    assert activate_view_details([1,2])[1] == 'secondary'
+     
 
+def test_043_show_compare_btn():
+    """
+    GIVEN a number of selected rows
+    IF num_selected >= 2 
+    ASSERT compare_workouts btn visible 
+    IF num_selected < 2
+    ASSERT compare_workouts btn invisible"""
+    pass # skip - simple
 
+def test_044_make_graph():
+    pass # skip - need to work on graph
 
-# TODO: there are lots of other sub fns...should I write tests for them?? This is probably the most likely place for there to be mistakes. 
+def test_clear_testdb():
+    c.clear_test_db()
 
         
