@@ -104,7 +104,7 @@ def test_addinterval(client):
         cur.execute(sql, subs)
         cur.execute("INSERT INTO workout_log(workout_id) VALUES(1)")
         # create interval data POST
-        POST_dict = {'workout_id':1,'interval_wo':'True','distance':510,'time_sec':120,'split':125,'rest':60}
+        POST_dict = {'workout_id':1,'interval_wo':'True','distance':510,'time_sec':120.0,'split':125.9,'rest':60}
         # pass POST to flask func
         response = client.post("/addinterval", data=json.dumps(POST_dict), content_type='application/json')
         data_dict = json.loads(response.data.decode("ASCII")) # status_code, message, success

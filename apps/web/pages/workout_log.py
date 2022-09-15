@@ -31,9 +31,9 @@ def layout(user_id=1):
     for i in range(len(flash_workouts)):
         workouts['id'].append(flash_workouts[i][0]),
         workouts['Date'].append(flash_workouts[i][2]),
-        workouts['Time'].append(seconds_to_duration(flash_workouts[i][3])),
+        workouts['Time'].append(seconds_to_duration(float(flash_workouts[i][3]))),
         workouts['Distance'].append(str(flash_workouts[i][4])),
-        workouts['Split'].append(seconds_to_duration(flash_workouts[i][5])),
+        workouts['Split'].append(seconds_to_duration(float(flash_workouts[i][5]))),
         workouts['Stroke Rate'].append(str(flash_workouts[i][6])),
         workouts['Heart Rate'].append(str(flash_workouts[i][7])),
         workouts['Intervals'].append(str(flash_workouts[i][8])),

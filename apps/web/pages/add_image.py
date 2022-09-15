@@ -103,9 +103,10 @@ def layout(user_id=1):
 @callback(
     Output('output-upload', 'children'),
     Output('base64_img', 'data'),
-    Input('upload-image', 'contents'),
+    Input('upload-image', 'contents'), 
     State('upload-image', 'filename'),
-    State('upload-image', 'last_modified'))
+    State('upload-image', 'last_modified'),
+    prevent_initial_call=True)
 def upload_img(contents, filename, date):
     if contents is not None:
         base64_img = contents[23:]
@@ -167,6 +168,7 @@ def fill_form(raw_ocr, n_clicks, formatted, radio, date, df):
     if not raw_ocr:
         raise PreventUpdate 
     num_ints = len(raw_ocr['time'])
+    print('num ints', num_ints)
     hr = 'n/a'
     rest = 'n/a'
     if radio == 'Intervals':
@@ -258,5 +260,5 @@ def post_wo_to_db(n_clicks, formatting_approved, int_dict, user_id, radio):
     wo_dict = generate_post_wo_dict2(int_dict, user_id, EMPTY_POST_WO_DICT, interval)
     print(wo_dict)
     wo_id = post_new_workout(wo_dict)['workout_id']
-    format_and_post_intervals(wo_id, int_dict, interval)
+    idict = format_and_post_intervals(wo_id, int_dict, interval)
     return 'Workout Submitted!', 'success'

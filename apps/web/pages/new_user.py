@@ -48,11 +48,12 @@ def layout():
     Input('dd_team', 'options')
 )
 def populate_team_dropdown(init_option,get=rget, get_args={}):
+    print('ran populate_team_db')
     team_info = get(ROOT_URL+'/teams',**get_args)['body']
     team_names =[]
     for i in range(len(team_info)):
         team_names.append(team_info[i][1])
-    team_names.append(init_option) #'None'
+    team_names.append(init_option[0]) #'None'
     team_names.append('Other')
     return team_names
 

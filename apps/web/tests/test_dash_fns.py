@@ -207,7 +207,7 @@ def test_16_format_and_post_intervals(mocker):
     ASSERT returns expected dict - ready to be POSTed to interval_log"""
     int_dict = {'Date':['2000-01-01','2000-01-01','2000-01-01'],'Time':['00:08:00.0','00:05:00.0','00:03:00.0'],'Distance':['2000','1000','1000'],'Split':['2:00.0','2:30.0','1:30.0'],'s/m':['22','20','24'],'HR':['155','155','155'],'Rest':['60','60','60'],'Comment':["2x1k","slow","fast"]}
     mocker.patch('apps.web.dash_fns.post_new_interval',return_value=True)
-    expected_result = {'workout_id':'10','time_sec':180,'distance':'1000','split':90,'sr':'24','hr':'155','rest':'60','comment':'fast', 'intrvl_wo':True}
+    expected_result = {'workout_id':'10','time_sec':180,'distance':'1000','split':90,'sr':'24','hr':'155','rest':'60','comment':'fast', 'interval_wo':True}
     assert format_and_post_intervals('10', int_dict, True)== expected_result
 
 

@@ -39,7 +39,7 @@ def test_00_populate_test_db():
 
 # new_user.py
 def test_021_populate_team_dropdown(client):
-    team_list = populate_team_dropdown('None', client_get, {'client':client})
+    team_list = populate_team_dropdown(['None'], client_get, {'client':client})
     assert team_list == ['utah crew', 'tumbleweed', 'None', 'Other']
 
 
