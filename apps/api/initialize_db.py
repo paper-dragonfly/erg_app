@@ -29,14 +29,14 @@ def create_test_db():
 def create_team_table(cur):
     cur.execute("""CREATE TABLE IF NOT EXISTS team(
         team_id SERIAL PRIMARY KEY,
-        team_name VARCHAR(50) 
+        team_name VARCHAR(50) UNIQUE 
         ) """)
 
 
 def create_users_table(cur):
     cur.execute("""CREATE TABLE IF NOT EXISTS users(
         user_id SERIAL PRIMARY KEY,
-        user_name VARCHAR(25) NOT NULL,
+        user_name VARCHAR(25) NOT NULL UNIQUE,
         dob DATE,
         sex VARCHAR(8),
         team INTEGER,
@@ -49,9 +49,9 @@ def create_workout_log_table(cur):
         workout_id SERIAL PRIMARY KEY,
         user_id INTEGER, 
         workout_date DATE,
-        time_sec INTEGER,
+        time_sec DECIMAL(6,1),
         distance INTEGER,
-        split INTEGER,
+        split DECIMAL(6,1),
         sr INTEGER,
         hr INTEGER,
         intervals INTEGER,
@@ -64,14 +64,14 @@ def create_interval_log_table(cur):
     cur.execute("""CREATE TABLE IF NOT EXISTS interval_log(
         interval_id SERIAL PRIMARY KEY,
         workout_id INTEGER,
-        time_sec INTEGER,
+        time_sec DECIMAL(6,1),
         distance INTEGER,
-        split INTEGER,
+        split DECIMAL(6,1),
         sr INTEGER,
         hr INTEGER,
         rest INTEGER,
         comment VARCHAR(255),
-        intrvl_wo BOOLEAN, 
+        interval_wo BOOLEAN, 
         FOREIGN KEY (workout_id) REFERENCES workout_log(workout_id))"""
     )
 

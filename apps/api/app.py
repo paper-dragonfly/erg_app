@@ -8,72 +8,47 @@ import pdb
 def create_app(db):
     app = Flask(__name__) 
 
-    #TODO: new as of Aug 19, no tests yet
-    @app.route('/username/<id>', methods=['GET'])
-    def get_username(id):
-        user_name = l.get_user_name(id, db)
-        return json.dumps({'status_code': 200, 'user_name': user_name})
-
-    @app.route("/userid/<user_name>",methods=["GET"]) #find user_id for existing user
-    def userid(user_name):
-        #Submit user_name, return user_id
-        user_id = l.get_user_id(user_name, db)
-        return json.dumps({'status_code':200, 'user_id': user_id})
-    
-
-    @app.route("/usernames", methods = ['GET'])
-    def usernames():
-        # GET, return all user_names 
-        user_names = []
-        try: 
-            conn, cur = l.db_connect(db)
-            cur.execute('SELECT user_name FROM users')
-            user_names = cur.fetchall() #[["n1"],["n2"]]
-        finally: 
-            cur.close()
-            conn.close()
-            return json.dumps({'status_code': 200, 'user_names': user_names})
-
-
-    @app.route("/newuser", methods=['POST']) # create new user
-    def newuser():
+    @app.route('/users', methods=['GET', 'POST'])
+    def users():
+        if request.method == 'GET': #get user info
+            status_code, users_dict = l.get_users(db)
+            return json.dumps({'status_code':status_code, 'body':users_dict})
         # POST new_user info, return: user_id
-        try:
-            pdb.set_trace()
-            resp_newuser = NewUser.parse_obj(request.get_json())
-        except ValidationError() as e:
-            return json.dumps({'status_code': 400, 'message': e})
-        user_id = l.add_new_user(db, resp_newuser)
-        return json.dumps({'status_code': 200, 'user_id': user_id})
+        elif request.method == 'POST':
+            try:
+                resp_newuser = NewUser.parse_obj(request.get_json())
+            except ValidationError() as e:
+                return json.dumps({'status_code': 400, 'message': e, 'body':None})
+            user_id = l.add_new_user(db, resp_newuser)
+            return json.dumps({'status_code': 200, 'body': user_id})
 
 
-    @app.route("/log/<user_id>", methods = ['GET']) #list all workouts for user
-    def log(user_id):
+    @app.route("/workoutlog", methods = ['GET', 'POST']) #list all workouts for user
+    def workoutlog():
+        if request.method == 'GET':
+            user_id = request.args["user_id"]
         # submit GET request with user_id -> all workouts listed by date for specific user. Fields: date, distance, time, av split, intervals
-        try:
-            conn, cur=l.db_connect(db)
-            user_id = int(user_id)
-            sql = "SELECT * FROM workout_log WHERE user_id=%s ORDER BY workout_date"
-            subs = (user_id,)
-            cur.execute(sql, subs)
-            user_workouts = cur.fetchall() #[(v1,v2,v3),(...)]
-        except ValueError:
-            return json.dumps({'status_code':400, 'message':'user_id must be integer'})
-        finally:
-            conn.close()
-            cur.close()
-            return json.dumps({'status_code':200, 'message':user_workouts}, default=str) #datetime not json serializable so use defualt=str to convert non-serializable values to strings
-
-
-    @app.route('/addworkout', methods=['POST'])
-    def addworkout():
-        # POST user_id, date, distance, time_sec, split, intervals, comment | return: workout_id
-        try:
-            workout_inst = NewWorkout.parse_obj(request.get_json())
-        except ValidationError() as e:
-            return json.dumps({'status_code': 400, 'message': e})
-        workout_id = l.add_workout(db, workout_inst)
-        return json.dumps({'status_code': 200, 'workout_id': workout_id})
+            try:
+                conn, cur=l.db_connect(db)
+                user_id = int(user_id)
+                sql = "SELECT * FROM workout_log WHERE user_id=%s ORDER BY workout_date"
+                subs = (user_id,)
+                cur.execute(sql, subs)
+                user_workouts = cur.fetchall() #[(v1,v2,v3),(...)]
+            except ValueError:
+                return json.dumps({'status_code':400, 'message':'user_id must be integer'})
+            finally:
+                conn.close()
+                cur.close()
+                return json.dumps({'status_code':200, 'message':user_workouts}, default=str) #datetime not json serializable so use defualt=str to convert non-serializable values to strings
+        elif request.method == 'POST':
+                # POST user_id, date, distance, time_sec, split, intervals, comment | return: workout_id
+            try:
+                workout_inst = NewWorkout.parse_obj(request.get_json())
+            except ValidationError() as e:
+                return json.dumps({'status_code': 400, 'message': e})
+            workout_id = l.add_workout(db, workout_inst)
+            return json.dumps({'status_code': 200, 'workout_id': workout_id})
 
 
     @app.route('/addinterval', methods=['POST'])
@@ -84,25 +59,7 @@ def create_app(db):
         except ValidationError() as e:
             return json.dumps({'status_code': 400, 'message': e})
         add_successful:bool = l.add_interval(db, interval_inst) 
-        return json.dumps({'status_code': 200, 'message':add_successful})    
-
-
-    @app.route("/logsearch", methods = ['GET']) # returns all workouts that match search results
-    def logsearch():
-        workout_search_params:dict = request.args 
-        sql, subs = l.search_sql_str(workout_search_params)
-        matching_workouts = None
-        try:
-            conn, cur = l.db_connect(db)
-            cur.execute(sql, subs) 
-            matching_workouts = cur.fetchall()
-        finally:
-            cur.close()
-            conn.close()
-            if matching_workouts == None:
-                return json.dumps({'status_code':500, 'message':[]})
-            else: 
-                return json.dumps({'status_code':200, 'message':matching_workouts},default=str)
+        return json.dumps({'status_code': 200, 'message':None, 'success':add_successful})    
             
 
     @app.route("/details", methods=['GET']) #list summary stats + all interval_log data for a specific workout_id
@@ -149,22 +106,31 @@ def create_app(db):
             conn.close()
             return json.dumps({'status_code':200, 'distance':distance, 'time':time, 'count':count, "user_info": user_info, "user_team":user_team})
 
-    @app.route('/listteams', methods=['GET'])
-    def list_teams():
-        m = 'fail'
-        try:
-            # pdb.set_trace()
-            conn,cur = l.db_connect(db)
-            cur.execute("SELECT team_name FROM team")
-            team_ll = cur.fetchall() #[(t1,),(t2,)]
-            team_names =[]
-            for i in range(len(team_ll)):
-                team_names.append(team_ll[i][0])
-            m = team_names
-        finally:
-            cur.close()
-            conn.close()
-            return json.dumps({'status_code': 200, 'message': m})
+    @app.route('/teams', methods=['GET','POST'])
+    def teams(): ##need updatte test
+        if request.method == 'GET':
+            try:
+                conn,cur = l.db_connect(db)
+                cur.execute("SELECT * FROM team")
+                team_lt = cur.fetchall() #[(t1id,t1nm),(t2id,t2nm)]
+            finally:
+                cur.close()
+                conn.close()
+                return json.dumps({'status_code': 200, 'body': team_lt})
+        elif request.method == 'POST':
+            newteam = request.get_json()['name']
+            try:
+                conn,cur = l.db_connect(db)
+                # add team to team table if not already in db
+                cur.execute("INSERT INTO team(team_name) VALUES(%s) ON CONFLICT DO NOTHING",(newteam,))
+                conn.commit()
+                cur.execute("SELECT team_id FROM team WHERE team_name=%s",(newteam,))
+                newteam_id = cur.fetchone()[0] 
+            finally:
+                cur.close()
+                conn.close()
+                return json.dumps({'status_code': 200, 'body': newteam_id})
+
 
 
 

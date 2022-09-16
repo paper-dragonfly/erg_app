@@ -6,12 +6,12 @@ class NewUser(BaseModel):
     user_name:str
     dob:str
     sex:str='Female'
-    team:str='private'
+    team_id:str
 
 class IntervalWorkout(BaseModel):
     user_id:str = 'guest'
     distance:int = 0
-    time:int = 0
+    time:float = 0
     rest:int = 0
     intervals:int = 1
     date = '2000-01-01'
@@ -20,9 +20,9 @@ class IntervalWorkout(BaseModel):
 class NewWorkout(BaseModel):
     user_id:int
     workout_date:str = '2000-01-01'
-    time_sec:int = 0
+    time_sec:float = 0.0
     distance:int = 0
-    split:int = 0
+    split:float = 0.0
     sr:int = 0
     hr:int = 0
     intervals:int = 1
@@ -30,13 +30,13 @@ class NewWorkout(BaseModel):
 
 class NewInterval(BaseModel):
     workout_id:int 
-    time_sec:int
+    time_sec:float
     distance:int 
-    split:int=0
+    split:float=0.0
     sr:int=0
     hr:int=0
     rest:int=0
     comment:str=""
-    intrvl_wo:bool
+    interval_wo:bool
 
 

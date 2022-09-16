@@ -26,13 +26,14 @@ def add_new_user(db:str, resp_newuser:NewUser)->int:
     user_id = 0
     try:
         conn, cur = db_connect(db)
-        # add team to team table if not already in db
-        cur.execute("INSERT INTO team(team_name) VALUES(%s) ON CONFLICT DO NOTHING",(resp_newuser.team,))
-        #get user's team_id
-        cur.execute("SELECT team_id FROM team WHERE team_name=%s",(resp_newuser.team,))
-        team_id= cur.fetchone()[0]
+        #check if user already exists
+        cur.execute('SELECT user_name FROM users')
+        usernames = cur.fetchall()
+        for i in range(len(usernames)):
+            if usernames[i][0] == resp_newuser.user_name: 
+                return 0
         # add user 
-        cur.execute("INSERT INTO users(user_name, dob, sex, team) VALUES(%s,%s,%s,%s)",(resp_newuser.user_name, resp_newuser.dob, resp_newuser.sex,team_id))
+        cur.execute("INSERT INTO users(user_name, dob, sex, team) VALUES(%s,%s,%s,%s)",(resp_newuser.user_name, resp_newuser.dob, resp_newuser.sex,resp_newuser.team_id))
         cur.execute("SELECT user_id FROM users WHERE user_name=%s",(resp_newuser.user_name,))
         user_id = cur.fetchone()[0]
         conn.commit()
@@ -42,34 +43,28 @@ def add_new_user(db:str, resp_newuser:NewUser)->int:
         return user_id
 
 
-#Get user_name from ID
-def get_user_name(id, db):
+#Get user info given ID
+def get_users(db:str)->tuple:
+    user_dict={'user_id':[], 'user_name':[], 'dob':[],'sex':[],'team':[]}
     try:
         conn, cur = db_connect(db)
-        cur.execute("SELECT user_name FROM users WHERE user_id=%s",(id,))
-        user_name = cur.fetchone()[0]
-    # exception - no user_name maches given user_name
-    except:  
-        user_name = 'No Match'
+        cur.execute("SELECT * FROM users")
+        uinfo = cur.fetchall()
+        # if no user_name maches given user_id
+        if not uinfo:
+            status_code = 404
+        else:  
+            for i in range(len(uinfo)): 
+                user_dict['user_id'].append(uinfo[i][0])
+                user_dict['user_name'].append(uinfo[i][1])
+                user_dict['dob'] .append(str(uinfo[i][2]))
+                user_dict['sex'].append(uinfo[i][3])
+                user_dict['team'].append(uinfo[i][4])
+            status_code = 200
     finally:
         cur.close()
         conn.close()
-        return user_name 
-
-
-#Get User id
-def get_user_id(user_name, db='Erg'):
-    try:
-        conn, cur = db_connect(db)
-        cur.execute("SELECT user_id FROM users WHERE user_name=%s",(user_name,))
-        user_id = cur.fetchone()[0]
-    # exception - no user_name maches given user_name
-    except:  
-        user_id = 0
-    finally:
-        cur.close()
-        conn.close()
-        return user_id 
+        return status_code, user_dict
 
 
 # add workout to workout_log
@@ -96,8 +91,8 @@ def add_interval(db:str, interval_inst:NewInterval)->bool:
         # connect to db
         conn, cur = db_connect(db, True)
         # add interval data to interval_log table
-        sql = "INSERT INTO interval_log(workout_id, time_sec, distance, split, sr, hr, rest, comment, intrvl_wo) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s)"
-        subs = (interval_inst.workout_id, interval_inst.time_sec, interval_inst.distance, interval_inst.split, interval_inst.sr, interval_inst.hr, interval_inst.rest, interval_inst.comment, interval_inst.intrvl_wo) 
+        sql = "INSERT INTO interval_log(workout_id, time_sec, distance, split, sr, hr, rest, comment, interval_wo) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+        subs = (interval_inst.workout_id, interval_inst.time_sec, interval_inst.distance, interval_inst.split, interval_inst.sr, interval_inst.hr, interval_inst.rest, interval_inst.comment, interval_inst.interval_wo) 
         cur.execute(sql, subs)
         added = True
     finally:
@@ -105,23 +100,6 @@ def add_interval(db:str, interval_inst:NewInterval)->bool:
         conn.close()
         return added  
 
-
-def search_sql_str(workout_search_params:dict)-> str:
-    sql = 'SELECT * FROM workout_log WHERE '
-    subs = []
-    l = len(workout_search_params) 
-    i = 1
-    for key in workout_search_params:
-        if i < l:
-            sql+= key
-            sql+= '=%s AND '
-            subs.append(workout_search_params[key])
-        else:
-            sql+= key
-            sql+= '=%s'
-            subs.append(workout_search_params[key])
-        i += 1
-    return sql, subs 
         
 
 

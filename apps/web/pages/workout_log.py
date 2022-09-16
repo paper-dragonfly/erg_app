@@ -3,9 +3,9 @@ from dash.dependencies import Input, Output, State
 import pandas as pd
 import requests
 from typing import List
-from constants import ROOT_URL
-from apps.web.dash_fxs import flask_requests_get, flask_requests_post
-from apps.web.dash_fxs import get_name, seconds_to_duration
+from apps.web.constants import ROOT_URL
+from apps.web.dash_fns import flask_requests_get, flask_requests_post
+from apps.web.dash_fns import get_name, seconds_to_duration
 import dash_bootstrap_components as dbc
 import plotly.express as px
 from dash.exceptions import PreventUpdate
@@ -16,7 +16,7 @@ register_page(__name__,path_template='/log_table/<user_id>')
 
 
 def layout(user_id=1):
-    flash_workouts:List[List] = requests.get(ROOT_URL+f'/log/{user_id}').json()['message']
+    flash_workouts:List[List] = requests.get(ROOT_URL+f'/workoutlog?user_id={user_id}').json()['message']
     workouts = {
         'id' : [],
         'Date':[],
@@ -31,9 +31,9 @@ def layout(user_id=1):
     for i in range(len(flash_workouts)):
         workouts['id'].append(flash_workouts[i][0]),
         workouts['Date'].append(flash_workouts[i][2]),
-        workouts['Time'].append(seconds_to_duration(flash_workouts[i][3])),
+        workouts['Time'].append(seconds_to_duration(float(flash_workouts[i][3]))),
         workouts['Distance'].append(str(flash_workouts[i][4])),
-        workouts['Split'].append(seconds_to_duration(flash_workouts[i][5])),
+        workouts['Split'].append(seconds_to_duration(float(flash_workouts[i][5]))),
         workouts['Stroke Rate'].append(str(flash_workouts[i][6])),
         workouts['Heart Rate'].append(str(flash_workouts[i][7])),
         workouts['Intervals'].append(str(flash_workouts[i][8])),
