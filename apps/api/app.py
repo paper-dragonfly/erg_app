@@ -159,4 +159,4 @@ def create_app(db):
 
 if __name__ == '__main__':
     app = create_app('erg')
-    app.run(host='localhost', port=5000, debug=True)
+    # app.run(host='localhost', port=5000, debug=True)
