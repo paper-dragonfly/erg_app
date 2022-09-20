@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from apps.api.post_classes import NewUser, NewInterval, NewWorkout
 import json
 import pdb
-from apps.api import conftest as c
+from apps.api.tests import conftest as c
 
 
 def test_add_new_user():

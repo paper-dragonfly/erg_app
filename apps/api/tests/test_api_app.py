@@ -1,5 +1,5 @@
 import json 
-from apps.api import conftest as c
+from apps.api.tests import conftest as c
 from apps.api.logic import add_new_user, db_connect, add_workout, add_interval, get_users
 from pydantic import BaseModel
 import pdb
