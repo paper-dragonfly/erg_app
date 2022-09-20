@@ -1,4 +1,3 @@
-from logging import PlaceHolder
 from dash import dcc, html, register_page, Output, Input, State, callback
 import dash_bootstrap_components as dbc
 from PIL import Image

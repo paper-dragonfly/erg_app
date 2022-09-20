@@ -1,6 +1,6 @@
 import pandas as pd
 import pdb
-from dash import Dash, dcc, html, register_page, callback, Input, Output, State 
+from dash import dcc, html, register_page, callback, Input, Output, State 
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
 from apps.web.dash_fns import choose_title, format_and_post_intervals, generate_post_wo_dict2, post_new_workout, format_and_post_intervals, validate_form_inputs
@@ -10,8 +10,7 @@ import datetime
 import base64
 import numpy as np
 from matplotlib import pyplot as plt
-import re
-from ocr.pipeline import clean_ocr 
+from apps.web.ocr_pipeline import clean_ocr 
 
 register_page(__name__,path_template='/upload_image/<user_id>')
 
