@@ -7,4 +7,4 @@ __pycache__/*
 ocr/temp/*
 apps/web/.venv_dash/*
 apps/api/.venv_flask/*
-
+.env/*
