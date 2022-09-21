@@ -4,6 +4,9 @@ import psycopg2
 from apps.api.post_classes import NewInterval, NewUser, NewWorkout
 import pdb 
 import os
+from dotenv import load_dotenv
+
+load_dotenv() 
 
 # get database parameters
 def config(db:str='dev_local', config_file:str='apps/api/config/config.yaml')-> dict:

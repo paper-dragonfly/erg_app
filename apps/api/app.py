@@ -7,7 +7,6 @@ import pdb
 import os
 from dotenv import load_dotenv
 
-
 #Get env vars from .env 
 def try_load_env_vars():
     success = load_dotenv(verbose=True)
