@@ -1,5 +1,5 @@
 ---
-erg:
+dev_local:
   host: localhost
   # port: 5000
   database: erg

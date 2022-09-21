@@ -3,9 +3,10 @@ import yaml
 import psycopg2 
 from apps.api.post_classes import NewInterval, NewUser, NewWorkout
 import pdb 
+import os
 
 # get database parameters
-def config(db:str='erg', config_file:str='apps/api/config/config.yaml')-> dict:
+def config(db:str='dev_local', config_file:str='apps/api/config/config.yaml')-> dict:
     with open(f'{config_file}', 'r') as f:
         config_dict = yaml.safe_load(f) 
     db_params = config_dict[db]
@@ -14,8 +15,13 @@ def config(db:str='erg', config_file:str='apps/api/config/config.yaml')-> dict:
 
 # connect to database
 def db_connect(db:str, autocommit:bool = False):
-    params = config(db)
-    conn = psycopg2.connect(**params)
+    if db == 'production':
+        conn = psycopg2.connect(os.getenv('DB_CONN_STR_INT'))    
+    elif db == 'dev_hybrid':
+        conn = psycopg2.connect(os.getenv('DB_CONN_STR_EXT'))
+    else:
+        params = config(db)
+        conn = psycopg2.connect(**params)
     cur = conn.cursor()
     conn.autocommit = autocommit
     return conn, cur

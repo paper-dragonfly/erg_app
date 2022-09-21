@@ -4,6 +4,18 @@ from apps.api.post_classes import NewInterval, NewUser, NewWorkout
 import json
 from apps.api import logic as l
 import pdb
+from dotenv import load_dotenv
+
+
+#Get env vars from .env 
+def try_load_env_vars():
+    success = load_dotenv(verbose=True)
+    if not success:
+        raise Exception('No environmental variables found')
+    else:
+        print('env vars found')
+    
+try_load_env_vars()
 
 def create_app(db):
     app = Flask(__name__) 
