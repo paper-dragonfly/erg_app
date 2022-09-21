@@ -4,6 +4,7 @@ from apps.api.post_classes import NewInterval, NewUser, NewWorkout
 import json
 from apps.api import logic as l
 import pdb
+import os
 from dotenv import load_dotenv
 
 
@@ -16,6 +17,7 @@ def try_load_env_vars():
         print('env vars found')
     
 try_load_env_vars()
+ENV = os.getenv('ENVIRONMENT')
 
 def create_app(db):
     app = Flask(__name__) 
@@ -169,6 +171,10 @@ def create_app(db):
     
     return app 
 
+
 if __name__ == '__main__':
-    app = create_app('erg')
-    # app.run(host='localhost', port=5000, debug=True)
+    app = create_app(ENV)
+    if ENV=='dev_local' or ENV=='dev_hybrid':
+        app.run(host='localhost', port=5000, debug=True)
+
+

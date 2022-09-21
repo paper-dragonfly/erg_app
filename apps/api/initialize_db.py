@@ -1,5 +1,9 @@
 from logic import db_connect
 import pdb
+from dotenv import load_dotenv
+import os 
+
+print('Env vars loaded:', load_dotenv())
 
 def create_erg_db():
     conn, cur = db_connect('create_dbs', True)
@@ -25,7 +29,7 @@ def create_test_db():
     cur.close()
     conn.close()
 
-
+# create db tables
 def create_team_table(cur):
     cur.execute("""CREATE TABLE IF NOT EXISTS team(
         team_id SERIAL PRIMARY KEY,
@@ -82,15 +86,18 @@ def initialize(db):
         create_team_table(cur)
         create_users_table(cur)
         create_workout_log_table(cur)
-        create_interval_log_table(cur) 
+        create_interval_log_table(cur)
+        print(f'{db} tables created') 
     finally:
-        conn.close()
         cur.close()
+        conn.close()
 
 
 if __name__ == "__main__":
     create_erg_db()
     create_test_db()
-    initialize('erg')
+    initialize('dev_local')
     initialize('testing') 
+    #populate remote db fm local terminal
+    initialize('dev_hybrid') 
 
