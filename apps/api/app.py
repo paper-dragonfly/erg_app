@@ -170,9 +170,10 @@ def create_app(db):
     
     return app 
 
+if ENV != 'testing':
+    app = create_app(ENV)
 
 if __name__ == '__main__':
-    app = create_app(ENV)
     if ENV=='dev_local' or ENV=='dev_hybrid':
         app.run(host='localhost', port=5000, debug=True)
 
