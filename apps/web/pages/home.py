@@ -4,7 +4,7 @@ from PIL import Image
 
 register_page(__name__, path='/')
 
-pil_image = Image.open("/Users/katcha/NiCode_Academy/ErgApp/images/erg_cartoon.png")
+pil_image = Image.open("apps/web/erg_cartoon.png")
 
 
 def layout():
