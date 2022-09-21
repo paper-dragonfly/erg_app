@@ -7,6 +7,8 @@ import apps.web.dash_fns as dfx
 import pdb
 
 app = Dash(__name__,external_stylesheets=[dbc.themes.SANDSTONE], use_pages=True)
+server = app.server
+
 
 user_names = dfx.get_usernames()
 
