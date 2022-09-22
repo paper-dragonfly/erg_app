@@ -1,1 +1,1 @@
-ROOT_URL = "http://localhost:5000"
+ROOT_URL = "https://ergtrack-api.onrender.com"

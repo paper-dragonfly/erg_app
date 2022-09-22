@@ -5,6 +5,10 @@ from apps.web.constants import ROOT_URL
 import requests
 import apps.web.dash_fns as dfx
 import pdb
+import os 
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Dash(__name__,external_stylesheets=[dbc.themes.SANDSTONE], use_pages=True)
 server = app.server
@@ -44,5 +48,5 @@ def choose_page(username='kaja'):
     ]
     return pages
 
-if __name__ == '__main__':
+if __name__ == '__main__' and os.getenv('ENVIRONMENT') != 'production':
     app.run('localhost', 5001, debug=True )
