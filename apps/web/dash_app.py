@@ -21,7 +21,8 @@ if len(user_names) == 0:
 # Layout
 app.layout = dbc.Container([
     dbc.NavbarSimple([
-        dcc.Dropdown(options=user_names, value="None", id='user_dropdown',),
+        dcc.Store(id='user_names', data=['None']),
+        dcc.Dropdown(options=user_names, value="None", id='user_dropdown'),
         dbc.DropdownMenu(
             children=None,
             id='page_menu',
@@ -32,6 +33,17 @@ app.layout = dbc.Container([
 ])
 
 #Callback 
+
+@app.callback(
+    Output('user_names', 'data'),
+    Input('user_dropdown', 'value')
+)
+def reload_names(user='None'):
+    user_names = dfx.get_usernames()
+    if len(user_names) == 0:
+        return ['None']
+    return user_names
+
 
 @app.callback(
     Output('page_menu', 'children'),
