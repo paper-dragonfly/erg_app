@@ -5,25 +5,25 @@ from apps.web.constants import ROOT_URL
 import pdb 
 
 # FLASK get+post for requests/client
-def flask_requests_get(url:str):
+def flask_requests_get(url:str)->dict:
     return requests.get(url).json()
 
 
-def flask_requests_post(url:str,data:dict,):
+def flask_requests_post(url:str,data:dict,)->dict:
     return requests.post(url, json=data).json()
 
 
-def flask_client_get(url:str,client):
+def flask_client_get(url:str,client)->dict:
     response = client.get(url)
     return json.loads(response.data.decode("ASCII"))
 
 
-def flask_client_post(url:str, data:dict,client):
+def flask_client_post(url:str, data:dict,client)->dict:
     response = client.post(url, data=json.dumps(data), content_type='application/json')
     return json.loads(response.data.decode("ASCII"))
 
 # GET requests
-def get_usernames(get=flask_requests_get, get_args={}):
+def get_usernames(get=flask_requests_get, get_args={})->list:
     names:tuple = get(ROOT_URL+'/users', **get_args)['body']['user_name']
     name_list = []
     for i in range(len(names)):
